@@ -1,0 +1,28 @@
+{
+  "name": "fi-thnitek",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:int": "turbo run test:int",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @fi-thnitek/api db:generate",
+    "db:migrate": "pnpm --filter @fi-thnitek/api db:migrate",
+    "db:seed": "pnpm --filter @fi-thnitek/api db:seed"
+  },
+  "devDependencies": {
+    "@fi-thnitek/config": "workspace:*",
+    "prettier": "3.9.9",
+    "turbo": "2.11.7",
+    "typescript": "~6.0.3"
+  }
+}
