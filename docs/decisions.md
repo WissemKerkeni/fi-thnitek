@@ -54,6 +54,18 @@ Verified drivers may publish up to 5 one-off or weekly routes **without sharing*
 ### ADR-212: Approved screen designs in Stitch; blue + yellow palette at implementation · Accepted
 The mobile screens are designed in Google Stitch (project "Fi Thnitek Transit Map", see `docs/ux.md §5`) and approved for layout, content and copy. Stitch generated a green palette; it is **not** binding. The app's theme tokens use a **deep blue primary + sunny yellow accent** (Mediterranean), with green/amber/red reserved for status (visible, warning, stop). Contrast must stay WCAG AA.
 
+### ADR-213: Phase 1 toolchain and library versions · Accepted
+Pinned 2026-10-02 after checking peer compatibility:
+- **Runtime/tooling:** Node 22 LTS (≥ 22.12, for `require(esm)` and Vitest 5) · pnpm 12.8 · Turborepo 2.11 · **TypeScript ~6.0** (not 7.0: the NestJS CLI and the Expo SDK 57 template pin 6.0, and typescript-eslint supports < 6.1) · ESLint 10 flat config + typescript-eslint 8 · Prettier 3 · Vitest 5.
+- **Shared packages** are ESM, built with `tsc` to `dist/`; the CommonJS API loads them via `require(esm)`.
+- **API:** NestJS 12.1 (+ schedule 12, swagger 12), nestjs-pino 5 / pino 10, Drizzle ORM 0.45 + drizzle-kit 0.31 + `pg` 8, Zod 4.6 (OpenAPI schemas generated with `z.toJSONSchema`). Tests run on Vite 8's Oxc transform, which emits decorator metadata, so **no SWC**. Integration tests: Testcontainers 12 with `postgis/postgis:16-3.5`.
+- **Errors:** RFC 9457 `application/problem+json` with a stable `code`; `type` is a URN (`urn:fi-thnitek:problem:<code>`) so no domain is assumed.
+- **Audit:** `audit.audit_logs` is insert-only through a trigger (blocks UPDATE/DELETE/TRUNCATE for every role, owner included) plus an INSERT/SELECT-only role `fi_audit_writer`.
+- **Mobile:** Expo **SDK 57** with the versions it pins (React Native 0.86.3, React 19.2.3, reanimated 4.5.1, worklets 0.10.1), expo-router 57, `@maplibre/maplibre-react-native` 11.4 (OpenFreeMap "liberty" style), i18next 26, TanStack Query 5. SDK peers are pinned explicitly because pnpm otherwise auto-installs their latest versions.
+- **Admin:** Vite 8 + Refine 5 + antd **5.29** + react-router **7** (`@refinedev/antd` and `@refinedev/react-router` do not support antd 6 / react-router 8 yet). Refine telemetry disabled.
+- **pnpm supply-chain settings:** install scripts allowed only for `esbuild`; denied for `@swc/core`, `@scarf/scarf`, `cpu-features`, `ssh2`, `protobufjs`. pnpm's minimum-release-age rule auto-exempted a few just-released packages (listed in `pnpm-workspace.yaml`).
+- **Open:** MinIO community images are no longer published, so the S3-compatible store for verification documents must be chosen before Phase 3.
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 
