@@ -18,3 +18,5 @@ minimumReleaseAgeExclude:
   - turbo@2.11.7
   - nestjs-pino@5.3.0
   - supertest@7.3.1
+  - '@tanstack/query-core@5.104.1'
+  - '@tanstack/react-query@5.104.1'
