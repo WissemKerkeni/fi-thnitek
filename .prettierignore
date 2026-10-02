@@ -5,3 +5,6 @@ coverage/
 .expo/
 apps/api/drizzle/meta/
 docs/
+*.md
+.idea/
+apps/mobile/.expo/
