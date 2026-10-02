@@ -3,7 +3,7 @@
 Run it from the repo root, **in plan mode first**, after Phase 0 has produced the launch-city places data (Phase 1 doesn't strictly need it).
 
 ```text
-You are implementing Phase 1 (Foundation) of the transport-tunisia project.
+You are implementing Phase 1 (Foundation) of the Fi thnitek project.
 
 Read fully before planning (they are the source of truth):
 - CLAUDE.md

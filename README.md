@@ -1,4 +1,4 @@
-# transport-tunisia (codename "Mechwar" · مشوار)
+# Fi thnitek (في ثنيتك)
 
 **A shared live map of Tunisian transport. Passengers show where they're going; the first driver to arrive picks them up.**
 
@@ -32,7 +32,7 @@ Expo (React Native, TS) + MapLibre + expo-location foreground services · NestJS
 
 ## Repository structure (planned)
 ```text
-transport-tunisia/
+fi-thnitek/
 ├── apps/
 │   ├── mobile/          # Expo: passenger mode + driver mode (driver-only accounts)
 │   │   ├── app/         # expo-router: (auth)/ (passenger)/ (driver)/

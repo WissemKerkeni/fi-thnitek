@@ -51,6 +51,9 @@ When a request closes `MOVED_AWAY`, **all** sharing drivers ≤ 50 m from the an
 ### ADR-211: Routine routes · Accepted
 Verified drivers may publish up to 5 one-off or weekly routes **without sharing**. They are informational only (no booking) and shown as "Scheduled departures" in the finder. They pre-fill "heading to" when sharing starts within ±60 min, and prompt for staleness after 30 unused days.
 
+### ADR-212: Approved screen designs in Stitch; blue + yellow palette at implementation · Accepted
+The mobile screens are designed in Google Stitch (project "Fi Thnitek Transit Map", see `docs/ux.md §5`) and approved for layout, content and copy. Stitch generated a green palette; it is **not** binding. The app's theme tokens use a **deep blue primary + sunny yellow accent** (Mediterranean), with green/amber/red reserved for status (visible, warning, stop). Contrast must stay WCAG AA.
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 
