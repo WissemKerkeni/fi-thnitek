@@ -1,0 +1,72 @@
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_THRESHOLDS, resolveThresholds } from './thresholds.js';
+
+describe('DEFAULT_THRESHOLDS', () => {
+  it('matches docs/domain-model.md §3 exactly', () => {
+    expect(DEFAULT_THRESHOLDS).toEqual({
+      move_away_m: 20,
+      move_away_min_accuracy_m: 25,
+      move_away_confirm_s: 10,
+      anchor_max_accuracy_m: 30,
+      location_lost_min: 5,
+      request_ttl_min: 60,
+      request_max_renewals: 3,
+      driver_fresh_s: 120,
+      driver_buffer_max_min: 60,
+      cooldown_min: 60,
+      break_options_min: [30, 60, 120],
+      break_resume_window_min: 15,
+      session_max_h: 12,
+      routine_max: 5,
+      routine_stale_days: 30,
+      routine_prompt_grace_days: 7,
+      routine_prefill_window_min: 60,
+      pickup_radius_m: 50,
+      spoof_speed_kmh: 180,
+      approx_grid_m: 100,
+    });
+  });
+
+  it('is deeply frozen', () => {
+    expect(Object.isFrozen(DEFAULT_THRESHOLDS)).toBe(true);
+    expect(Object.isFrozen(DEFAULT_THRESHOLDS.break_options_min)).toBe(true);
+  });
+});
+
+describe('resolveThresholds', () => {
+  it('returns the defaults when there are no overrides', () => {
+    expect(resolveThresholds()).toEqual(DEFAULT_THRESHOLDS);
+    expect(resolveThresholds({})).toEqual(DEFAULT_THRESHOLDS);
+  });
+
+  it('applies partial overrides and keeps the other defaults', () => {
+    const t = resolveThresholds({ move_away_m: 25, break_options_min: [15, 30] });
+    expect(t.move_away_m).toBe(25);
+    expect(t.break_options_min).toEqual([15, 30]);
+    expect(t.cooldown_min).toBe(60);
+  });
+
+  it('rejects unknown keys so typos in admin config fail loudly', () => {
+    expect(() => resolveThresholds({ move_away_meters: 25 })).toThrow();
+  });
+
+  it('rejects non-positive or non-integer values', () => {
+    expect(() => resolveThresholds({ move_away_m: 0 })).toThrow();
+    expect(() => resolveThresholds({ cooldown_min: -5 })).toThrow();
+    expect(() => resolveThresholds({ request_max_renewals: 1.5 })).toThrow();
+  });
+
+  it('allows zero renewals', () => {
+    expect(resolveThresholds({ request_max_renewals: 0 }).request_max_renewals).toBe(0);
+  });
+
+  it('requires break options to be non-empty, unique and ascending', () => {
+    expect(() => resolveThresholds({ break_options_min: [] })).toThrow();
+    expect(() => resolveThresholds({ break_options_min: [60, 30] })).toThrow();
+    expect(() => resolveThresholds({ break_options_min: [30, 30] })).toThrow();
+  });
+
+  it('returns a frozen object', () => {
+    expect(Object.isFrozen(resolveThresholds({ move_away_m: 30 }))).toBe(true);
+  });
+});
