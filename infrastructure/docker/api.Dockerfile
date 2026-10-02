@@ -54,5 +54,5 @@ USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/v1/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-# Migrations run as a separate one-off: docker compose run --rm api node dist/db/migrate.js
+# Migrations run as a separate one-off: docker compose run --rm api node dist/db/migrate-cli.js
 CMD ["node", "dist/main.js"]
