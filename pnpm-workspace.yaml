@@ -1,6 +1,13 @@
 packages:
   - apps/*
   - packages/*
+allowBuilds:
+  '@scarf/scarf': false
+  '@swc/core': false
+  cpu-features: false
+  esbuild: true
+  protobufjs: false
+  ssh2: false
 minimumReleaseAgeExclude:
   - '@turbo/darwin-64@2.11.7'
   - '@turbo/darwin-arm64@2.11.7'
@@ -9,3 +16,5 @@ minimumReleaseAgeExclude:
   - '@turbo/windows-64@2.11.7'
   - '@turbo/windows-arm64@2.11.7'
   - turbo@2.11.7
+  - nestjs-pino@5.3.0
+  - supertest@7.3.1
