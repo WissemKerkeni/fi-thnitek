@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 /** Placeholder shipped in .env.example; refused in production. */
 export const DEV_JWT_SECRET = 'dev-only-secret-change-me-0123456789abcdef';
+/** Development placeholders for CIN protection; refused in production. */
+export const DEV_CIN_ENCRYPTION_KEY = 'ZGV2LW9ubHktY2luLWtleS0zMi1ieXRlcy1sb25nISE=';
+export const DEV_CIN_HMAC_KEY = 'dev-only-cin-hmac-key-change-me-0123456789';
 
 const commaList = (lowercase = false) =>
   z
@@ -35,10 +38,43 @@ const EnvSchema = z
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(60),
     /** Current Terms & Privacy version; users must accept it during onboarding (R-002). */
     TERMS_VERSION: z.string().min(1).max(32).default('draft-2026-10'),
+
+    /** S3-compatible store for verification documents (Garage, ADR-215). */
+    S3_ENDPOINT: z.url(),
+    S3_REGION: z.string().default('garage'),
+    S3_BUCKET: z.string().min(3),
+    S3_ACCESS_KEY_ID: z.string().min(1),
+    S3_SECRET_ACCESS_KEY: z.string().min(1),
+    /** Largest accepted document photo. */
+    MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(20).default(8),
+
+    /** AES-256-GCM key for CINs at rest: 32 bytes, base64. */
+    CIN_ENCRYPTION_KEY: z
+      .string()
+      .refine((v) => Buffer.from(v, 'base64').length === 32, 'must be 32 bytes, base64-encoded'),
+    /** HMAC key for the CIN uniqueness index. */
+    CIN_HMAC_KEY: z.string().min(32),
+
+    /** Firebase service-account JSON file for FCM pushes. Unset = pushes are logged, not sent. */
+    FIREBASE_SERVICE_ACCOUNT_FILE: z.string().optional(),
   })
-  .refine((env) => env.NODE_ENV !== 'production' || env.JWT_SECRET !== DEV_JWT_SECRET, {
-    path: ['JWT_SECRET'],
-    message: 'the development placeholder cannot be used in production',
+  .superRefine((env, ctx) => {
+    if (env.NODE_ENV !== 'production') return;
+    // Development placeholders are committed in .env.example; production must set its own secrets.
+    const placeholders: [keyof typeof env, string][] = [
+      ['JWT_SECRET', DEV_JWT_SECRET],
+      ['CIN_ENCRYPTION_KEY', DEV_CIN_ENCRYPTION_KEY],
+      ['CIN_HMAC_KEY', DEV_CIN_HMAC_KEY],
+    ];
+    for (const [key, placeholder] of placeholders) {
+      if (env[key] === placeholder) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [key],
+          message: 'the development placeholder cannot be used in production',
+        });
+      }
+    }
   });
 
 export type Env = z.infer<typeof EnvSchema>;

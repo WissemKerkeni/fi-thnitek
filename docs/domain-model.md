@@ -112,7 +112,7 @@ stateDiagram-v2
 8. Pings with no active mode are rejected with `stop: true` and not stored.
 
 ## 3. Configurable thresholds (admin "Content → thresholds")
-`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`.
+`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `document_expiry_reminder_days=30`.
 
 ## 4. Retention (proposed; confirm with a lawyer)
 | Data | Retention |

@@ -7,7 +7,7 @@ import { ApiException } from '../common/api-exception.js';
 import { ENV, type Env } from '../config/env.js';
 import type { Database, Executor } from '../db/client.js';
 import { DB } from '../db/db.module.js';
-import { devices, sessions, users } from '../db/schema/index.js';
+import { devices, driverProfiles, sessions, users } from '../db/schema/index.js';
 
 type User = typeof users.$inferSelect;
 
@@ -20,7 +20,7 @@ export class UsersService {
   ) {}
 
   /** The only shape a user ever sees of themselves (no email, no Google sub). */
-  toMe(user: User): Me {
+  toMe(user: User, driverVerification: Me['driverVerification'] = null): Me {
     return {
       id: user.id,
       displayName: user.displayName,
@@ -29,14 +29,24 @@ export class UsersService {
       isAdmin: user.isAdmin,
       termsAcceptedVersion: user.termsAcceptedVersion,
       currentTermsVersion: this.env.TERMS_VERSION,
+      driverVerification,
       needsOnboarding: !user.displayName || user.termsAcceptedVersion !== this.env.TERMS_VERSION,
     };
+  }
+
+  /** The user's driver verification state, or null if they never started one. */
+  async driverStateOf(userId: string, db: Executor = this.db): Promise<Me['driverVerification']> {
+    const [row] = await db
+      .select({ status: driverProfiles.status })
+      .from(driverProfiles)
+      .where(eq(driverProfiles.userId, userId));
+    return row?.status ?? null;
   }
 
   async getMe(userId: string): Promise<Me> {
     const [user] = await this.db.select().from(users).where(eq(users.id, userId));
     if (!user) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    return this.toMe(user);
+    return this.toMe(user, await this.driverStateOf(userId));
   }
 
   async updateMe(userId: string, patch: UpdateMeRequest): Promise<Me> {
@@ -59,7 +69,7 @@ export class UsersService {
       .where(eq(users.id, userId))
       .returning();
     if (!user) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    return this.toMe(user);
+    return this.toMe(user, await this.driverStateOf(userId));
   }
 
   /** Upserts the caller's device by install ID (R-004). Returns the device ID. */

@@ -4,9 +4,13 @@ import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testconta
 export const POSTGIS_IMAGE = 'postgis/postgis:16-3.5';
 
 export async function startPostgis(): Promise<StartedPostgreSqlContainer> {
-  return new PostgreSqlContainer(POSTGIS_IMAGE)
-    .withDatabase('fi_thnitek_test')
-    .withUsername('app')
-    .withPassword('app')
-    .start();
+  return (
+    new PostgreSqlContainer(POSTGIS_IMAGE)
+      .withDatabase('fi_thnitek_test')
+      .withUsername('app')
+      .withPassword('app')
+      // The PostGIS image installs its extensions on first start: allow slow machines (CI is much faster).
+      .withStartupTimeout(300_000)
+      .start()
+  );
 }

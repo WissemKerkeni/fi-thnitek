@@ -1,14 +1,15 @@
 import { type Server } from 'node:http';
 import { type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { type JWTPayload, SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from 'jose';
 import { Pool } from 'pg';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.factory.js';
 import { GOOGLE_VERIFIER, GoogleTokenVerifier } from '../src/auth/google-verifier.js';
-import { DEV_JWT_SECRET, ENV, loadEnv } from '../src/config/env.js';
+import { DEV_CIN_ENCRYPTION_KEY, DEV_CIN_HMAC_KEY, DEV_JWT_SECRET, ENV, loadEnv } from '../src/config/env.js';
 import { runMigrations } from '../src/db/migrate.js';
+import { PUSH_TRANSPORT, RecordingTransport } from '../src/notifications/push.service.js';
+import { TEST_S3, startGarage } from './garage.js';
 import { startPostgis } from './postgis.js';
 
 export const TEST_CLIENT_ID = 'test-web.apps.googleusercontent.com';
@@ -22,13 +23,19 @@ export interface TestApp {
   pool: Pool;
   /** Signs a Google-like ID token with the local test key. */
   googleToken: (claims?: JWTPayload) => Promise<string>;
+  /** Pushes the app tried to send (no FCM in tests). */
+  push: RecordingTransport;
   close: () => Promise<void>;
 }
 
-/** Real PostGIS (Testcontainers) + migrations + the full Nest app; only Google's key set is local. */
+/**
+ * Real PostGIS and Garage (Testcontainers) + migrations + the full Nest app. Only Google's key set is local
+ * and pushes are recorded instead of sent.
+ */
 export async function startTestApp(): Promise<TestApp> {
-  const container: StartedPostgreSqlContainer = await startPostgis();
+  const [container, garage] = await Promise.all([startPostgis(), startGarage()]);
   const databaseUrl = container.getConnectionUri();
+  const push = new RecordingTransport();
   await runMigrations(databaseUrl);
   const pool = new Pool({ connectionString: databaseUrl });
 
@@ -47,10 +54,18 @@ export async function startTestApp(): Promise<TestApp> {
         GOOGLE_CLIENT_IDS: TEST_CLIENT_ID,
         ADMIN_EMAILS: TEST_ADMIN_EMAIL,
         TERMS_VERSION: TEST_TERMS_VERSION,
+        S3_ENDPOINT: garage.endpoint,
+        S3_BUCKET: TEST_S3.bucket,
+        S3_ACCESS_KEY_ID: TEST_S3.accessKeyId,
+        S3_SECRET_ACCESS_KEY: TEST_S3.secretAccessKey,
+        CIN_ENCRYPTION_KEY: DEV_CIN_ENCRYPTION_KEY,
+        CIN_HMAC_KEY: DEV_CIN_HMAC_KEY,
       }),
     )
     .overrideProvider(GOOGLE_VERIFIER)
     .useValue(verifier)
+    .overrideProvider(PUSH_TRANSPORT)
+    .useValue(push)
     .compile();
   const app = moduleRef.createNestApplication({ bufferLogs: true });
   configureApp(app);
@@ -77,10 +92,11 @@ export async function startTestApp(): Promise<TestApp> {
     server: () => app.getHttpServer() as Server,
     pool,
     googleToken,
+    push,
     close: async () => {
       await app.close();
       await pool.end();
-      await container.stop();
+      await Promise.all([container.stop(), garage.container.stop()]);
     },
   };
 }

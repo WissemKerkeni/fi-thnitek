@@ -53,7 +53,11 @@ export class AuthService {
 
       const deviceId = device ? await this.users.upsertDevice(user.id, device, tx) : null;
       const pair = await this.startFamily(tx, user.id, deviceId);
-      return { kind: 'ok', pair, me: this.users.toMe(user) } as const;
+      return {
+        kind: 'ok',
+        pair,
+        me: this.users.toMe(user, await this.users.driverStateOf(user.id, tx)),
+      } as const;
     });
 
     // Thrown after commit, so the revocation above is kept.

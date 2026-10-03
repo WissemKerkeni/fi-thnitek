@@ -57,8 +57,17 @@ services:
         - { action: sync, path: ../../apps/admin/src, target: /repo/apps/admin/src }
         - { action: rebuild, path: ../../apps/admin/package.json }
 
-  # Object storage (private verification documents) is added in Phase 3: the MinIO community images are
-  # no longer published, so the S3-compatible replacement needs a decision first (see docs/decisions.md).
+  # Private object storage for verification documents (ADR-215). Initialise once with
+  # `sh infrastructure/garage/init-dev.sh`. S3 API on 127.0.0.1:3900 (admin URLs are signed for it).
+  garage:
+    image: dxflrs/garage:v2.4.1
+    volumes:
+      - ../garage/garage.dev.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    ports: ['127.0.0.1:3900:3900']
 
 volumes:
   db-data:
+  garage-meta:
+  garage-data:

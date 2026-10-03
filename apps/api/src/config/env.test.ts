@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { DEV_JWT_SECRET, InvalidEnvError, loadEnv } from './env.js';
+import { DEV_CIN_ENCRYPTION_KEY, DEV_CIN_HMAC_KEY, DEV_JWT_SECRET, InvalidEnvError, loadEnv } from './env.js';
 
-const valid = { DATABASE_URL: 'postgres://app:secret@localhost:5432/fi', JWT_SECRET: DEV_JWT_SECRET };
+const valid = {
+  DATABASE_URL: 'postgres://app:secret@localhost:5432/fi',
+  JWT_SECRET: DEV_JWT_SECRET,
+  S3_ENDPOINT: 'http://localhost:3900',
+  S3_BUCKET: 'fi-documents',
+  S3_ACCESS_KEY_ID: 'GKdev',
+  S3_SECRET_ACCESS_KEY: 'dev',
+  CIN_ENCRYPTION_KEY: DEV_CIN_ENCRYPTION_KEY,
+  CIN_HMAC_KEY: DEV_CIN_HMAC_KEY,
+};
+const prodSecrets = {
+  JWT_SECRET: 'p'.repeat(48),
+  CIN_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+  CIN_HMAC_KEY: 'h'.repeat(40),
+};
 
 describe('loadEnv', () => {
   it('applies defaults', () => {
@@ -53,9 +67,7 @@ describe('loadEnv', () => {
 
   it('refuses the development JWT secret in production', () => {
     expect(() => loadEnv({ ...valid, NODE_ENV: 'production' })).toThrow(/JWT_SECRET/);
-    expect(loadEnv({ ...valid, NODE_ENV: 'production', JWT_SECRET: 'p'.repeat(48) }).NODE_ENV).toBe(
-      'production',
-    );
+    expect(loadEnv({ ...valid, ...prodSecrets, NODE_ENV: 'production' }).NODE_ENV).toBe('production');
   });
 
   it('never echoes secret values in the error', () => {

@@ -7,7 +7,7 @@
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "declaration": false,
-    "types": ["node"]
+    "types": ["node", "multer"]
   },
   "include": ["src", "test", "vitest.config.ts", "drizzle.config.ts"]
 }
