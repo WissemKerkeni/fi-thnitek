@@ -1,8 +1,13 @@
 import { existsSync } from 'node:fs';
 import type { ExpoConfig } from 'expo/config';
 
-/** FCM client config from Firebase (not secret, but kept out of git); builds without it skip push. */
-const GOOGLE_SERVICES = './google-services.json';
+/**
+ * FCM client config from Firebase (kept out of git). EAS builds get it from the GOOGLE_SERVICES_JSON file
+ * variable (`eas env:create --type file`); local builds use ./google-services.json. Without it, no push.
+ */
+const LOCAL_GOOGLE_SERVICES = './google-services.json';
+const GOOGLE_SERVICES =
+  process.env.GOOGLE_SERVICES_JSON ?? (existsSync(LOCAL_GOOGLE_SERVICES) ? LOCAL_GOOGLE_SERVICES : undefined);
 
 const config: ExpoConfig = {
   name: 'Fi thnitek',
@@ -14,7 +19,7 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'light',
   android: {
     package: 'tn.fithnitek.app',
-    ...(existsSync(GOOGLE_SERVICES) && { googleServicesFile: GOOGLE_SERVICES }),
+    ...(GOOGLE_SERVICES && { googleServicesFile: GOOGLE_SERVICES }),
     // CLAUDE.md rule 7: location only in user-started foreground services. Phase 1 needs no location at all.
     blockedPermissions: [
       'android.permission.ACCESS_BACKGROUND_LOCATION',
