@@ -1,8 +1,8 @@
 {
  "source": "OpenStreetMap via Overpass API",
  "license": "ODbL 1.0 — © OpenStreetMap contributors",
- "generatedAt": "2026-10-03T19:47:30.452Z",
- "count": 1915,
+ "generatedAt": "2026-10-03T20:58:38.627Z",
+ "count": 2093,
  "places": [
   {
    "source": "osm:node/10002024986",
@@ -588,6 +588,162 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/10246235609",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة اللواج باب عليوة",
+   "nameFr": "Station Louage Bab Aliwa",
+   "aliases": [
+    "Louage Station Bab Aliwa"
+   ],
+   "lat": 36.788997,
+   "lng": 10.181827,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/10293029709",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage à Tozeur",
+   "nameFr": "Louage à Tozeur",
+   "aliases": [],
+   "lat": 33.872619,
+   "lng": 7.886207,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/10295304334",
+   "kind": "BUS_STATION",
+   "nameAr": "ساحة الجمهورية",
+   "nameFr": "place de la République",
+   "aliases": [],
+   "lat": 36.804653,
+   "lng": 10.179801,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295304422",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة ترابط اريانة",
+   "nameFr": "station de rabattement Ariana",
+   "aliases": [],
+   "lat": 36.860166,
+   "lng": 10.198188,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295304585",
+   "kind": "BUS_STATION",
+   "nameAr": "الشركة التونسية للكهرباء والغاز (ذهاب)",
+   "nameFr": "Société tunisienne de l'électricité et du gaz (Aller)",
+   "aliases": [],
+   "lat": 36.8055,
+   "lng": 10.181998,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295305033",
+   "kind": "BUS_STATION",
+   "nameAr": "باب عليوة",
+   "nameFr": "Bab Alioua",
+   "aliases": [],
+   "lat": 36.788821,
+   "lng": 10.180405,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295305452",
+   "kind": "BUS_STATION",
+   "nameAr": "بال في",
+   "nameFr": "BELLEVUE",
+   "aliases": [],
+   "lat": 36.772956,
+   "lng": 10.187501,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295305660",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة ساحة البرشلونة",
+   "nameFr": "Station Place de Barcelone",
+   "aliases": [],
+   "lat": 36.797066,
+   "lng": 10.180226,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295305681",
+   "kind": "BUS_STATION",
+   "nameAr": "شارع قرطاج",
+   "nameFr": "Avenue de CARTHAGE",
+   "aliases": [],
+   "lat": 36.791924,
+   "lng": 10.182264,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10295305721",
+   "kind": "BUS_STATION",
+   "nameAr": "حديقة ثامر",
+   "nameFr": "JARDIN THAMEUR",
+   "aliases": [],
+   "lat": 36.80381,
+   "lng": 10.177911,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/10298110009",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louage Le Kef",
+   "nameFr": "Station de Louage Le Kef",
+   "aliases": [],
+   "lat": 36.175321,
+   "lng": 8.707495,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/10302101909",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station louage Aïn Draham",
+   "nameFr": "Station louage Aïn Draham",
+   "aliases": [],
+   "lat": 36.77803,
+   "lng": 8.68783,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/10304098209",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station louage Tabarka",
+   "nameFr": "Station louage Tabarka",
+   "aliases": [],
+   "lat": 36.951688,
+   "lng": 8.759879,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/10308259909",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Gare de Louage à Beja",
+   "nameFr": "Gare de Louage à Beja",
+   "aliases": [],
+   "lat": 36.951425,
+   "lng": 8.761867,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/10313284409",
    "kind": "LANDMARK",
    "nameAr": "أم الأقصاب",
@@ -702,6 +858,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/10720584036",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة سيارات أجرة قصر هلال-مكنين louages",
+   "nameFr": "محطة سيارات أجرة قصر هلال-مكنين louages",
+   "aliases": [],
+   "lat": 35.770548,
+   "lng": 10.825784,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/10725184506",
    "kind": "CITY",
    "nameAr": "وادي رقة",
@@ -746,6 +913,17 @@
    "lng": 10.199677,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/1080749590",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة تونس البحرية",
+   "nameFr": "Station Tunis Marine",
+   "aliases": [],
+   "lat": 36.800319,
+   "lng": 10.190424,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/10820674793",
@@ -920,8 +1098,8 @@
    "nameAr": "بني معقل",
    "nameFr": "Beni Maaguel",
    "aliases": [],
-   "lat": 33.758907,
-   "lng": 10.951584,
+   "lat": 33.758944,
+   "lng": 10.951456,
    "governorateCode": null,
    "popularity": 60
   },
@@ -1016,6 +1194,28 @@
    "popularity": 91
   },
   {
+   "source": "osm:node/11053233305",
+   "kind": "BUS_STATION",
+   "nameAr": "Marché ettahrir station",
+   "nameFr": "Marché ettahrir station",
+   "aliases": [],
+   "lat": 36.825553,
+   "lng": 10.125642,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/11061449364",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de taxi collectif Monastir (louage)",
+   "nameFr": "Station de taxi collectif Monastir (louage)",
+   "aliases": [],
+   "lat": 35.687203,
+   "lng": 10.842425,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/11068047902",
    "kind": "LANDMARK",
    "nameAr": "Centre Amel",
@@ -1058,6 +1258,17 @@
    "lng": 9.770557,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/11143567143",
+   "kind": "BUS_STATION",
+   "nameAr": "hattab radiateur",
+   "nameFr": "hattab radiateur",
+   "aliases": [],
+   "lat": 36.716153,
+   "lng": 10.18372,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/1114749818",
@@ -1549,6 +1760,39 @@
    "lng": 9.969835,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/11388111069",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة المدي",
+   "nameFr": "محطة المدي",
+   "aliases": [],
+   "lat": 35.833769,
+   "lng": 10.589001,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/11388194870",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة المدي",
+   "nameFr": "محطة المدي",
+   "aliases": [],
+   "lat": 35.833766,
+   "lng": 10.589014,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/11388194969",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة المدي",
+   "nameFr": "محطة المدي",
+   "aliases": [],
+   "lat": 36.799573,
+   "lng": 10.190272,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/1143501777",
@@ -2846,7 +3090,7 @@
   {
    "source": "osm:node/12230629412",
    "kind": "CITY",
-   "nameAr": "الوشاشنة",
+   "nameAr": "Ouchachna",
    "nameFr": "Ouchachna",
    "aliases": [],
    "lat": 33.808877,
@@ -2959,8 +3203,8 @@
    "nameAr": "سلقطة",
    "nameFr": "Salakta",
    "aliases": [],
-   "lat": 35.391756,
-   "lng": 11.046095,
+   "lat": 35.391768,
+   "lng": 11.046096,
    "governorateCode": null,
    "popularity": 60
   },
@@ -3022,6 +3266,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/12355170403",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage Station",
+   "nameFr": "Louage Station",
+   "aliases": [],
+   "lat": 36.450818,
+   "lng": 8.442782,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/12373562064",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "تلاكين",
@@ -3055,6 +3310,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/12419982502",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station louage",
+   "nameFr": "Station louage",
+   "aliases": [],
+   "lat": 35.28825,
+   "lng": 10.704923,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/12458531012",
    "kind": "LANDMARK",
    "nameAr": "Centre médical AHLEM",
@@ -3086,6 +3352,17 @@
    "lng": 10.624805,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/12480666635",
+   "kind": "BUS_STATION",
+   "nameAr": "بال في (نهاية خط 28)",
+   "nameFr": "BELLEVUE (Fin ligne 28)",
+   "aliases": [],
+   "lat": 36.774079,
+   "lng": 10.185886,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/12493615764",
@@ -3551,9 +3828,9 @@
    "source": "osm:node/1259515942",
    "kind": "CITY",
    "nameAr": "ربانة",
-   "nameFr": "Robbana",
+   "nameFr": "Robana",
    "aliases": [
-    "Robana"
+    "Robbana"
    ],
    "lat": 33.774439,
    "lng": 10.895919,
@@ -3671,6 +3948,17 @@
    "lng": 10.148182,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/12676166701",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louages (Rakkeda)",
+   "nameFr": "Louages (Rakkeda)",
+   "aliases": [],
+   "lat": 35.663939,
+   "lng": 10.097579,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/1275012701",
@@ -3954,6 +4242,28 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/13194562161",
+   "kind": "BUS_STATION",
+   "nameAr": "Marche de Gros",
+   "nameFr": "Marche de Gros",
+   "aliases": [],
+   "lat": 36.725068,
+   "lng": 10.228674,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/13255124730",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حافلات",
+   "nameFr": "محطة حافلات",
+   "aliases": [],
+   "lat": 36.781768,
+   "lng": 10.2344,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/13274901586",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "Touiren",
@@ -4053,6 +4363,28 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/13653565206",
+   "kind": "BUS_STATION",
+   "nameAr": "الشركة الجهوية للنقل بولاية نابل فرع قربة",
+   "nameFr": "الشركة الجهوية للنقل بولاية نابل فرع قربة",
+   "aliases": [],
+   "lat": 36.576357,
+   "lng": 10.860138,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/13727132001",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station des Louages",
+   "nameFr": "Station des Louages",
+   "aliases": [],
+   "lat": 35.679178,
+   "lng": 10.088365,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/13731006454",
    "kind": "LANDMARK",
    "nameAr": "مشتشفى الحروق البليغة",
@@ -4062,6 +4394,28 @@
    "lng": 10.212183,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:node/13734674701",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage Station",
+   "nameFr": "Louage Station",
+   "aliases": [],
+   "lat": 33.666664,
+   "lng": 10.014154,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/13737332301",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage station",
+   "nameFr": "Louage station",
+   "aliases": [],
+   "lat": 33.351664,
+   "lng": 10.496198,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/1374298091",
@@ -4084,6 +4438,58 @@
    "lng": 10.869717,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/13743543551",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة اللواج المنصف باي",
+   "nameFr": "Station Louage Moncef Bey",
+   "aliases": [
+    "Louage Station Moncef Bey"
+   ],
+   "lat": 36.791657,
+   "lng": 10.187151,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/13743543552",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة اللواج تطاوين",
+   "nameFr": "Station Louage Tataouine",
+   "aliases": [
+    "Louage Station Tataouine"
+   ],
+   "lat": 36.797014,
+   "lng": 10.188509,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/13743543553",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة اللواج باب سعدون",
+   "nameFr": "Station Louage Bab saasoun",
+   "aliases": [
+    "Louage Station Bab saadoun"
+   ],
+   "lat": 36.810185,
+   "lng": 10.154301,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/13743543554",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل البري للشمال",
+   "nameFr": "Gare Routière Nord",
+   "aliases": [
+    "North Road Station"
+   ],
+   "lat": 36.810635,
+   "lng": 10.153497,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/13751653571",
@@ -4218,6 +4624,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/14064021565",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلات تالة",
+   "nameFr": "محطة الحافلات تالة",
+   "aliases": [],
+   "lat": 35.57259,
+   "lng": 8.670332,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/14090213947",
    "kind": "CITY",
    "nameAr": "العلالشة",
@@ -4227,6 +4644,17 @@
    "lng": 10.537857,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/14124245001",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louaget",
+   "nameFr": "Louaget",
+   "aliases": [],
+   "lat": 37.149023,
+   "lng": 9.790138,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/14125846916",
@@ -4700,6 +5128,17 @@
    "lng": 10.540596,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/1625961071",
+   "kind": "BUS_STATION",
+   "nameAr": "Gammarth",
+   "nameFr": "Gammarth",
+   "aliases": [],
+   "lat": 36.906474,
+   "lng": 10.302863,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/1631463921",
@@ -5230,7 +5669,6 @@
    "nameAr": "برج بورقيبة",
    "nameFr": "Bordj Bourguiba",
    "aliases": [
-    "ⴱⵔⵊ ⴱⵓⵔⵇⵉⴱⴰ برج بورقيبة",
     "Borj Bourguiba",
     "برج القصيرة"
    ],
@@ -5361,6 +5799,17 @@
    "lng": 9.60776,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/1977220963",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حافلة النقل المدرسي",
+   "nameFr": "محطة حافلة النقل المدرسي",
+   "aliases": [],
+   "lat": 35.21604,
+   "lng": 9.607687,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/1977376169",
@@ -5708,6 +6157,39 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/2094071547",
+   "kind": "BUS_STATION",
+   "nameAr": "Station de bus Grande lignes",
+   "nameFr": "Station de bus Grande lignes",
+   "aliases": [],
+   "lat": 35.814367,
+   "lng": 10.630472,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/2095491824",
+   "kind": "BUS_STATION",
+   "nameAr": "Société de Transport du Sahel",
+   "nameFr": "Société de Transport du Sahel",
+   "aliases": [],
+   "lat": 35.832834,
+   "lng": 10.631166,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/2095497143",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلة",
+   "nameFr": "Station de Bus",
+   "aliases": [],
+   "lat": 35.828376,
+   "lng": 10.638907,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/2096248909",
    "kind": "LANDMARK",
    "nameAr": "المعهد العالي للدراسات التكنولوجية بسوسة",
@@ -5728,6 +6210,17 @@
    "lng": 10.58913,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:node/2109037682",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Bus et louage",
+   "nameFr": "Station de Bus et louage",
+   "aliases": [],
+   "lat": 35.83453,
+   "lng": 10.590053,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/2131332953",
@@ -5818,6 +6311,17 @@
    "lng": 10.162672,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/2163893505",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل البري",
+   "nameFr": "Gare routière",
+   "aliases": [],
+   "lat": 33.458148,
+   "lng": 9.02284,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/2164230913",
@@ -6005,8 +6509,8 @@
    "aliases": [
     "Hay Al Mihrajan"
    ],
-   "lat": 36.830055,
-   "lng": 10.178822,
+   "lat": 36.82876,
+   "lng": 10.17806,
    "governorateCode": null,
    "popularity": 35
   },
@@ -6285,6 +6789,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/2296199311",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلات",
+   "nameFr": "Gare routière",
+   "aliases": [],
+   "lat": 33.617992,
+   "lng": 10.285767,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/2300289484",
    "kind": "LANDMARK",
    "nameAr": "معهد النهوض بالعمل العالي بن عروس",
@@ -6345,6 +6860,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/2371772950",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة سليمان كاهية الحافلات",
+   "nameFr": "Station Bus Slimen Kehia",
+   "aliases": [],
+   "lat": 36.80351,
+   "lng": 10.099298,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/2402352381",
    "kind": "CITY",
    "nameAr": "رجيش",
@@ -6369,7 +6895,7 @@
   {
    "source": "osm:node/2419847402",
    "kind": "CITY",
-   "nameAr": "واد الزبيب",
+   "nameAr": "وادي الزبيب",
    "nameFr": "Oued Zbib",
    "aliases": [],
    "lat": 33.789383,
@@ -6501,6 +7027,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/2524351741",
+   "kind": "BUS_STATION",
+   "nameAr": "Hammamet Station",
+   "nameFr": "Hammamet Station",
+   "aliases": [],
+   "lat": 36.39667,
+   "lng": 10.614554,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/2529678969",
    "kind": "CITY",
    "nameAr": "نقة",
@@ -6525,6 +7062,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/2537049183",
+   "kind": "BUS_STATION",
+   "nameAr": "10 ديسمبر 1984",
+   "nameFr": "10 Decembre 1984",
+   "aliases": [],
+   "lat": 36.844455,
+   "lng": 10.184551,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/2537855079",
    "kind": "CITY",
    "nameAr": "سندس",
@@ -6545,6 +7093,17 @@
    "lng": 10.250764,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/2585065963",
+   "kind": "BUS_STATION",
+   "nameAr": "حومة السوق",
+   "nameFr": "حومة السوق",
+   "aliases": [],
+   "lat": 33.872101,
+   "lng": 10.858019,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/2587154200",
@@ -7276,8 +7835,8 @@
    "nameAr": "بن عروس",
    "nameFr": "Ben Arous",
    "aliases": [],
-   "lat": 36.751692,
-   "lng": 10.224501,
+   "lat": 36.751686,
+   "lng": 10.224507,
    "governorateCode": null,
    "popularity": 95
   },
@@ -7359,8 +7918,8 @@
    "aliases": [
     "Medenine"
    ],
-   "lat": 33.343413,
-   "lng": 10.491056,
+   "lat": 33.343401,
+   "lng": 10.49107,
    "governorateCode": null,
    "popularity": 94
   },
@@ -7433,8 +7992,8 @@
    "aliases": [
     "Manzil Bourguiba"
    ],
-   "lat": 37.154987,
-   "lng": 9.79259,
+   "lat": 37.154947,
+   "lng": 9.792586,
    "governorateCode": null,
    "popularity": 94
   },
@@ -7717,6 +8276,28 @@
    "lng": 9.374373,
    "governorateCode": null,
    "popularity": 91
+  },
+  {
+   "source": "osm:node/2934330674",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louage",
+   "nameFr": "Station de Louage",
+   "aliases": [],
+   "lat": 35.773032,
+   "lng": 10.825696,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/2958429800",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حافلات قابس",
+   "nameFr": "Gare routière de Gabés",
+   "aliases": [],
+   "lat": 33.882269,
+   "lng": 10.086251,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/2960139532",
@@ -8456,6 +9037,52 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/3611675863",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة بوشوشة",
+   "nameFr": "Station Bouchoucha",
+   "aliases": [],
+   "lat": 36.809026,
+   "lng": 10.148483,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/3611676948",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة بوشوشة",
+   "nameFr": "محطة بوشوشة",
+   "aliases": [],
+   "lat": 36.809559,
+   "lng": 10.150345,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/3611684915",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حافلات",
+   "nameFr": "Gare routière du Nord",
+   "aliases": [
+    "North Ouest Transport"
+   ],
+   "lat": 36.809625,
+   "lng": 10.161706,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/3655351329",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حومة السوق الحافلات",
+   "nameFr": "Gare routière de Houmt Souk",
+   "aliases": [],
+   "lat": 33.872377,
+   "lng": 10.858206,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/3668370508",
    "kind": "CITY",
    "nameAr": "البطان",
@@ -8487,6 +9114,28 @@
    "lng": 10.090114,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/3712368518",
+   "kind": "BUS_STATION",
+   "nameAr": "طج 21",
+   "nameFr": "RR21",
+   "aliases": [],
+   "lat": 36.842234,
+   "lng": 10.173064,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/3750284165",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلات",
+   "nameFr": "Gare de bus",
+   "aliases": [],
+   "lat": 36.693257,
+   "lng": 10.493247,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/3771493269",
@@ -8568,6 +9217,17 @@
    "lng": 11.000684,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/3846832715",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louages Zaghouan",
+   "nameFr": "Station de Louages Zaghouan",
+   "aliases": [],
+   "lat": 36.400307,
+   "lng": 10.147675,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/393271099",
@@ -8716,6 +9376,17 @@
    "lng": 10.124794,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/4251900291",
+   "kind": "BUS_STATION",
+   "nameAr": "19C",
+   "nameFr": "19C",
+   "aliases": [],
+   "lat": 36.748454,
+   "lng": 10.251501,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/4275407242",
@@ -8924,6 +9595,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:node/4394884945",
+   "kind": "BUS_STATION",
+   "nameAr": "ksar said 2 Bus Station",
+   "nameFr": "ksar said 2 Bus Station",
+   "aliases": [],
+   "lat": 36.822871,
+   "lng": 10.122399,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/4394953973",
    "kind": "CITY",
    "nameAr": "حمام الأتف",
@@ -8933,6 +9615,17 @@
    "lng": 10.336399,
    "governorateCode": null,
    "popularity": 93
+  },
+  {
+   "source": "osm:node/4396253922",
+   "kind": "BUS_STATION",
+   "nameAr": "Barraket essahel",
+   "nameFr": "Barraket essahel",
+   "aliases": [],
+   "lat": 36.404754,
+   "lng": 10.562072,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/4396821689",
@@ -8946,6 +9639,17 @@
    "lng": 10.112677,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/4400882006",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حافلات المرناقية 23",
+   "nameFr": "Terminus Mornaguia 23",
+   "aliases": [],
+   "lat": 36.756956,
+   "lng": 10.014401,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/442686289",
@@ -9074,6 +9778,65 @@
    "popularity": 25
   },
   {
+   "source": "osm:node/4453398490",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحبيب بورقيبه",
+   "nameFr": "Habib Bourguiba",
+   "aliases": [
+    "Habib Bourguiba Station"
+   ],
+   "lat": 36.801297,
+   "lng": 10.186183,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/4453494989",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة المنار1",
+   "nameFr": "محطة المنار1",
+   "aliases": [],
+   "lat": 36.838976,
+   "lng": 10.156864,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/4453517189",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة محمد الخامس جنب السفارة",
+   "nameFr": "Mohamed V",
+   "aliases": [
+    "محطة محمد الخامس"
+   ],
+   "lat": 36.819499,
+   "lng": 10.181883,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/4490862999",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "لواج",
+   "nameFr": "لواج",
+   "aliases": [],
+   "lat": 35.810203,
+   "lng": 10.636425,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/4500491425",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "station de louages",
+   "nameFr": "station de louages",
+   "aliases": [],
+   "lat": 35.809696,
+   "lng": 10.636392,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/4524273690",
    "kind": "LANDMARK",
    "nameAr": "حالة طوارئ",
@@ -9153,6 +9916,17 @@
    "lng": 8.354734,
    "governorateCode": null,
    "popularity": 90
+  },
+  {
+   "source": "osm:node/4629644294",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louage",
+   "nameFr": "Station de Louage",
+   "aliases": [],
+   "lat": 34.734451,
+   "lng": 10.74913,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/4633446424",
@@ -9332,6 +10106,17 @@
    "popularity": 84
   },
   {
+   "source": "osm:node/4922410822",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلات وسيارات الأجرة",
+   "nameFr": "Station De Bus Et Taxis",
+   "aliases": [],
+   "lat": 34.655729,
+   "lng": 10.970122,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/494264588",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "صفاقس الجديدة",
@@ -9380,6 +10165,17 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/4978372721",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "تكسي جماعي",
+   "nameFr": "Louage",
+   "aliases": [],
+   "lat": 35.946395,
+   "lng": 8.830709,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/500182808",
    "kind": "CITY",
    "nameAr": "البرمة",
@@ -9426,6 +10222,28 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/5048665494",
+   "kind": "BUS_STATION",
+   "nameAr": "المطار",
+   "nameFr": "l'Aéroport",
+   "aliases": [],
+   "lat": 33.870742,
+   "lng": 10.775942,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/5055878121",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare Routière de Menzel Bourguiba",
+   "nameFr": "Gare Routière de Menzel Bourguiba",
+   "aliases": [],
+   "lat": 37.155798,
+   "lng": 9.789577,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/506035292",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "مركز العلوي",
@@ -9446,6 +10264,19 @@
    "lng": 9.196003,
    "governorateCode": null,
    "popularity": 88
+  },
+  {
+   "source": "osm:node/5071677096",
+   "kind": "CITY",
+   "nameAr": "رأس جدير",
+   "nameFr": "Ras Jedir",
+   "aliases": [
+    "Ras Ajdir"
+   ],
+   "lat": 33.1485,
+   "lng": 11.553766,
+   "governorateCode": null,
+   "popularity": 60
   },
   {
    "source": "osm:node/5077814443",
@@ -9492,6 +10323,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/5159455423",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de louages",
+   "nameFr": "Station de louages",
+   "aliases": [],
+   "lat": 35.809461,
+   "lng": 10.636644,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/520156780",
    "kind": "CITY",
    "nameAr": "الصغار",
@@ -9512,6 +10354,19 @@
    "lng": 10.491473,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/5221105421",
+   "kind": "BUS_STATION",
+   "nameAr": "Main bus station",
+   "nameFr": "Main bus station",
+   "aliases": [
+    "Gare Routière"
+   ],
+   "lat": 35.177941,
+   "lng": 8.847715,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/5233525275",
@@ -9545,6 +10400,39 @@
    "lng": 10.817218,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/5300682138",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلة",
+   "nameFr": "محطة الحافلة",
+   "aliases": [],
+   "lat": 35.751517,
+   "lng": 10.711567,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/5300772452",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة سيارات الأجرة - اللواج",
+   "nameFr": "محطة سيارات الأجرة - اللواج",
+   "aliases": [],
+   "lat": 35.642496,
+   "lng": 10.966555,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/5303391078",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلة",
+   "nameFr": "محطة الحافلة",
+   "aliases": [],
+   "lat": 35.639125,
+   "lng": 10.96117,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/5314225842",
@@ -9951,6 +10839,17 @@
    "popularity": 96
   },
   {
+   "source": "osm:node/5613566721",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة",
+   "nameFr": "Gare routière",
+   "aliases": [],
+   "lat": 33.362781,
+   "lng": 10.218226,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/5627564471",
    "kind": "CITY",
    "nameAr": "بني عيشون",
@@ -9971,6 +10870,17 @@
    "lng": 8.337259,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/5651484523",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louage",
+   "nameFr": "Station de Louage",
+   "aliases": [],
+   "lat": 33.810359,
+   "lng": 10.990476,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/5654347073",
@@ -10085,6 +10995,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/5659333605",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة لواج جبنيانة الحنشة",
+   "nameFr": "Station de Louage Jebeniana El Hencha",
+   "aliases": [],
+   "lat": 34.741502,
+   "lng": 10.762,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/5673214937",
    "kind": "LANDMARK",
    "nameAr": "المستشفى المحلي محمد سلامة",
@@ -10096,6 +11017,19 @@
    "popularity": 25
   },
   {
+   "source": "osm:node/5737417422",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "لواج تونس العاصمة",
+   "nameFr": "Louage",
+   "aliases": [
+    "Luage"
+   ],
+   "lat": 36.407967,
+   "lng": 10.561304,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/5741769757",
    "kind": "CITY",
    "nameAr": "تشين",
@@ -10105,6 +11039,28 @@
    "lng": 10.002205,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/5763648885",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare de bus longues lignes",
+   "nameFr": "Gare de bus longues lignes",
+   "aliases": [],
+   "lat": 33.725759,
+   "lng": 8.980171,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/5763648886",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Gare des louages longues lignes",
+   "nameFr": "Gare des louages longues lignes",
+   "aliases": [],
+   "lat": 33.726513,
+   "lng": 8.980198,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/5826137835",
@@ -10188,6 +11144,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/5988810816",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare Routière de Chebba",
+   "nameFr": "Gare Routière de Chebba",
+   "aliases": [],
+   "lat": 35.235031,
+   "lng": 11.107457,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/6002801243",
    "kind": "CITY",
    "nameAr": "شواط",
@@ -10269,9 +11236,11 @@
    "kind": "CITY",
    "nameAr": "الرقبة",
    "nameFr": "El Rogba",
-   "aliases": [],
-   "lat": 32.908214,
-   "lng": 10.42471,
+   "aliases": [
+    "Ar Ruqba"
+   ],
+   "lat": 32.908583,
+   "lng": 10.414462,
    "governorateCode": null,
    "popularity": 60
   },
@@ -10311,6 +11280,39 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/6246619686",
+   "kind": "BUS_STATION",
+   "nameAr": "lwaj ras jebel",
+   "nameFr": "lwaj ras jebel",
+   "aliases": [],
+   "lat": 37.269161,
+   "lng": 9.872346,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/6252317139",
+   "kind": "BUS_STATION",
+   "nameAr": "Béni Khiar",
+   "nameFr": "Béni Khiar",
+   "aliases": [],
+   "lat": 36.46929,
+   "lng": 10.781207,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:node/6256539405",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage Vers Tunis",
+   "nameFr": "Station Louage Vers Tunis",
+   "aliases": [],
+   "lat": 36.399436,
+   "lng": 10.615472,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/6284535864",
    "kind": "LANDMARK",
    "nameAr": "المعهد العالي للدراسات التطبيقية في الإنسانيات بالمهدية",
@@ -10344,6 +11346,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:node/6311344981",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louages - Tunis MB",
+   "nameFr": "Station de Louages - Tunis MB",
+   "aliases": [],
+   "lat": 37.150418,
+   "lng": 9.7954,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/631655121",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "حي ابن خلدون",
@@ -10357,6 +11370,28 @@
    "popularity": 35
   },
   {
+   "source": "osm:node/6318392168",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage - محطة سيارات الأجرة بقربة",
+   "nameFr": "Louage - محطة سيارات الأجرة بقربة",
+   "aliases": [],
+   "lat": 36.575408,
+   "lng": 10.85897,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:node/6318392170",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة التاكسي قربة Station De Taxi",
+   "nameFr": "محطة التاكسي قربة Station De Taxi",
+   "aliases": [],
+   "lat": 36.573856,
+   "lng": 10.858491,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:node/6329687284",
    "kind": "NEIGHBOURHOOD",
    "nameAr": "وادي سهيل",
@@ -10366,6 +11401,17 @@
    "lng": 10.724433,
    "governorateCode": null,
    "popularity": 35
+  },
+  {
+   "source": "osm:node/6339857224",
+   "kind": "BUS_STATION",
+   "nameAr": "Station de Bus de Maamoura",
+   "nameFr": "Station de Bus de Maamoura",
+   "aliases": [],
+   "lat": 36.477707,
+   "lng": 10.79801,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:node/6389607508",
@@ -10399,6 +11445,17 @@
    "lng": 10.51909,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/6404006085",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Louage Matmata",
+   "nameFr": "Louage Matmata",
+   "aliases": [],
+   "lat": 33.884777,
+   "lng": 10.090734,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/6454492258",
@@ -11104,8 +12161,8 @@
    "nameAr": "بئر شلوف",
    "nameFr": "Bir Challouf",
    "aliases": [],
-   "lat": 36.448991,
-   "lng": 10.72203,
+   "lat": 36.448933,
+   "lng": 10.721994,
    "governorateCode": null,
    "popularity": 35
   },
@@ -11835,7 +12892,7 @@
   {
    "source": "osm:node/7056910053",
    "kind": "CITY",
-   "nameAr": "بوسمايل",
+   "nameAr": "بوسماعیل",
    "nameFr": "Bousmail",
    "aliases": [
     "بو اسماعيل",
@@ -14269,6 +15326,17 @@
    "popularity": 84
   },
   {
+   "source": "osm:node/9293600917",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage",
+   "nameFr": "Station Louage",
+   "aliases": [],
+   "lat": 35.227799,
+   "lng": 9.127663,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/9318731577",
    "kind": "LANDMARK",
    "nameAr": "Université Centrale",
@@ -14379,6 +15447,17 @@
    "popularity": 60
   },
   {
+   "source": "osm:node/9352204830",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louages",
+   "nameFr": "Station Louages",
+   "aliases": [],
+   "lat": 35.573737,
+   "lng": 8.670573,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:node/9363301703",
    "kind": "CITY",
    "nameAr": "بن بشير",
@@ -14487,6 +15566,17 @@
    "lng": 10.751304,
    "governorateCode": null,
    "popularity": 60
+  },
+  {
+   "source": "osm:node/9775256831",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة الواج رمادة",
+   "nameFr": "محطة الواج رمادة",
+   "aliases": [],
+   "lat": 32.927856,
+   "lng": 10.44754,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:node/9811078186",
@@ -15055,6 +16145,332 @@
    "popularity": 40
   },
   {
+   "source": "osm:relation/1434949",
+   "kind": "GOVERNORATE",
+   "nameAr": "القصرين",
+   "nameFr": "Kasserine",
+   "aliases": [
+    "ولاية القصرين",
+    "Gouvernorat Kasserine"
+   ],
+   "lat": 35.209163,
+   "lng": 8.792299,
+   "governorateCode": "TN-42",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1434950",
+   "kind": "GOVERNORATE",
+   "nameAr": "قبلي",
+   "nameFr": "Kébili",
+   "aliases": [
+    "ولاية قبلي",
+    "Gouvernorat Kébili"
+   ],
+   "lat": 33.344015,
+   "lng": 8.872111,
+   "governorateCode": "TN-73",
+   "popularity": 66
+  },
+  {
+   "source": "osm:relation/1434951",
+   "kind": "GOVERNORATE",
+   "nameAr": "قفصة",
+   "nameFr": "Gafsa",
+   "aliases": [
+    "ولاية قفصة",
+    "Gouvernorat Gafsa"
+   ],
+   "lat": 34.431434,
+   "lng": 8.801205,
+   "governorateCode": "TN-71",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1434952",
+   "kind": "GOVERNORATE",
+   "nameAr": "مدنين",
+   "nameFr": "Médenine",
+   "aliases": [
+    "ولاية مدنين",
+    "Gouvernorat Médenine"
+   ],
+   "lat": 33.082824,
+   "lng": 10.654788,
+   "governorateCode": "TN-82",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1434953",
+   "kind": "GOVERNORATE",
+   "nameAr": "تطاوين",
+   "nameFr": "Tataouine",
+   "aliases": [
+    "ولاية تطاوين",
+    "Gouvernorat Tataouine"
+   ],
+   "lat": 31.731907,
+   "lng": 9.849404,
+   "governorateCode": "TN-83",
+   "popularity": 66
+  },
+  {
+   "source": "osm:relation/1434954",
+   "kind": "GOVERNORATE",
+   "nameAr": "المنستير",
+   "nameFr": "Monastir",
+   "aliases": [
+    "ولاية المنستير",
+    "Gouvernorat Monastir"
+   ],
+   "lat": 35.614035,
+   "lng": 10.771483,
+   "governorateCode": "TN-52",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1434955",
+   "kind": "GOVERNORATE",
+   "nameAr": "المهدية",
+   "nameFr": "Mahdia",
+   "aliases": [
+    "ولاية المهدية",
+    "Gouvernorat Mahdia"
+   ],
+   "lat": 35.340858,
+   "lng": 10.664078,
+   "governorateCode": "TN-53",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1434956",
+   "kind": "GOVERNORATE",
+   "nameAr": "قابس",
+   "nameFr": "Gabès",
+   "aliases": [
+    "ولاية قابس",
+    "Gouvernorat Gabès"
+   ],
+   "lat": 33.776253,
+   "lng": 9.863819,
+   "governorateCode": "TN-81",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1434957",
+   "kind": "GOVERNORATE",
+   "nameAr": "صفاقس",
+   "nameFr": "Sfax",
+   "aliases": [
+    "ولاية صفاقس",
+    "Gouvernorat Sfax"
+   ],
+   "lat": 34.723269,
+   "lng": 10.537187,
+   "governorateCode": "TN-61",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435825",
+   "kind": "GOVERNORATE",
+   "nameAr": "نابل",
+   "nameFr": "Nabeul",
+   "aliases": [
+    "ولاية نابل",
+    "Gouvernorat Nabeul"
+   ],
+   "lat": 36.747987,
+   "lng": 10.734493,
+   "governorateCode": "TN-21",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435826",
+   "kind": "GOVERNORATE",
+   "nameAr": "توزر",
+   "nameFr": "Tozeur",
+   "aliases": [
+    "ولاية توزر",
+    "Gouvernorat Tozeur"
+   ],
+   "lat": 33.978507,
+   "lng": 8.08506,
+   "governorateCode": "TN-72",
+   "popularity": 65
+  },
+  {
+   "source": "osm:relation/1435827",
+   "kind": "GOVERNORATE",
+   "nameAr": "بنزرت",
+   "nameFr": "Bizerte",
+   "aliases": [
+    "ولاية بنزرت",
+    "Gouvernorat Bizerte"
+   ],
+   "lat": 37.142178,
+   "lng": 9.599854,
+   "governorateCode": "TN-23",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435828",
+   "kind": "GOVERNORATE",
+   "nameAr": "منوبة",
+   "nameFr": "La Manouba",
+   "aliases": [
+    "ولاية منوبة",
+    "Manouba",
+    "Gouvernorat La Manouba"
+   ],
+   "lat": 36.762318,
+   "lng": 9.842716,
+   "governorateCode": "TN-14",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1435829",
+   "kind": "GOVERNORATE",
+   "nameAr": "سليانة",
+   "nameFr": "Siliana",
+   "aliases": [
+    "ولاية سليانة",
+    "Gouvernorat Siliana"
+   ],
+   "lat": 35.971256,
+   "lng": 9.346977,
+   "governorateCode": "TN-34",
+   "popularity": 68
+  },
+  {
+   "source": "osm:relation/1435830",
+   "kind": "GOVERNORATE",
+   "nameAr": "أريانة",
+   "nameFr": "Ariana",
+   "aliases": [
+    "ولاية أريانة",
+    "Gouvernorat Ariana"
+   ],
+   "lat": 36.968561,
+   "lng": 10.126014,
+   "governorateCode": "TN-12",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435831",
+   "kind": "GOVERNORATE",
+   "nameAr": "سيدي بوزيد",
+   "nameFr": "Sidi Bouzid",
+   "aliases": [
+    "ولاية سيدي بوزيد",
+    "Gouvernorat Sidi Bouzid"
+   ],
+   "lat": 34.880205,
+   "lng": 9.492245,
+   "governorateCode": "TN-43",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1435832",
+   "kind": "GOVERNORATE",
+   "nameAr": "القيروان",
+   "nameFr": "Kairouan",
+   "aliases": [
+    "ولاية القيروان",
+    "Gouvernorat Kairouan"
+   ],
+   "lat": 35.579282,
+   "lng": 9.788352,
+   "governorateCode": "TN-41",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435833",
+   "kind": "GOVERNORATE",
+   "nameAr": "باجة",
+   "nameFr": "Béja",
+   "aliases": [
+    "ولاية باجة",
+    "Gouvernorat Béja"
+   ],
+   "lat": 36.746278,
+   "lng": 9.37446,
+   "governorateCode": "TN-31",
+   "popularity": 68
+  },
+  {
+   "source": "osm:relation/1435834",
+   "kind": "GOVERNORATE",
+   "nameAr": "جندوبة",
+   "nameFr": "Jendouba",
+   "aliases": [
+    "ولاية جندوبة",
+    "Gouvernorat Jendouba",
+    "ولاية سوق الأربعاء"
+   ],
+   "lat": 36.67784,
+   "lng": 8.615213,
+   "governorateCode": "TN-32",
+   "popularity": 69
+  },
+  {
+   "source": "osm:relation/1435835",
+   "kind": "GOVERNORATE",
+   "nameAr": "تونس",
+   "nameFr": "Tunis",
+   "aliases": [
+    "ولاية تونس",
+    "Gouvernorat Tunis"
+   ],
+   "lat": 36.817765,
+   "lng": 10.1793,
+   "governorateCode": "TN-11",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435836",
+   "kind": "GOVERNORATE",
+   "nameAr": "بن عروس",
+   "nameFr": "Ben Arous",
+   "aliases": [
+    "ولاية بن عروس",
+    "Gouvernorat Ben Arous"
+   ],
+   "lat": 36.629492,
+   "lng": 10.230846,
+   "governorateCode": "TN-13",
+   "popularity": 70
+  },
+  {
+   "source": "osm:relation/1435837",
+   "kind": "GOVERNORATE",
+   "nameAr": "زغوان",
+   "nameFr": "Zaghouan",
+   "aliases": [
+    "ولاية زغوان",
+    "Zaghouan Governorate",
+    "Gouvernorat Zaghouan"
+   ],
+   "lat": 36.331669,
+   "lng": 9.992707,
+   "governorateCode": "TN-22",
+   "popularity": 67
+  },
+  {
+   "source": "osm:relation/1435838",
+   "kind": "GOVERNORATE",
+   "nameAr": "الكاف",
+   "nameFr": "Le Kef",
+   "aliases": [
+    "ولاية الكاف",
+    "Al Kaf",
+    "Gouvernorat Le Kef"
+   ],
+   "lat": 36.034685,
+   "lng": 8.712108,
+   "governorateCode": "TN-33",
+   "popularity": 68
+  },
+  {
    "source": "osm:relation/14530345",
    "kind": "LANDMARK",
    "nameAr": "مركز الصحة الأساسية حي الزهور",
@@ -15276,6 +16692,20 @@
    "lng": 11.164825,
    "governorateCode": null,
    "popularity": 69
+  },
+  {
+   "source": "osm:relation/3152094",
+   "kind": "GOVERNORATE",
+   "nameAr": "سوسة",
+   "nameFr": "Sousse",
+   "aliases": [
+    "ولاية سوسة",
+    "Gouvernorat Sousse"
+   ],
+   "lat": 35.893924,
+   "lng": 10.42254,
+   "governorateCode": "TN-51",
+   "popularity": 70
   },
   {
    "source": "osm:relation/4128393",
@@ -18904,6 +20334,19 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/100159444",
+   "kind": "BUS_STATION",
+   "nameAr": "Bus Station of Mornag",
+   "nameFr": "Bus Station of Mornag",
+   "aliases": [
+    "Station des bus Mornag"
+   ],
+   "lat": 36.679835,
+   "lng": 10.289537,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/1003486773",
    "kind": "LANDMARK",
    "nameAr": "جامعة صفاقس",
@@ -18963,6 +20406,17 @@
    "lng": 10.192224,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/103399498",
+   "kind": "BUS_STATION",
+   "nameAr": "المحطة الجنوبية للنقل البري",
+   "nameFr": "GARE ROUTIÈRE DE TUNIS SUD",
+   "aliases": [],
+   "lat": 36.788085,
+   "lng": 10.179639,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/104487592",
@@ -19099,6 +20553,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/1064362847",
+   "kind": "BUS_STATION",
+   "nameAr": "الشركة الجهوية للنقل",
+   "nameFr": "Societé regional de transport",
+   "aliases": [],
+   "lat": 32.929237,
+   "lng": 10.447034,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/106513506",
    "kind": "LANDMARK",
    "nameAr": "المستشفى الجهوي برادس",
@@ -19209,6 +20674,28 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/1116848545",
+   "kind": "BUS_STATION",
+   "nameAr": "Station De Bus Et Taxis",
+   "nameFr": "Station De Bus Et Taxis",
+   "aliases": [],
+   "lat": 34.655633,
+   "lng": 10.970536,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/1117802281",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare routière de Zarzis",
+   "nameFr": "Gare routière de Zarzis",
+   "aliases": [],
+   "lat": 33.499179,
+   "lng": 11.11516,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/1118903102",
    "kind": "LANDMARK",
    "nameAr": "Université de Kairouan",
@@ -19262,6 +20749,17 @@
    "lng": 11.032105,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/1126946945",
+   "kind": "BUS_STATION",
+   "nameAr": "Medina",
+   "nameFr": "Medina",
+   "aliases": [],
+   "lat": 34.737406,
+   "lng": 10.757858,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/1154088946",
@@ -19339,6 +20837,30 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/124083153",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة القيروان الحافلات",
+   "nameFr": "Gare routière de Kairouan",
+   "aliases": [
+    "Kairouan Bus Station"
+   ],
+   "lat": 35.68145,
+   "lng": 10.086558,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/1244613487",
+   "kind": "BUS_STATION",
+   "nameAr": "El Hammah Bus Station",
+   "nameFr": "El Hammah Bus Station",
+   "aliases": [],
+   "lat": 33.889241,
+   "lng": 9.800245,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/1251979553",
    "kind": "LANDMARK",
    "nameAr": "University Hospital Tahar Sfar",
@@ -19359,6 +20881,17 @@
    "lng": 10.162069,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/1253625133",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة سيارات أجرة قصر هلال-مكنين",
+   "nameFr": "Station Louage Monastir-Jammel-Ksar Hellal",
+   "aliases": [],
+   "lat": 35.76995,
+   "lng": 10.826055,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:way/1253931598",
@@ -19416,6 +20949,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/1280843749",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة حاجب العيون الباص",
+   "nameFr": "Hajeb Laayoun Bus Station",
+   "aliases": [],
+   "lat": 35.395888,
+   "lng": 9.542286,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/1296960588",
    "kind": "LANDMARK",
    "nameAr": "Institut Supérieur des Etudes Technologiques de Kasserine",
@@ -19440,6 +20984,28 @@
    "lng": 8.877828,
    "governorateCode": null,
    "popularity": 55
+  },
+  {
+   "source": "osm:way/1308694083",
+   "kind": "BUS_STATION",
+   "nameAr": "Station de Bus STS",
+   "nameFr": "Station de Bus STS",
+   "aliases": [],
+   "lat": 35.773177,
+   "lng": 10.826046,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/1310652848",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل الريفي المكنين",
+   "nameFr": "Moknine Rural Transport Station",
+   "aliases": [],
+   "lat": 35.625497,
+   "lng": 10.899751,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/1317469437",
@@ -19473,6 +21039,17 @@
    "lng": 10.592858,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/1320669871",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare Routiere de Sousse",
+   "nameFr": "Gare Routiere de Sousse",
+   "aliases": [],
+   "lat": 35.81444,
+   "lng": 10.63071,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/1321866219",
@@ -19574,6 +21151,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/1368512339",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage Bousalem-Beja-Tunis",
+   "nameFr": "Station Louage Bousalem-Beja-Tunis",
+   "aliases": [],
+   "lat": 36.612119,
+   "lng": 8.973313,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/1369678912",
    "kind": "LANDMARK",
    "nameAr": "Foyer Universitaire",
@@ -19662,6 +21250,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/1408118042",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage Jendouba - Tabarka -Kef",
+   "nameFr": "Station Louage Jendouba - Tabarka -Kef",
+   "aliases": [],
+   "lat": 36.605254,
+   "lng": 8.969806,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/1423283175",
    "kind": "LANDMARK",
    "nameAr": "مستوصف منزل حر",
@@ -19706,6 +21305,17 @@
    "lng": 10.04919,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/1551496399",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل الريفي المكنين",
+   "nameFr": "Moknine Rural Transport Station",
+   "aliases": [],
+   "lat": 35.625276,
+   "lng": 10.900086,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/161476375",
@@ -19817,6 +21427,17 @@
    ],
    "lat": 36.076971,
    "lng": 10.43865,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:way/175333832",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station des louages",
+   "nameFr": "Station des louages",
+   "aliases": [],
+   "lat": 36.37581,
+   "lng": 9.902174,
    "governorateCode": null,
    "popularity": 55
   },
@@ -20037,6 +21658,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/201642515",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station louage",
+   "nameFr": "Station louage",
+   "aliases": [],
+   "lat": 35.292888,
+   "lng": 10.705368,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/201812946",
    "kind": "LANDMARK",
    "nameAr": "جامعة تونس الافتراضية",
@@ -20057,6 +21689,17 @@
    "lng": 10.626108,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/203029531",
+   "kind": "BUS_STATION",
+   "nameAr": "باب سعدون",
+   "nameFr": "Bab Saadoun",
+   "aliases": [],
+   "lat": 36.810636,
+   "lng": 10.153575,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/203055339",
@@ -20095,6 +21738,17 @@
    "lng": 10.487706,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/207216168",
+   "kind": "BUS_STATION",
+   "nameAr": "Station de bus de Béni Khaled",
+   "nameFr": "Station de bus de Béni Khaled",
+   "aliases": [],
+   "lat": 36.651313,
+   "lng": 10.590526,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/207216169",
@@ -20185,6 +21839,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/215247722",
+   "kind": "BUS_STATION",
+   "nameAr": "تطاوين",
+   "nameFr": "Long Distance Louage Station",
+   "aliases": [],
+   "lat": 32.947735,
+   "lng": 10.457204,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/215498157",
    "kind": "LANDMARK",
    "nameAr": "المستشفى المحلي حسان بلخوجة براس الجبل",
@@ -20194,6 +21859,17 @@
    "lng": 10.125135,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/220507464",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة مارث الحافلات",
+   "nameFr": "Station routière",
+   "aliases": [],
+   "lat": 33.617955,
+   "lng": 10.285753,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/221633097",
@@ -20229,6 +21905,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/242297580",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare Régional de Kerkennah",
+   "nameFr": "Gare Régional de Kerkennah",
+   "aliases": [],
+   "lat": 34.704909,
+   "lng": 11.202645,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/242336866",
    "kind": "LANDMARK",
    "nameAr": "المستشفى الجهوي بقرقنة",
@@ -20251,6 +21938,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/244662755",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare routière de Nabeul",
+   "nameFr": "Gare routière de Nabeul",
+   "aliases": [],
+   "lat": 36.45145,
+   "lng": 10.729765,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/246289920",
    "kind": "LANDMARK",
    "nameAr": "المستشفى المحلي بدوز",
@@ -20271,6 +21969,28 @@
    "lng": 8.973266,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/248818099",
+   "kind": "BUS_STATION",
+   "nameAr": "Station El Karia",
+   "nameFr": "Station El Karia",
+   "aliases": [],
+   "lat": 34.739713,
+   "lng": 10.761388,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/250696132",
+   "kind": "BUS_STATION",
+   "nameAr": "الشركة الجهرية للنقل بنابل فرع قليبية",
+   "nameFr": "الشركة الجهرية للنقل بنابل فرع قليبية",
+   "aliases": [],
+   "lat": 36.84826,
+   "lng": 11.087586,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/252496177",
@@ -20350,6 +22070,17 @@
    "lng": 9.864334,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/256681682",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة ماطر الحافلات",
+   "nameFr": "محطة ماطر الحافلات",
+   "aliases": [],
+   "lat": 37.268035,
+   "lng": 9.858401,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/256776424",
@@ -20488,6 +22219,32 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/284064570",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل البري الوطنية طريق قابس",
+   "nameFr": "Gare Routière Nationale Route Gabes",
+   "aliases": [
+    "National Bus Station Road Gabes"
+   ],
+   "lat": 33.361105,
+   "lng": 10.469131,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/284065126",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطة النقل البرّي اللواجات الوطنية طريق قابس",
+   "nameFr": "Gare Routière Nationale Louage Route Gabes",
+   "aliases": [
+    "National Looage Station Road Gabes"
+   ],
+   "lat": 33.360952,
+   "lng": 10.468664,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/284289321",
    "kind": "LANDMARK",
    "nameAr": "المستشفى",
@@ -20519,6 +22276,19 @@
    "lng": 10.046455,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/28744929",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "محطّة اللّوّاجات",
+   "nameFr": "Station de Louage",
+   "aliases": [
+    "Louage Station"
+   ],
+   "lat": 34.728343,
+   "lng": 10.753501,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:way/28746875",
@@ -20631,6 +22401,28 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/289504792",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل البري",
+   "nameFr": "Gare routière",
+   "aliases": [],
+   "lat": 36.094167,
+   "lng": 9.369862,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/296331904",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare routière de Ben Guerdane",
+   "nameFr": "Gare routière de Ben Guerdane",
+   "aliases": [],
+   "lat": 33.155613,
+   "lng": 11.212968,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/302940137",
    "kind": "LANDMARK",
    "nameAr": "فنون جميلة",
@@ -20666,6 +22458,28 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/311749675",
+   "kind": "BUS_STATION",
+   "nameAr": "مكاتب الجمارك الإقليمية",
+   "nameFr": "Bureaux régionaux des douanes",
+   "aliases": [],
+   "lat": 37.269033,
+   "lng": 9.872664,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/312140310",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare Routière SRTB",
+   "nameFr": "Gare Routière SRTB",
+   "aliases": [],
+   "lat": 37.265373,
+   "lng": 9.886432,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/314457342",
    "kind": "LANDMARK",
    "nameAr": "المستشفى الجهوي حسين بوزيان بقفصة",
@@ -20686,6 +22500,17 @@
    "lng": 8.781723,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/319454398",
+   "kind": "BUS_STATION",
+   "nameAr": "Station Bus Ek kaouefel",
+   "nameFr": "Station Bus Ek kaouefel",
+   "aliases": [],
+   "lat": 34.416493,
+   "lng": 8.789878,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/320311916",
@@ -20747,6 +22572,19 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/377774873",
+   "kind": "BUS_STATION",
+   "nameAr": "محطّة النقل البرّي الوطنيّة طريق قابس",
+   "nameFr": "Gare Routière Nationale Route Gabes",
+   "aliases": [
+    "National Bus Station Road Gabes"
+   ],
+   "lat": 33.361136,
+   "lng": 10.469173,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/382858792",
    "kind": "LANDMARK",
    "nameAr": "مستشفى التّضامن",
@@ -20778,6 +22616,17 @@
    "lng": 9.194682,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/386263364",
+   "kind": "BUS_STATION",
+   "nameAr": "bus 68",
+   "nameFr": "bus 68",
+   "aliases": [],
+   "lat": 36.827677,
+   "lng": 10.106085,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/387025967",
@@ -20822,6 +22671,17 @@
    "lng": 10.718618,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/40879350",
+   "kind": "BUS_STATION",
+   "nameAr": "Parc De La SORETRAS",
+   "nameFr": "Parc De La SORETRAS",
+   "aliases": [],
+   "lat": 34.728125,
+   "lng": 10.756394,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/431059012",
@@ -20901,6 +22761,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/441936618",
+   "kind": "BUS_STATION",
+   "nameAr": "Barraket essahel",
+   "nameFr": "Barraket essahel",
+   "aliases": [],
+   "lat": 36.40414,
+   "lng": 10.562424,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/442174850",
    "kind": "LANDMARK",
    "nameAr": "المعهد العالي للموسيقى بسوسة",
@@ -20967,6 +22838,17 @@
    "lng": 8.792379,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/521566194",
+   "kind": "BUS_STATION",
+   "nameAr": "Station de Bus Grandes Lignes",
+   "nameFr": "Station de Bus Grandes Lignes",
+   "aliases": [],
+   "lat": 34.723739,
+   "lng": 10.755321,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/522193757",
@@ -21173,6 +23055,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/613730221",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة النقل البري الرديف",
+   "nameFr": "gare routière Redeyef",
+   "aliases": [],
+   "lat": 34.384649,
+   "lng": 8.154996,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/613779778",
    "kind": "LANDMARK",
    "nameAr": "المستشفى المحلي أم العرايس",
@@ -21305,6 +23198,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/661590435",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de louages",
+   "nameFr": "Station de louages",
+   "aliases": [],
+   "lat": 36.459817,
+   "lng": 10.727415,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/662750807",
    "kind": "LANDMARK",
    "nameAr": "Lycée l'Espoir",
@@ -21336,6 +23240,17 @@
    "lng": 10.909514,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/664624245",
+   "kind": "BUS_STATION",
+   "nameAr": "T.U.S",
+   "nameFr": "T.U.S",
+   "aliases": [],
+   "lat": 36.828209,
+   "lng": 10.076303,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/667686446",
@@ -21424,6 +23339,19 @@
    "lng": 10.177118,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/672867836",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage Moncef Bey",
+   "nameFr": "Station Louage Moncef Bey",
+   "aliases": [
+    "Moncef bey louage station"
+   ],
+   "lat": 36.79165,
+   "lng": 10.187152,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:way/673871491",
@@ -21562,6 +23490,28 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/678016068",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de Louage de Menzel Temime",
+   "nameFr": "Station de Louage de Menzel Temime",
+   "aliases": [],
+   "lat": 36.781372,
+   "lng": 10.994171,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:way/678157614",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station de louage de Grombalia",
+   "nameFr": "Station de louage de Grombalia",
+   "aliases": [],
+   "lat": 36.593742,
+   "lng": 10.502666,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
    "source": "osm:way/678274097",
    "kind": "LANDMARK",
    "nameAr": "ISET Tozeur",
@@ -21631,6 +23581,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/680589855",
+   "kind": "BUS_STATION",
+   "nameAr": "ماطر",
+   "nameFr": "Mateur",
+   "aliases": [],
+   "lat": 37.036285,
+   "lng": 9.667357,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/680776125",
    "kind": "LANDMARK",
    "nameAr": "مستشفى ساقية سيدي يوسف",
@@ -21662,6 +23623,28 @@
    "lng": 11.058516,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/681230217",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station Louage Mahdia",
+   "nameFr": "Station Louage Mahdia",
+   "aliases": [],
+   "lat": 35.498275,
+   "lng": 11.053107,
+   "governorateCode": null,
+   "popularity": 55
+  },
+  {
+   "source": "osm:way/681230218",
+   "kind": "BUS_STATION",
+   "nameAr": "Gare routière de Mahdia",
+   "nameFr": "Gare routière de Mahdia",
+   "aliases": [],
+   "lat": 35.500237,
+   "lng": 11.050128,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/682299042",
@@ -21778,6 +23761,28 @@
    "lng": 10.755648,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/749059170",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة توزر",
+   "nameFr": "Station Tozeur",
+   "aliases": [],
+   "lat": 33.922405,
+   "lng": 8.130975,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/753114640",
+   "kind": "LOUAGE_STATION",
+   "nameAr": "Station des Bus et Louage",
+   "nameFr": "Station des Bus et Louage",
+   "aliases": [],
+   "lat": 34.532814,
+   "lng": 10.577688,
+   "governorateCode": null,
+   "popularity": 55
   },
   {
    "source": "osm:way/756753474",
@@ -22117,6 +24122,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/878933048",
+   "kind": "BUS_STATION",
+   "nameAr": "Mahatta",
+   "nameFr": "Mahatta",
+   "aliases": [],
+   "lat": 33.058741,
+   "lng": 10.340564,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/878934169",
    "kind": "LANDMARK",
    "nameAr": "Hôpital Ghomrassen",
@@ -22128,6 +24144,17 @@
    "lng": 10.368093,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/884339828",
+   "kind": "BUS_STATION",
+   "nameAr": "SRTM Agence Ben Guerdane",
+   "nameFr": "SRTM Agence Ben Guerdane",
+   "aliases": [],
+   "lat": 33.140769,
+   "lng": 11.217383,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/89020034",
@@ -22215,6 +24242,17 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/94280296",
+   "kind": "BUS_STATION",
+   "nameAr": "محطة الحافلات المنتزه",
+   "nameFr": "Station bus El Montazah",
+   "aliases": [],
+   "lat": 36.742699,
+   "lng": 10.193606,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/94548468",
    "kind": "LANDMARK",
    "nameAr": "المبيت الجامعي باردو 1",
@@ -22286,6 +24324,28 @@
    "popularity": 25
   },
   {
+   "source": "osm:way/95130082",
+   "kind": "BUS_STATION",
+   "nameAr": "حبيب ثامر",
+   "nameFr": "Thameur",
+   "aliases": [],
+   "lat": 36.803748,
+   "lng": 10.178011,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
+   "source": "osm:way/95132614",
+   "kind": "BUS_STATION",
+   "nameAr": "علي بلهوان",
+   "nameFr": "Ali Belhaouan",
+   "aliases": [],
+   "lat": 36.806633,
+   "lng": 10.174231,
+   "governorateCode": null,
+   "popularity": 45
+  },
+  {
    "source": "osm:way/95139152",
    "kind": "LANDMARK",
    "nameAr": "مستشفى الرابطة",
@@ -22319,6 +24379,17 @@
    "lng": 10.334697,
    "governorateCode": null,
    "popularity": 25
+  },
+  {
+   "source": "osm:way/95199304",
+   "kind": "BUS_STATION",
+   "nameAr": "المحطة الجنوبية للنقل البري باب عليوة",
+   "nameFr": "Gare Routiere de Tunis Sud, Bab Alioua",
+   "aliases": [],
+   "lat": 36.78779,
+   "lng": 10.179776,
+   "governorateCode": null,
+   "popularity": 45
   },
   {
    "source": "osm:way/95199308",

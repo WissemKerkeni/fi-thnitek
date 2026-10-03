@@ -72,8 +72,9 @@ async function overpass(query: string): Promise<OsmElement[]> {
       if (res.ok) {
         // A server-side timeout still answers 200, with a `remark` and partial (often empty) elements.
         const json = (await res.json()) as { elements: OsmElement[]; remark?: string };
-        if (!json.remark) return json.elements;
-        process.stdout.write(`  ${mirror} → ${json.remark.slice(0, 120)}, retrying\n`);
+        // Every category exists in Tunisia: an empty answer means a mirror with a stale or partial area index.
+        if (!json.remark && json.elements.length > 0) return json.elements;
+        process.stdout.write(`  ${mirror} → ${json.remark?.slice(0, 120) ?? 'no elements'}, retrying\n`);
       } else {
         process.stdout.write(`  ${mirror} → HTTP ${res.status}, retrying\n`);
       }
