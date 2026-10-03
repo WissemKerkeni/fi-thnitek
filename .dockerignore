@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.turbo
+**/.expo
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.idea
+apps/mobile/android
+apps/mobile/ios

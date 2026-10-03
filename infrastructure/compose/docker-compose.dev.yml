@@ -1,0 +1,61 @@
+# Local development stack. From the repo root:
+#   docker compose -f infrastructure/compose/docker-compose.dev.yml up --watch
+#   docker compose -f infrastructure/compose/docker-compose.dev.yml run --rm migrate
+# Dev-only credentials below; never reuse them anywhere else.
+name: fi-thnitek
+
+services:
+  db:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_DB: fi_thnitek
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      TZ: UTC
+    ports: ['127.0.0.1:5432:5432']
+    volumes: [db-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U app -d fi_thnitek']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build: { context: ../.., dockerfile: infrastructure/docker/api.Dockerfile, target: dev }
+    command: ['pnpm', 'run', 'db:migrate']
+    environment: &api-env
+      NODE_ENV: development
+      DATABASE_URL: postgres://app:app@db:5432/fi_thnitek
+      LOG_LEVEL: debug
+      CORS_ORIGINS: http://localhost:5173
+    depends_on: { db: { condition: service_healthy } }
+    profiles: [tools]
+
+  api:
+    build: { context: ../.., dockerfile: infrastructure/docker/api.Dockerfile, target: dev }
+    environment: *api-env
+    # API_BIND=0.0.0.0 exposes the API on your Wi-Fi so a phone can reach it (phone testing only).
+    ports: ['${API_BIND:-127.0.0.1}:3000:3000']
+    depends_on: { db: { condition: service_healthy } }
+    develop:
+      watch:
+        - { action: sync, path: ../../apps/api/src, target: /repo/apps/api/src }
+        - { action: rebuild, path: ../../apps/api/package.json }
+        - { action: rebuild, path: ../../packages }
+
+  admin:
+    build: { context: ../.., dockerfile: infrastructure/docker/admin.Dockerfile, target: dev }
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports: ['127.0.0.1:5173:5173']
+    depends_on: [api]
+    develop:
+      watch:
+        - { action: sync, path: ../../apps/admin/src, target: /repo/apps/admin/src }
+        - { action: rebuild, path: ../../apps/admin/package.json }
+
+  # Object storage (private verification documents) is added in Phase 3: the MinIO community images are
+  # no longer published, so the S3-compatible replacement needs a decision first (see docs/decisions.md).
+
+volumes:
+  db-data:

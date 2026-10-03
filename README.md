@@ -1,4 +1,4 @@
-# transport-tunisia (codename "Mechwar" · مشوار)
+# Fi thnitek (في ثنيتك)
 
 **A shared live map of Tunisian transport. Passengers show where they're going; the first driver to arrive picks them up.**
 
@@ -9,7 +9,20 @@
 - Bus passengers don't request or share location; they just see buses on the map.
 - Everyone signs in with **Google**. Drivers are verified by an admin in the web admin and get a push notification when approved.
 
-> Status: planning (v3). No application code yet.
+> Status: Phase 1 (Foundation) — monorepo skeleton, no product features yet. Designs: [docs/ux.md §5](docs/ux.md).
+
+## Getting started
+Requires Node 22 (≥ 22.12) and pnpm 12 (`corepack enable` or `npm i -g pnpm@12`); Docker for the dev stack and integration tests.
+
+```bash
+pnpm install
+pnpm build && pnpm lint && pnpm typecheck && pnpm test   # all packages and apps
+pnpm test:int                                           # API integration tests (Testcontainers, needs Docker)
+docker compose -f infrastructure/compose/docker-compose.dev.yml up --watch   # db + api + admin
+docker compose -f infrastructure/compose/docker-compose.dev.yml run --rm migrate
+pnpm --filter @fi-thnitek/mobile dev                    # Expo dev client (EAS development build)
+```
+API docs (dev): http://localhost:3000/v1/docs · Admin: http://localhost:5173
 
 ## Documentation
 | Doc | What's inside |
@@ -30,9 +43,9 @@
 ## Stack
 Expo (React Native, TS) + MapLibre + expo-location foreground services · NestJS REST + `@nestjs/schedule` · PostgreSQL 16 + PostGIS (Drizzle) · MinIO · FCM · React + Vite + Refine admin · Docker Compose on one VPS + Caddy (≈ €10–30/month).
 
-## Repository structure (planned)
+## Repository structure (planned; Phase 1 created the skeleton)
 ```text
-transport-tunisia/
+fi-thnitek/
 ├── apps/
 │   ├── mobile/          # Expo: passenger mode + driver mode (driver-only accounts)
 │   │   ├── app/         # expo-router: (auth)/ (passenger)/ (driver)/

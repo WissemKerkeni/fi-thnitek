@@ -115,3 +115,25 @@ Sessions (start/end, breaks, reason; each with **Report a problem** + an approxi
 - Warn before consequences (the 20 m auto-close, the 1 h cooldown, breaks can't be ended early).
 - Say who sees what: "Anonymous to drivers" / "Drivers see your name".
 - Touch targets ≥ 48 dp; body text ≥ 16 sp; RTL-correct; vehicle types have distinct shapes (not colour only).
+
+## 5. Approved designs (Stitch)
+Project **Fi Thnitek Transit Map**: https://stitch.withgoogle.com/projects/13099947558251856528 (approved 2026-10-02, ADR-212).
+
+| Screen | Stitch screen |
+|---|---|
+| P1 Map home | Map home |
+| P2 Destination | Tunis → Sousse |
+| P3 Request sheet | Nouvelle demande |
+| P4 Active request | Active Ride |
+| P5 Request closed | Request closed |
+| P6 Me | Profile |
+| D1 / D2 | Vérification chauffeur · Statut de vérification |
+| D3 Start sharing | Commencer le partage |
+| D4 Driver live map | En partage · Visible |
+| D4 Passenger details | Anonymous / Identified Passenger Details |
+| D4 On break | On break |
+| D5 Routine routes | Mes trajets habituels · Trajet habituel (editor) |
+| D6 Me | Driver profile |
+
+**Palette:** ignore Stitch's green. Implement deep blue (primary) + sunny yellow (accent); green / amber / red only for status.
+**Open:** the confirmations after "Nobody there" and "Block" are not designed yet; the Block label should read "Bloquer ce passager".

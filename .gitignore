@@ -1,0 +1,24 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Expo / React Native
+.expo/
+apps/mobile/android/
+apps/mobile/ios/
+*.apk
+*.aab
+*.ipa
+
+# IDE
+.idea/workspace.xml
+.idea/shelf/
+.vscode/*
+!.vscode/extensions.json
