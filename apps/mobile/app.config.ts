@@ -1,4 +1,8 @@
+import { existsSync } from 'node:fs';
 import type { ExpoConfig } from 'expo/config';
+
+/** FCM client config from Firebase (not secret, but kept out of git); builds without it skip push. */
+const GOOGLE_SERVICES = './google-services.json';
 
 const config: ExpoConfig = {
   name: 'Fi thnitek',
@@ -10,6 +14,7 @@ const config: ExpoConfig = {
   userInterfaceStyle: 'light',
   android: {
     package: 'tn.fithnitek.app',
+    ...(existsSync(GOOGLE_SERVICES) && { googleServicesFile: GOOGLE_SERVICES }),
     // CLAUDE.md rule 7: location only in user-started foreground services. Phase 1 needs no location at all.
     blockedPermissions: [
       'android.permission.ACCESS_BACKGROUND_LOCATION',
@@ -25,6 +30,14 @@ const config: ExpoConfig = {
     '@react-native-google-signin/google-signin',
     // Keeps the refresh token out of Android backups.
     ['expo-secure-store', { configureAndroidBackup: true }],
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'Fi thnitek uses the camera to photograph your verification documents.',
+        microphonePermission: false,
+      },
+    ],
+    'expo-notifications',
   ],
   extra: {
     // Lets I18nManager.forceRTL take effect for Arabic.

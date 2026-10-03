@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../src/auth/AuthProvider';
+import { usePushRegistration } from '../src/push/usePushRegistration';
 import { initI18n } from '../src/i18n';
 import { queryClient } from '../src/lib/query';
 import { colors } from '../src/theme/tokens';
@@ -35,6 +36,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <PushRegistration />
           <StatusBar style="dark" />
           <Stack
             screenOptions={{
@@ -47,4 +49,9 @@ export default function RootLayout() {
       </QueryClientProvider>
     </SafeAreaProvider>
   );
+}
+
+function PushRegistration() {
+  usePushRegistration();
+  return null;
 }

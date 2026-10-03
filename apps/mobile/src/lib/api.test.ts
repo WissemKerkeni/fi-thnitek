@@ -28,6 +28,7 @@ const me = {
   isAdmin: false,
   termsAcceptedVersion: null,
   currentTermsVersion: 'v1',
+  driverVerification: null,
   needsOnboarding: true,
 };
 const pair = (n: number): TokenPair => ({
@@ -162,5 +163,31 @@ describe('createApiClient', () => {
   it('rejects bodies that break the contract', async () => {
     const fetchImpl = vi.fn(() => Promise.resolve(json(200, { status: 'great' })));
     await expect(createApiClient('http://api', { fetchImpl }).getHealth()).rejects.toThrow();
+  });
+});
+
+describe('driver verification calls', () => {
+  it('uploads documents as multipart without forcing a JSON content type', async () => {
+    const tokens = memoryStore(pair(1));
+    const doc = {
+      id: '0192a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5d',
+      type: 'INSURANCE',
+      status: 'PENDING',
+      expiresOn: '2030-01-01',
+      rejectionReason: null,
+      contentType: 'image/jpeg',
+      sizeBytes: 1200,
+      uploadedAt: '2026-10-03T10:00:00.000Z',
+    };
+    const fetchImpl = vi.fn(() => Promise.resolve(json(201, doc)));
+    const client = createApiClient('http://api', { fetchImpl, tokens });
+    await expect(
+      client.uploadDocument({ type: 'INSURANCE', uri: 'file:///photo.jpg', expiresOn: '2030-01-01' }),
+    ).resolves.toEqual(doc);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('http://api/v1/driver/documents');
+    expect(init.body).toBeInstanceOf(FormData);
+    expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined();
+    expect((init.body as FormData).get('type')).toBe('INSURANCE');
   });
 });

@@ -71,6 +71,16 @@ export default function HomeScreen() {
         loading={health.isFetching}
       />
       <Button label={t('map.title')} onPress={() => router.push('/map')} />
+      <Button
+        label={
+          session.status === 'signedIn' && session.me.driverVerification
+            ? t('driver.statusTitle')
+            : t('driver.entry')
+        }
+        variant="accent"
+        onPress={() => router.push('/driver')}
+        accessibilityHint={t('driver.entryHint')}
+      />
       <Button label={t('language.title')} variant="secondary" onPress={() => router.push('/language')} />
       <Button
         label={t('me.signOut')}
