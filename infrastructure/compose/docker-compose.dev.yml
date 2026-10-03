@@ -34,7 +34,8 @@ services:
   api:
     build: { context: ../.., dockerfile: infrastructure/docker/api.Dockerfile, target: dev }
     environment: *api-env
-    ports: ['127.0.0.1:3000:3000']
+    # API_BIND=0.0.0.0 exposes the API on your Wi-Fi so a phone can reach it (phone testing only).
+    ports: ['${API_BIND:-127.0.0.1}:3000:3000']
     depends_on: { db: { condition: service_healthy } }
     develop:
       watch:
