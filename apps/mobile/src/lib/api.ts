@@ -1,4 +1,14 @@
-import { HealthResponse, PROBLEM_JSON, ProblemDetails } from '@fi-thnitek/contracts';
+import {
+  type DeviceInfo,
+  HealthResponse,
+  Me,
+  PROBLEM_JSON,
+  ProblemDetails,
+  type RegisterDeviceRequest,
+  SignInResponse,
+  TokenPair,
+  type UpdateMeRequest,
+} from '@fi-thnitek/contracts';
 import type { ZodType } from 'zod';
 
 /** A non-2xx response. `problem` is set when the server sent RFC 9457 problem details. */
@@ -14,24 +24,143 @@ export class ApiError extends Error {
 
 type Fetch = typeof fetch;
 
-export interface ApiClient {
-  getHealth(): Promise<HealthResponse>;
+/** Where tokens live. The mobile implementation keeps the refresh token in secure storage. */
+export interface TokenStore {
+  getAccessToken(): string | null;
+  getRefreshToken(): Promise<string | null>;
+  save(pair: TokenPair): Promise<void>;
+  clear(): Promise<void>;
 }
 
-export function createApiClient(baseUrl: string, fetchImpl: Fetch = fetch): ApiClient {
-  const root = baseUrl.replace(/\/+$/, '');
+export interface ApiClientOptions {
+  fetchImpl?: Fetch;
+  tokens?: TokenStore;
+  /** Called when the session can no longer be refreshed (expired, revoked, reused, account blocked). */
+  onSessionEnded?: (reason: ApiError) => void;
+}
 
-  async function get<T>(path: string, schema: ZodType<T>, acceptStatuses: number[] = []): Promise<T> {
-    const res = await fetchImpl(`${root}/v1${path}`, { headers: { Accept: 'application/json' } });
+export interface ApiClient {
+  getHealth(): Promise<HealthResponse>;
+  signInWithGoogle(idToken: string, device: DeviceInfo): Promise<SignInResponse>;
+  getMe(): Promise<Me>;
+  updateMe(patch: UpdateMeRequest): Promise<Me>;
+  registerDevice(device: RegisterDeviceRequest): Promise<void>;
+  logout(): Promise<void>;
+  deleteMe(): Promise<void>;
+}
+
+const NO_BODY = { parse: () => undefined } as unknown as ZodType<void>;
+
+export function createApiClient(baseUrl: string, options: ApiClientOptions = {}): ApiClient {
+  const root = baseUrl.replace(/\/+$/, '');
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const tokens = options.tokens;
+  let refreshing: Promise<boolean> | null = null;
+
+  async function send(method: string, path: string, body: unknown, accessToken: string | null) {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    return fetchImpl(`${root}/v1${path}`, {
+      method,
+      headers,
+      ...(body !== undefined && { body: JSON.stringify(body) }),
+    });
+  }
+
+  async function toError(res: Response): Promise<ApiError> {
     const body: unknown = await res.json().catch(() => undefined);
-    if (res.ok || acceptStatuses.includes(res.status)) return schema.parse(body);
     const isProblem = res.headers.get('content-type')?.includes(PROBLEM_JSON);
     const problem = isProblem ? ProblemDetails.safeParse(body) : undefined;
-    throw new ApiError(res.status, problem?.success ? problem.data : undefined);
+    return new ApiError(res.status, problem?.success ? problem.data : undefined);
+  }
+
+  async function parse<T>(res: Response, schema: ZodType<T>): Promise<T> {
+    if (res.status === 204) return schema.parse(undefined);
+    return schema.parse(await res.json());
+  }
+
+  /** Single-flight: concurrent 401s share one refresh, since replaying a refresh token revokes the session. */
+  function refreshOnce(): Promise<boolean> {
+    refreshing ??= (async () => {
+      const refreshToken = await tokens?.getRefreshToken();
+      if (!tokens || !refreshToken) return false;
+      const res = await send('POST', '/auth/refresh', { refreshToken }, null);
+      if (!res.ok) {
+        const error = await toError(res);
+        await tokens.clear();
+        options.onSessionEnded?.(error);
+        return false;
+      }
+      await tokens.save(TokenPair.parse(await res.json()));
+      return true;
+    })().finally(() => {
+      refreshing = null;
+    });
+    return refreshing;
+  }
+
+  async function authed<T>(method: string, path: string, schema: ZodType<T>, body?: unknown): Promise<T> {
+    if (!tokens?.getAccessToken()) await refreshOnce();
+    const used = tokens?.getAccessToken() ?? null;
+    let res = await send(method, path, body, used);
+    if (res.status === 401) {
+      const error = await toError(res);
+      if (error.problem?.code !== 'TOKEN_EXPIRED') {
+        // Logged out elsewhere, revoked, or a deleted account: the session is over.
+        await tokens?.clear();
+        options.onSessionEnded?.(error);
+        throw error;
+      }
+      // Another request may already have refreshed while this one was in flight.
+      const renewed = tokens?.getAccessToken() !== used || (await refreshOnce());
+      if (!renewed) throw error;
+      res = await send(method, path, body, tokens?.getAccessToken() ?? null);
+    }
+    if (res.status === 403) {
+      const error = await toError(res);
+      const code = error.problem?.code;
+      if (code === 'ACCOUNT_SUSPENDED' || code === 'ACCOUNT_BANNED') {
+        await tokens?.clear();
+        options.onSessionEnded?.(error);
+      }
+      throw error;
+    }
+    if (!res.ok) throw await toError(res);
+    return parse(res, schema);
   }
 
   return {
-    // 503 still carries a HealthResponse saying which check is down.
-    getHealth: () => get('/health', HealthResponse, [503]),
+    async getHealth() {
+      const res = await send('GET', '/health', undefined, null);
+      // 503 still carries a HealthResponse saying which check is down.
+      if (res.ok || res.status === 503) return HealthResponse.parse(await res.json());
+      throw await toError(res);
+    },
+
+    async signInWithGoogle(idToken, device) {
+      const res = await send('POST', '/auth/google', { idToken, device }, null);
+      if (!res.ok) throw await toError(res);
+      const signedIn = SignInResponse.parse(await res.json());
+      await tokens?.save(signedIn);
+      return signedIn;
+    },
+
+    getMe: () => authed('GET', '/me', Me),
+    updateMe: (patch) => authed('PATCH', '/me', Me, patch),
+    registerDevice: (device) => authed('PUT', '/me/device', NO_BODY, device),
+
+    async logout() {
+      try {
+        await authed('POST', '/auth/logout', NO_BODY);
+      } finally {
+        await tokens?.clear();
+      }
+    },
+
+    async deleteMe() {
+      await authed('DELETE', '/me', NO_BODY);
+      await tokens?.clear();
+    },
   };
 }

@@ -28,6 +28,9 @@ services:
       DATABASE_URL: postgres://app:app@db:5432/fi_thnitek
       LOG_LEVEL: debug
       CORS_ORIGINS: http://localhost:5173
+      JWT_SECRET: dev-only-secret-change-me-0123456789abcdef
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
     depends_on: { db: { condition: service_healthy } }
     profiles: [tools]
 

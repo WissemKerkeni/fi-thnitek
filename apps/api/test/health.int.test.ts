@@ -1,42 +1,22 @@
-import { type Server } from 'node:http';
-import { type INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { HealthResponse, PROBLEM_JSON, ProblemDetails } from '@fi-thnitek/contracts';
-import { type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import { Pool } from 'pg';
+import { type Pool } from 'pg';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AppModule } from '../src/app.module.js';
-import { configureApp } from '../src/app.factory.js';
-import { ENV, loadEnv } from '../src/config/env.js';
 import { PG_POOL } from '../src/db/db.module.js';
-import { runMigrations } from '../src/db/migrate.js';
-import { startPostgis } from './postgis.js';
+import { type TestApp, startTestApp } from './test-app.js';
 
-let container: StartedPostgreSqlContainer;
+let t: TestApp;
 let pool: Pool;
-let app: INestApplication;
-const server = () => app.getHttpServer() as Server;
+let app: TestApp['app'];
+const server = () => t.server();
 
 beforeAll(async () => {
-  container = await startPostgis();
-  const databaseUrl = container.getConnectionUri();
-  await runMigrations(databaseUrl);
-  pool = new Pool({ connectionString: databaseUrl });
-
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(ENV)
-    .useValue(loadEnv({ NODE_ENV: 'test', DATABASE_URL: databaseUrl, LOG_LEVEL: 'silent' }))
-    .compile();
-  app = moduleRef.createNestApplication({ bufferLogs: true });
-  configureApp(app);
-  await app.init();
+  t = await startTestApp();
+  ({ pool, app } = t);
 });
 
 afterAll(async () => {
-  await app?.close();
-  await pool?.end();
-  await container?.stop();
+  await t?.close();
 });
 
 describe('migrations', () => {

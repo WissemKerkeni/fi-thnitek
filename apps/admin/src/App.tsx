@@ -5,7 +5,7 @@ import routerProvider, { CatchAllNavigate, NavigateToResource } from '@refinedev
 import { App as AntdApp, ConfigProvider } from 'antd';
 import frFR from 'antd/locale/fr_FR';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router';
-import { placeholderAuthProvider } from './lib/auth-provider';
+import { authProvider } from './lib/auth-provider';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
 
@@ -19,7 +19,7 @@ export function App() {
         <AntdApp>
           <Refine
             routerProvider={routerProvider}
-            authProvider={placeholderAuthProvider}
+            authProvider={authProvider}
             notificationProvider={useNotificationProvider}
             resources={[
               {

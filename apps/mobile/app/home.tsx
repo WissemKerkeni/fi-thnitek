@@ -1,16 +1,31 @@
 import { useQuery } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
+import { useAuth } from '../src/auth/AuthProvider';
 import { api } from '../src/lib/query';
 import { colors, radii, spacing } from '../src/theme/tokens';
 import { Button } from '../src/ui/Button';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 
-/** Phase 1 home: proves the app reaches the API (GET /v1/health) and opens the base map. */
+/** Placeholder home until the map home (P1) arrives: health, map, language and account (R-005). */
 export default function HomeScreen() {
   const { t } = useTranslation();
+  const { session, signOut, deleteAccount } = useAuth();
+  const name = session.status === 'signedIn' ? session.me.displayName : null;
+
+  function confirmDelete() {
+    Alert.alert(t('me.deleteConfirmTitle'), t('me.deleteConfirmBody'), [
+      { text: t('me.cancel'), style: 'cancel' },
+      {
+        text: t('me.confirmDelete'),
+        style: 'destructive',
+        onPress: () => void deleteAccount().then(() => router.replace('/')),
+      },
+    ]);
+  }
+
   const health = useQuery({ queryKey: ['health'], queryFn: () => api.getHealth() });
 
   const up = health.data?.status === 'up';
@@ -25,6 +40,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('app.name') }} />
+      {name ? <Text variant="title">{t('me.greeting', { name })}</Text> : null}
       <View style={styles.card} accessibilityRole="summary">
         <Text variant="bodyStrong">{t('health.title')}</Text>
         <View style={styles.row}>
@@ -56,6 +72,12 @@ export default function HomeScreen() {
       />
       <Button label={t('map.title')} onPress={() => router.push('/map')} />
       <Button label={t('language.title')} variant="secondary" onPress={() => router.push('/language')} />
+      <Button
+        label={t('me.signOut')}
+        variant="secondary"
+        onPress={() => void signOut().then(() => router.replace('/'))}
+      />
+      <Button label={t('me.deleteAccount')} variant="secondary" onPress={confirmDelete} />
     </Screen>
   );
 }
