@@ -1,16 +1,21 @@
 {
   "cli": { "version": ">= 16.0.0", "appVersionSource": "remote" },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "http://10.0.2.2:3000" }
+    "base": {
+      "node": "22.12.0",
+      "pnpm": "12.8.1"
     },
-    "preview": {
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
       "distribution": "internal",
       "android": { "buildType": "apk" }
     },
-    "production": {}
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "production": { "extends": "base" }
   }
 }

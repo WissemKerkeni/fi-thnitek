@@ -3,6 +3,7 @@ import type { ExpoConfig } from 'expo/config';
 const config: ExpoConfig = {
   name: 'Fi thnitek',
   slug: 'fi-thnitek',
+  owner: 'wissemkerkeni',
   scheme: 'fithnitek',
   version: '0.0.0',
   orientation: 'portrait',
@@ -21,6 +22,7 @@ const config: ExpoConfig = {
   extra: {
     // Lets I18nManager.forceRTL take effect for Arabic.
     supportsRTL: true,
+    eas: { projectId: '67797ce6-5517-4556-8f7a-32459c495610' },
   },
   experiments: { typedRoutes: true },
 };
