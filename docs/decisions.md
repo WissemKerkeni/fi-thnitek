@@ -77,6 +77,16 @@ Pinned 2026-10-02 after checking peer compatibility:
 - **Devices (R-004):** a random per-install UUID (never a hardware ID); logout clears the device's push token. Push tokens need the FCM project and arrive with notifications.
 - **Not yet:** rate limiting of the auth endpoints; Sign in with Apple (iOS, v1.0).
 
+### ADR-215: Driver verification storage, uploads and push (Phase 3) · Accepted
+- **Object storage: Garage** (S3-compatible, self-hosted, `dxflrs/garage:v2.4.1`) replaces MinIO, whose community images are no longer published. The API uses the standard S3 SDK, so any S3-compatible store can replace it. The bucket is private; reads are 60-second signed GET URLs; every admin view is audited.
+- **Uploads go through the API** (multipart, ≤ `MAX_UPLOAD_MB`) instead of pre-signed PUTs, so the server can enforce what `docs/security.md §5` asks before anything is stored: type detected from the bytes (JPEG/PNG only), **EXIF/XMP/IPTC/comments stripped** (dependency-free byte-level code, no native image library), SHA-256 for duplicate warnings across accounts. The app also re-encodes photos on the device (resize to 1600 px, JPEG without EXIF). Object keys contain only IDs.
+- **CIN:** AES-256-GCM ciphertext (`CIN_ENCRYPTION_KEY`) + keyed HMAC (`CIN_HMAC_KEY`, unique index) + last 4 digits; the full CIN is only returned by the audited admin detail. Plates are normalised so Arabic (`123 تونس 4567`) and Latin (`123 TU 4567`) spellings collide.
+- **Required documents** per transport type are code defaults (`packages/domain`), pending legal confirmation and the admin "Content" editor. One vehicle per driver for now.
+- **Watermark:** the admin viewer overlays the reviewer and time on screen (a deterrent; server-side burned-in watermarks need an image library and are deferred).
+- **Push (R-063):** FCM via `firebase-admin` to native device tokens (`expo-notifications`), payload = an event code + generic localised text, never names, CINs or plates. Without `FIREBASE_SERVICE_ACCOUNT_FILE` pushes are recorded and logged, so development and tests run without Firebase. The in-app status is the source of truth.
+- **Expiry (R-064):** a daily job (07:00 Africa/Tunis) reminds once `document_expiry_reminder_days` before expiry and moves VERIFIED → EXPIRED when an accepted document expires; idempotent conditional updates.
+- **Use fake documents only** until the INPDP declaration is filed (docs/research-tunisia.md, legal question 4).
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 

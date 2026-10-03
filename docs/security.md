@@ -61,7 +61,7 @@ Privacy risks accepted by design (to explain in the privacy policy):
 | Minimisation, no history, encryption, audit | **[BP]** | Built in |
 
 ## 5. Documents **[BP]**
-Private bucket; pre-signed uploads; type/size checks; EXIF stripped; SHA-256 duplicates; 60-second signed admin URLs with a watermark; every view audited; purge after the decision + grace period (pending legal).
+Private bucket (Garage); uploads through the API (ADR-215) so type/size checks and EXIF stripping happen before storage; SHA-256 duplicates; 60-second signed admin URLs with an on-screen watermark; every view audited; CIN encrypted at rest (AES-256-GCM) with an HMAC for uniqueness; purge after the decision + grace period (pending legal).
 
 ## 6. Application & infra security **[BP]**
 - Role + state checks on every endpoint (`SHARING_REQUIRED`, `VERIFIED`, one-open-request).
