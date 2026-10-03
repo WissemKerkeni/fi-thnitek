@@ -66,6 +66,17 @@ Pinned 2026-10-02 after checking peer compatibility:
 - **pnpm supply-chain settings:** install scripts allowed only for `esbuild`; denied for `@swc/core`, `@scarf/scarf`, `cpu-features`, `ssh2`, `protobufjs`. pnpm's minimum-release-age rule auto-exempted a few just-released packages (listed in `pnpm-workspace.yaml`).
 - **Open:** MinIO community images are no longer published, so the S3-compatible store for verification documents must be chosen before Phase 3.
 
+### ADR-214: Authentication details (Phase 2) · Accepted
+- **Google ID tokens** are verified with `jose` against Google's JWKS: RS256 signature, `aud` ∈ `GOOGLE_CLIENT_IDS` (the OAuth *Web* client, which Android also targets as `webClientId`), `iss`, `exp`, `email_verified`. Every failure is one opaque `INVALID_GOOGLE_TOKEN`.
+- **Access token:** our own HS256 JWT (`JWT_SECRET`, ≥ 32 chars, the dev placeholder is refused in production), 15 min, claims = user ID + session family ID only (no PII).
+- **Refresh token:** 256-bit random, stored as SHA-256 only, 60 days. `sessions` holds **one row per refresh token**; a sign-in starts a *family*, each refresh marks the row `rotated_at` and inserts the next (conditional update, so only one concurrent refresh wins). Replaying a rotated token revokes the whole family (`REUSE_DETECTED`). Clients must serialise refreshes (both clients do single-flight).
+- **Every authenticated request** re-checks the session family and the account status (one indexed lookup), so logout, reuse detection, suspension and bans take effect immediately rather than after 15 minutes.
+- **Admins:** `is_admin` is recomputed at each sign-in from `ADMIN_EMAILS` (verified Google emails). The admin web app signs in with Google Identity Services and is admitted only if `GET /v1/admin/me` succeeds; its tokens live in `sessionStorage` (tab-scoped). Cookie-based admin sessions are a later hardening step.
+- **Onboarding (R-002):** `PATCH /v1/me` stores the display name, locale and the accepted Terms version (`TERMS_VERSION`); `needsOnboarding` until both are done. The current Terms text is a draft pending the v1.0 legal pack.
+- **Account deletion (R-005):** anonymises the user (email, name, Apple sub cleared; Google sub cleared so the person can start over), revokes all sessions, deletes devices and writes `user.delete` to the audit log. A suspended or banned account keeps its status and Google sub, so deletion cannot evade a sanction.
+- **Devices (R-004):** a random per-install UUID (never a hardware ID); logout clears the device's push token. Push tokens need the FCM project and arrive with notifications.
+- **Not yet:** rate limiting of the auth endpoints; Sign in with Apple (iOS, v1.0).
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 

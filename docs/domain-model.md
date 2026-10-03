@@ -22,9 +22,9 @@ erDiagram
 ```
 
 ### Identity
-- **users**: `id`, `google_sub` (unique), `apple_sub` (unique, later), `email` (private), `display_name`, `locale`, `status` (`ACTIVE`|`SUSPENDED`|`BANNED`|`DELETED`), `is_admin`, `created_at`, `deleted_at`.
-- **devices**: `id`, `user_id`, `install_id`, `platform`, `push_token`, `app_version`, `last_seen_at`.
-- **sessions**: `id`, `user_id`, `device_id`, `refresh_token_hash`, `family_id`, `expires_at`, `revoked_at`.
+- **users**: `id`, `google_sub` (unique; cleared on a normal deletion), `apple_sub` (unique, later), `email` (private), `display_name`, `locale`, `status` (`ACTIVE`|`SUSPENDED`|`BANNED`|`DELETED`), `is_admin` (from `ADMIN_EMAILS` at sign-in), `terms_accepted_version`, `terms_accepted_at`, `created_at`, `updated_at`, `deleted_at`.
+- **devices**: `id`, `user_id`, `install_id` (random per-install UUID), `platform`, `push_token`, `app_version`, `last_seen_at`, `created_at`. Unique (`user_id`, `install_id`).
+- **sessions** (one row per refresh token, ADR-214): `id`, `user_id`, `device_id`, `family_id` (= the logical session), `refresh_token_hash` (SHA-256, unique), `expires_at`, `rotated_at`, `revoked_at`, `revoke_reason`, `created_at`.
 
 ### Drivers
 - **driver_profiles**: `user_id` PK, legal names, `cin_hmac` (unique), `cin_last4`, `cin_encrypted`, `public_photo_key`, `status`, `submitted_at`, `reviewed_by`, `reviewed_at`, `decision_reason`, **`cooldown_until`**, document expiry dates.
