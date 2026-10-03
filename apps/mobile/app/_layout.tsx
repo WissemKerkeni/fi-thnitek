@@ -1,3 +1,5 @@
+// Registers the location task before anything else (Android delivers fixes to it by name).
+import '../src/sharing/tracking';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +10,7 @@ import { AuthProvider } from '../src/auth/AuthProvider';
 import { usePushRegistration } from '../src/push/usePushRegistration';
 import { initI18n } from '../src/i18n';
 import { queryClient } from '../src/lib/query';
+import { SharingSupervisor } from '../src/sharing/SharingSupervisor';
 import { colors } from '../src/theme/tokens';
 
 export default function RootLayout() {
@@ -37,6 +40,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <PushRegistration />
+          <SharingSupervisor />
           <StatusBar style="dark" />
           <Stack
             screenOptions={{

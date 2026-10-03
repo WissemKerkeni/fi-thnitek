@@ -4,3 +4,5 @@ export * from './health.js';
 export * from './places.js';
 export * from './problem-details.js';
 export * from './verification.js';
+export * from './map.js';
+export * from './sharing.js';

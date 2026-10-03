@@ -19,7 +19,7 @@ import { type SQL, and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiException } from '../common/api-exception.js';
-import type { Database } from '../db/client.js';
+import type { Database, Executor } from '../db/client.js';
 import { DB } from '../db/db.module.js';
 import { places } from '../db/schema/index.js';
 
@@ -54,6 +54,12 @@ const toPlace = (r: PlaceRow): Place => ({
   governorateCode: r.governorateCode,
   location: { lat: Number(r.lat), lng: Number(r.lng) },
 });
+
+/** One place by id (e.g. a driver's "heading to"), or null. */
+export async function findPlace(db: Executor, id: string): Promise<Place | null> {
+  const [row] = await db.select(placeColumns).from(places).where(eq(places.id, id));
+  return row ? toPlace(row) : null;
+}
 
 @Injectable()
 export class PlacesService {

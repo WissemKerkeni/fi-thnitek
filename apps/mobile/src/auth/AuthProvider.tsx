@@ -4,13 +4,12 @@ import {
   isCancelledResponse,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
-import { File } from 'expo-file-system';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { type ApiClient, type ApiError, createApiClient } from '../lib/api';
-import { API_URL, GOOGLE_WEB_CLIENT_ID } from '../lib/config';
+import type { ApiClient } from '../lib/api';
+import { GOOGLE_WEB_CLIENT_ID } from '../lib/config';
+import { hasStoredSession, onSessionEnded, signedInApi } from './client';
 import { deviceInfo } from './device';
 import type { SessionState } from './next-route';
-import { createSecureTokenStore } from './token-store';
 
 export type SignInResult = 'ok' | 'cancelled' | 'not-configured';
 
@@ -30,21 +29,17 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const tokens = createSecureTokenStore();
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>({ status: 'loading' });
   const [endedReason, setEndedReason] = useState<string | null>(null);
 
-  const api = useMemo(
+  const api = signedInApi;
+
+  useEffect(
     () =>
-      createApiClient(API_URL, {
-        tokens,
-        fileFromUri: (uri) => new File(uri),
-        onSessionEnded: (error: ApiError) => {
-          setEndedReason(error.problem?.code ?? null);
-          setSession({ status: 'signedOut' });
-        },
+      onSessionEnded((error) => {
+        setEndedReason(error.problem?.code ?? null);
+        setSession({ status: 'signedOut' });
       }),
     [],
   );
@@ -53,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (GOOGLE_WEB_CLIENT_ID) GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
     void (async () => {
-      if (!(await tokens.getRefreshToken())) return setSession({ status: 'signedOut' });
+      if (!(await hasStoredSession())) return setSession({ status: 'signedOut' });
       try {
         setSession({ status: 'signedIn', me: await api.getMe() });
       } catch {

@@ -5,3 +5,7 @@ export * from './state-machines/fsm.js';
 export * from './verification/documents.js';
 export * from './verification/identifiers.js';
 export * from './verification/verification.js';
+export * from './geo/distance.js';
+export * from './sharing-rules/fixes.js';
+export * from './sharing-rules/session.js';
+export * from './visibility/drivers.js';

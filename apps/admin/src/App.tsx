@@ -1,4 +1,9 @@
-import { DashboardOutlined, EnvironmentOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import {
+  CarOutlined,
+  DashboardOutlined,
+  EnvironmentOutlined,
+  SafetyCertificateOutlined,
+} from '@ant-design/icons';
 import { ThemedLayout, useNotificationProvider } from '@refinedev/antd';
 import { Authenticated, Refine } from '@refinedev/core';
 import routerProvider, { CatchAllNavigate, NavigateToResource } from '@refinedev/react-router';
@@ -9,6 +14,7 @@ import { authProvider } from './lib/auth-provider';
 import { Dashboard } from './pages/Dashboard';
 import { Login } from './pages/Login';
 import { PlaceList } from './pages/PlaceList';
+import { SessionList } from './pages/SessionList';
 import { VerificationList } from './pages/VerificationList';
 import { VerificationShow } from './pages/VerificationShow';
 
@@ -37,6 +43,11 @@ export function App() {
                 meta: { label: 'Vérifications', icon: <SafetyCertificateOutlined /> },
               },
               {
+                name: 'sessions',
+                list: '/sessions',
+                meta: { label: 'Sessions', icon: <CarOutlined /> },
+              },
+              {
                 name: 'places',
                 list: '/places',
                 meta: { label: 'Lieux', icon: <EnvironmentOutlined /> },
@@ -57,6 +68,7 @@ export function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="/verifications" element={<VerificationList />} />
                 <Route path="/verifications/:userId" element={<VerificationShow />} />
+                <Route path="/sessions" element={<SessionList />} />
                 <Route path="/places" element={<PlaceList />} />
               </Route>
               <Route

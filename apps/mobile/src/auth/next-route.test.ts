@@ -34,6 +34,17 @@ describe('nextRoute (docs/ux.md §1)', () => {
     expect(nextRoute({ status: 'signedIn', me }, true)).toBe('/home');
   });
 
+  it('sends driver accounts to the sharing screen, other driver files to the passenger map', () => {
+    for (const state of ['VERIFIED', 'EXPIRED', 'SUSPENDED'] as const) {
+      expect(nextRoute({ status: 'signedIn', me: { ...me, driverVerification: state } }, true)).toBe(
+        '/sharing',
+      );
+    }
+    for (const state of ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'REJECTED'] as const) {
+      expect(nextRoute({ status: 'signedIn', me: { ...me, driverVerification: state } }, true)).toBe('/home');
+    }
+  });
+
   it('asks again when the terms change', () => {
     expect(nextRoute({ status: 'signedIn', me: { ...me, termsAcceptedVersion: 'v1' } }, true)).toBe('/terms');
   });

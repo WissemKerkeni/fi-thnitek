@@ -20,12 +20,9 @@ const config: ExpoConfig = {
   android: {
     package: 'tn.fithnitek.app',
     ...(GOOGLE_SERVICES && { googleServicesFile: GOOGLE_SERVICES }),
-    // CLAUDE.md rule 7: location only in user-started foreground services. Phase 1 needs no location at all.
-    blockedPermissions: [
-      'android.permission.ACCESS_BACKGROUND_LOCATION',
-      'android.permission.ACCESS_FINE_LOCATION',
-      'android.permission.ACCESS_COARSE_LOCATION',
-    ],
+    // CLAUDE.md rule 7: location only while in use, inside user-started foreground services with a
+    // visible notification. Background location is never requested, even if a library adds it.
+    blockedPermissions: ['android.permission.ACCESS_BACKGROUND_LOCATION'],
   },
   ios: { bundleIdentifier: 'tn.fithnitek.app', supportsTablet: false },
   plugins: [
@@ -43,6 +40,17 @@ const config: ExpoConfig = {
       },
     ],
     'expo-notifications',
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'Fi thnitek shows your position to passengers only while you choose to share it.',
+        // Adds FOREGROUND_SERVICE + FOREGROUND_SERVICE_LOCATION for the "You're visible" service (R-052).
+        isAndroidForegroundServiceEnabled: true,
+        isAndroidBackgroundLocationEnabled: false,
+        isIosBackgroundLocationEnabled: false,
+      },
+    ],
   ],
   extra: {
     // Lets I18nManager.forceRTL take effect for Arabic.

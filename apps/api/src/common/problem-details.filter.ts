@@ -47,6 +47,12 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   FILE_TOO_LARGE: 'File too large',
   SHARING_REQUIRED: 'Sharing required',
   COOLDOWN_ACTIVE: 'Cooldown active',
+  SHARING_NOT_ALLOWED: 'Sharing not allowed',
+  ALREADY_SHARING: 'Already sharing',
+  NOT_SHARING: 'Not sharing',
+  FIX_REJECTED: 'Location fix rejected',
+  BREAK_NOT_OVER: 'Break not over',
+  BREAK_RESUME_EXPIRED: 'Resume window passed',
   INVALID_STATE_TRANSITION: 'Invalid state transition',
 };
 
