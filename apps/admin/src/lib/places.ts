@@ -10,6 +10,7 @@ export const placesApi = {
     return adminSession.request('GET', `/admin/places?${params.toString()}`, AdminPlaceList);
   },
   create: (input: PlaceInput) => adminSession.request('POST', '/admin/places', AdminPlace, input),
-  update: (id: string, input: PlaceInput) => adminSession.request('PUT', `/admin/places/${id}`, AdminPlace, input),
+  update: (id: string, input: PlaceInput) =>
+    adminSession.request('PUT', `/admin/places/${id}`, AdminPlace, input),
   remove: (id: string) => adminSession.request('DELETE', `/admin/places/${id}`, z.undefined()),
 };

@@ -58,7 +58,11 @@ export default function DestinationScreen() {
           placeholderTextColor={colors.textMuted}
           style={styles.input}
         />
-        <Pressable accessibilityRole="button" onPress={() => router.push('/pick-on-map')} style={styles.pickRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/pick-on-map')}
+          style={styles.pickRow}
+        >
           <Text style={styles.pickIcon}>📍</Text>
           <Text variant="bodyStrong" style={styles.pickText}>
             {t('places.pickOnMap')}
@@ -71,7 +75,9 @@ export default function DestinationScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          ready && results.isFetching ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null
+          ready && results.isFetching ? (
+            <ActivityIndicator color={colors.primary} style={styles.spinner} />
+          ) : null
         }
         ListEmptyComponent={
           empty ? (

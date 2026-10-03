@@ -145,7 +145,9 @@ export function PlaceList() {
           {
             title: 'Source',
             dataIndex: 'source',
-            render: (s: string) => <Tag color={s.startsWith('admin:') ? 'gold' : undefined}>{s.split(':')[0]}</Tag>,
+            render: (s: string) => (
+              <Tag color={s.startsWith('admin:') ? 'gold' : undefined}>{s.split(':')[0]}</Tag>
+            ),
           },
         ]}
       />

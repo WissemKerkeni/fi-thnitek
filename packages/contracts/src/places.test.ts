@@ -14,7 +14,12 @@ describe('place contracts', () => {
   });
 
   it('requires both names and a TN governorate code format', () => {
-    const base = { kind: 'LOUAGE_STATION', nameAr: 'محطة', nameFr: 'Station', location: { lat: 36.8, lng: 10.1 } };
+    const base = {
+      kind: 'LOUAGE_STATION',
+      nameAr: 'محطة',
+      nameFr: 'Station',
+      location: { lat: 36.8, lng: 10.1 },
+    };
     expect(PlaceInput.parse(base)).toMatchObject({ aliases: [], governorateCode: null });
     expect(PlaceInput.safeParse({ ...base, governorateCode: 'TN-11' }).success).toBe(true);
     expect(PlaceInput.safeParse({ ...base, governorateCode: 'Tunis' }).success).toBe(false);

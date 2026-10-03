@@ -5,7 +5,10 @@ export type Lang = 'ar' | 'fr';
 export const langOf = (language: string | undefined): Lang => (language?.startsWith('fr') ? 'fr' : 'ar');
 
 /** The name in the UI language, and the other one as a hint (shown only when it differs). */
-export function placeNames(place: Pick<Place, 'nameAr' | 'nameFr'>, lang: Lang): { name: string; other: string | null } {
+export function placeNames(
+  place: Pick<Place, 'nameAr' | 'nameFr'>,
+  lang: Lang,
+): { name: string; other: string | null } {
   const name = lang === 'ar' ? place.nameAr : place.nameFr;
   const other = lang === 'ar' ? place.nameFr : place.nameAr;
   return { name, other: other.trim() && other !== name ? other : null };
