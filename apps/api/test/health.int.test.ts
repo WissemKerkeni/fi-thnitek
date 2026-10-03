@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.factory.js';
 import { ENV, loadEnv } from '../src/config/env.js';
+import { PG_POOL } from '../src/db/db.module.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { startPostgis } from './postgis.js';
 
@@ -46,15 +47,10 @@ describe('migrations', () => {
     expect(rows.map((r) => r.extname)).toEqual(['pg_trgm', 'postgis', 'unaccent']);
   });
 
-  it('runs in UTC', async () => {
-    const client = await pool.connect();
-    try {
-      await client.query(`SET timezone = 'UTC'`);
-      const { rows } = await client.query<{ tz: string }>('SHOW timezone');
-      expect(rows[0]?.tz).toBe('UTC');
-    } finally {
-      client.release();
-    }
+  it("runs the app's connections in UTC (CLAUDE.md rule 9)", async () => {
+    const appPool = app.get<Pool>(PG_POOL);
+    const { rows } = await appPool.query<{ tz: string }>(`SELECT current_setting('TimeZone') AS tz`);
+    expect(rows[0]?.tz).toBe('UTC');
   });
 });
 
