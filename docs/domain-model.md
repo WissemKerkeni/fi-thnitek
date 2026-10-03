@@ -29,7 +29,7 @@ erDiagram
 ### Drivers
 - **driver_profiles**: `user_id` PK, legal names, `cin_hmac` (unique), `cin_last4`, `cin_encrypted`, `public_photo_key`, `status`, `submitted_at`, `reviewed_by`, `reviewed_at`, `decision_reason`, **`cooldown_until`**, document expiry dates.
 - **driver_documents**: `id`, `driver_user_id`, `type` (`CIN_FRONT`|`CIN_BACK`|`SELFIE`|`DRIVING_LICENCE`|`PROFESSIONAL_CARD`|`VEHICLE_REGISTRATION`|`INSURANCE`|`OPERATING_CARD`|`OPERATOR_AUTHORISATION`|`VEHICLE_PHOTO`), `storage_key`, `sha256`, `content_type`, `size_bytes`, `status` (`PENDING`|`ACCEPTED`|`REJECTED`), `reason`, `expires_on`, `reminded_at`, `created_at`, `reviewed_at`.
-- **vehicles**: `id`, `driver_user_id` (one vehicle per driver for now), `transport_type` (`TAXI`|`LOUAGE`|`BUS`), `plate_normalized` (unique; Arabic/Latin spellings collapse), `plate_display`, `model`, `color`, `seats`.
+- **vehicles**: `id`, `driver_user_id` (one vehicle per driver for now), `transport_type` (`TAXI`|`LOUAGE`|`BUS`), `plate_normalized` (unique; Arabic/Latin spellings collapse), `plate_display`, `seats` (from the type: taxi 4, louage 8, bus null; ADR-216).
 - **transport_types**: `code`, names, `can_share` (all true), `can_be_requested` (TAXI, LOUAGE true; BUS false), `required_documents[]`.
 
 Driver verification status:

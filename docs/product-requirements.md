@@ -86,7 +86,7 @@ Dispatch, offers, chat, phone sharing, seat booking on routines, fares, payments
 - **R-068** Routines never create bookings or obligations.
 
 ### 3.8 Driver verification
-- **R-060** Form: legal name, CIN + photos, selfie, driving licence, professional card (taxi/louage), type (taxi/louage/bus), vehicle (plate, model/colour, seats, registration, insurance, operating/operator authorisation, photo with the plate). The document list per type is admin-configurable (pending legal confirmation).
+- **R-060** Form (kept short, ADR-216): legal name, CIN + photos (front/back), driving licence, type (taxi/louage/bus), plate; taxi/louage add the professional card, carte grise and operating card; bus adds the operator authorisation. Seats are set by type (taxi 4, louage 8). The document list per type is admin-configurable (pending legal confirmation).
 - **R-061** Submit → **`UNDER_REVIEW`**. **R-062** Admin approve / request changes / reject with reasons. **R-063** A push + in-app status on each decision. **R-064** CIN/plate uniqueness; duplicate document hashes flagged. Document expiry reminders; at expiry, no sharing until re-approved.
 
 ### 3.9 Safety

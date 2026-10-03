@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { InvalidStateTransitionError } from '../state-machines/fsm.js';
 import {
   DEFAULT_REQUIRED_DOCUMENTS,
+  DEFAULT_SEATS,
   type DocumentSummary,
   expiredDocuments,
   expiringSoon,
@@ -74,6 +75,26 @@ describe('required documents', () => {
     expect(DEFAULT_REQUIRED_DOCUMENTS.BUS).toContain('OPERATOR_AUTHORISATION');
   });
 
+  it('keeps the file short: no selfie, insurance or vehicle photo (ADR-216)', () => {
+    for (const docs of Object.values(DEFAULT_REQUIRED_DOCUMENTS)) {
+      expect(docs).not.toContain('SELFIE');
+      expect(docs).not.toContain('INSURANCE');
+      expect(docs).not.toContain('VEHICLE_PHOTO');
+    }
+    expect(DEFAULT_REQUIRED_DOCUMENTS.TAXI).toEqual([
+      'CIN_FRONT',
+      'CIN_BACK',
+      'DRIVING_LICENCE',
+      'PROFESSIONAL_CARD',
+      'VEHICLE_REGISTRATION',
+      'OPERATING_CARD',
+    ]);
+  });
+
+  it('defaults seats by vehicle type', () => {
+    expect(DEFAULT_SEATS).toEqual({ TAXI: 4, LOUAGE: 8, BUS: null });
+  });
+
   it('accepts a complete louage file', () => {
     const docs = DEFAULT_REQUIRED_DOCUMENTS.LOUAGE.map((t) => ok(t, '2027-06-30'));
     expect(missingDocuments('LOUAGE', docs, today)).toEqual([]);
@@ -82,25 +103,25 @@ describe('required documents', () => {
   it('treats rejected, undated or expired expiring documents as missing', () => {
     const docs = DEFAULT_REQUIRED_DOCUMENTS.TAXI.map((t) => ok(t, '2027-06-30'));
     docs[0] = { ...docs[0]!, status: 'REJECTED' }; // CIN_FRONT
-    docs[3] = ok('DRIVING_LICENCE', null);
-    docs[6] = ok('INSURANCE', today); // expires today = expired
-    expect(missingDocuments('TAXI', docs, today)).toEqual(['CIN_FRONT', 'DRIVING_LICENCE', 'INSURANCE']);
+    docs[2] = ok('DRIVING_LICENCE', null);
+    docs[5] = ok('OPERATING_CARD', today); // expires today = expired
+    expect(missingDocuments('TAXI', docs, today)).toEqual(['CIN_FRONT', 'DRIVING_LICENCE', 'OPERATING_CARD']);
   });
 
   it('counts a re-upload after a rejection', () => {
     const docs = DEFAULT_REQUIRED_DOCUMENTS.BUS.map((t) => ok(t, '2027-06-30'));
-    docs.push({ type: 'SELFIE', status: 'REJECTED', expiresOn: null });
+    docs.push({ type: 'CIN_BACK', status: 'REJECTED', expiresOn: null });
     expect(missingDocuments('BUS', docs, today)).toEqual([]);
   });
 
   it('finds accepted documents that expired and those expiring soon', () => {
     const docs: DocumentSummary[] = [
-      { type: 'INSURANCE', status: 'ACCEPTED', expiresOn: '2026-10-02' },
+      { type: 'PROFESSIONAL_CARD', status: 'ACCEPTED', expiresOn: '2026-10-02' },
       { type: 'OPERATING_CARD', status: 'ACCEPTED', expiresOn: '2026-10-20' },
       { type: 'DRIVING_LICENCE', status: 'ACCEPTED', expiresOn: '2028-03-01' },
       { type: 'CIN_FRONT', status: 'ACCEPTED', expiresOn: null },
     ];
-    expect(expiredDocuments(docs, today)).toEqual(['INSURANCE']);
+    expect(expiredDocuments(docs, today)).toEqual(['PROFESSIONAL_CARD']);
     expect(expiringSoon(docs, today, 30)).toEqual(['OPERATING_CARD']);
   });
 

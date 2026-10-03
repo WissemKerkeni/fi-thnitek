@@ -47,7 +47,8 @@ export default function StepReview() {
         {file.cinLast4 ? <Text muted>CIN ••••{file.cinLast4}</Text> : null}
         {file.vehicle ? (
           <Text>
-            {file.vehicle.plateDisplay} · {file.vehicle.model} · {file.vehicle.color} · {file.vehicle.seats}
+            {file.vehicle.plateDisplay}
+            {file.vehicle.seats ? ` · ${file.vehicle.seats} ${t('driver.seats')}` : ''}
           </Text>
         ) : null}
       </View>

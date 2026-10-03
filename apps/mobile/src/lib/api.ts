@@ -42,6 +42,11 @@ export interface ApiClientOptions {
   tokens?: TokenStore;
   /** Called when the session can no longer be refreshed (expired, revoked, reused, account blocked). */
   onSessionEnded?: (reason: ApiError) => void;
+  /**
+   * Turns a local file URI into an uploadable Blob. Expo's fetch only accepts real Blob/File parts in
+   * FormData (not React Native's `{ uri, name, type }`), so the app passes expo-file-system's `File`.
+   */
+  fileFromUri?: (uri: string) => Blob;
 }
 
 export interface ApiClient {
@@ -194,8 +199,8 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
       const form = new FormData();
       form.append('type', upload.type);
       if (upload.expiresOn) form.append('expiresOn', upload.expiresOn);
-      // React Native's FormData accepts a file descriptor object for local URIs.
-      form.append('file', { uri: upload.uri, name: 'photo.jpg', type: 'image/jpeg' } as unknown as Blob);
+      if (!options.fileFromUri) throw new Error('fileFromUri is required to upload files');
+      form.append('file', options.fileFromUri(upload.uri), 'photo.jpg');
       return authed('POST', '/driver/documents', DocumentView, form);
     },
   };

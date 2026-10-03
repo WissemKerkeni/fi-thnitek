@@ -29,14 +29,8 @@ describe('verification contracts', () => {
         transportType: 'CAR',
       }).success,
     ).toBe(false);
-    expect(
-      VehicleInput.safeParse({ plate: '123 تونس 4567', model: 'Toyota Hiace', color: 'Blanc', seats: 8 })
-        .success,
-    ).toBe(true);
-    expect(
-      VehicleInput.safeParse({ plate: '123 تونس 4567', model: 'Toyota Hiace', color: 'Blanc', seats: 0 })
-        .success,
-    ).toBe(false);
+    expect(VehicleInput.safeParse({ plate: '123 تونس 4567' }).success).toBe(true);
+    expect(VehicleInput.safeParse({ plate: '' }).success).toBe(false);
   });
 
   it('keeps Me.driverVerification in sync with the domain states', () => {

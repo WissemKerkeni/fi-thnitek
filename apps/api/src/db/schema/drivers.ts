@@ -30,7 +30,7 @@ export const driverProfiles = pgTable('driver_profiles', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-/** One vehicle per driver for now; `plate_normalized` is unique across drivers (R-064). */
+/** One vehicle per driver for now; `plate_normalized` is unique across drivers (R-064). Only the plate is asked. */
 export const vehicles = pgTable('vehicles', {
   id: uuid('id').primaryKey(),
   driverUserId: uuid('driver_user_id')
@@ -40,9 +40,8 @@ export const vehicles = pgTable('vehicles', {
   transportType: transportType('transport_type').notNull(),
   plateNormalized: text('plate_normalized').notNull().unique(),
   plateDisplay: text('plate_display').notNull(),
-  model: text('model').notNull(),
-  color: text('color').notNull(),
-  seats: integer('seats').notNull(),
+  /** From the transport type (taxi 4, louage 8, bus null), not asked (ADR-216). */
+  seats: integer('seats'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

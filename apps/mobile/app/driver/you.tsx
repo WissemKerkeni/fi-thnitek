@@ -15,7 +15,7 @@ import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
 import { TextField } from '../../src/ui/TextField';
 
-/** D1 step 1 "You": legal name, CIN, transport type, then CIN photos and selfie. */
+/** D1 step 1 "You": legal name, CIN, transport type, then the CIN photos (no selfie, ADR-216). */
 export default function StepYou() {
   const { data: file } = useVerification();
   // The form starts from the saved file, so render it only once that has loaded.
@@ -114,11 +114,7 @@ function YouForm({ file }: { file: MyVerification }) {
         </Text>
       ) : null}
       {savedProfile ? (
-        <DocumentList
-          file={file}
-          types={['CIN_FRONT', 'CIN_BACK', 'SELFIE']}
-          onUploaded={() => void refresh()}
-        />
+        <DocumentList file={file} types={['CIN_FRONT', 'CIN_BACK']} onUploaded={() => void refresh()} />
       ) : (
         <Button label={t('driver.save')} onPress={() => void save()} loading={busy} />
       )}

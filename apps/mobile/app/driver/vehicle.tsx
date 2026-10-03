@@ -14,7 +14,10 @@ import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
 import { TextField } from '../../src/ui/TextField';
 
-/** D1 step 3 "Vehicle": plate, model, colour, seats, then the vehicle documents. */
+/**
+ * D1 step 3 "Vehicle": only the plate (seats follow the vehicle type: taxi 4, louage 8), then the
+ * carte grise and the operating card (ADR-216).
+ */
 export default function StepVehicle() {
   const { data: file } = useVerification();
   // The form starts from the saved vehicle, so render it only once the file has loaded.
@@ -26,18 +29,16 @@ function VehicleForm({ file }: { file: MyVerification }) {
   const { api } = useAuth();
   const { setData, refresh } = useVerification();
   const [plate, setPlate] = useState(file.vehicle?.plateDisplay ?? '');
-  const [model, setModel] = useState(file.vehicle?.model ?? '');
-  const [color, setColor] = useState(file.vehicle?.color ?? '');
-  const [seats, setSeats] = useState(file.vehicle ? String(file.vehicle.seats) : '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function saveVehicle(): Promise<boolean> {
-    const parsed = VehicleInput.safeParse({ plate, model, color, seats: Number(seats) });
+    const parsed = VehicleInput.safeParse({ plate });
     if (!parsed.success) {
       setError(t('common.error'));
       return false;
     }
+    if (file.vehicle?.plateDisplay === plate) return true;
     setBusy(true);
     setError(null);
     try {
@@ -65,30 +66,20 @@ function VehicleForm({ file }: { file: MyVerification }) {
         onChangeText={setPlate}
         placeholder={t('driver.platePlaceholder')}
       />
-      <TextField label={t('driver.model')} value={model} onChangeText={setModel} />
-      <TextField label={t('driver.color')} value={color} onChangeText={setColor} />
-      <TextField
-        label={t('driver.seats')}
-        value={seats}
-        onChangeText={(v) => setSeats(v.replace(/\D/g, ''))}
-        keyboardType="number-pad"
-        maxLength={2}
-      />
       {error ? (
         <Text style={styles.error} accessibilityRole="alert">
           {error}
         </Text>
       ) : null}
-      {file.vehicle ? null : (
-        <Button label={t('driver.save')} onPress={() => void saveVehicle()} loading={busy} />
-      )}
       {file.vehicle ? (
         <DocumentList
           file={file}
-          types={['VEHICLE_REGISTRATION', 'INSURANCE', 'OPERATING_CARD', 'VEHICLE_PHOTO']}
+          types={['VEHICLE_REGISTRATION', 'OPERATING_CARD']}
           onUploaded={() => void refresh()}
         />
-      ) : null}
+      ) : (
+        <Button label={t('driver.save')} onPress={() => void saveVehicle()} loading={busy} />
+      )}
       <Button label={t('driver.next')} onPress={() => void next()} loading={busy} />
       <Button label={t('driver.back')} variant="secondary" onPress={() => router.back()} />
     </Screen>

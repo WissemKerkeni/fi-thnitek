@@ -108,7 +108,7 @@ export function VerificationShow() {
         <Descriptions.Item label="CIN">{file.cin}</Descriptions.Item>
         <Descriptions.Item label="Véhicule">
           {file.vehicle
-            ? `${file.vehicle.plateDisplay} · ${file.vehicle.model} · ${file.vehicle.color} · ${file.vehicle.seats} places`
+            ? `${file.vehicle.plateDisplay}${file.vehicle.seats ? ` · ${file.vehicle.seats} places` : ''}`
             : '—'}
         </Descriptions.Item>
         <Descriptions.Item label="Soumis le">

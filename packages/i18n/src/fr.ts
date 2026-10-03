@@ -71,8 +71,6 @@ export const fr = {
     transportType: 'Type de transport',
     plate: 'Immatriculation',
     platePlaceholder: '123 تونس 4567',
-    model: 'Modèle',
-    color: 'Couleur',
     seats: 'Places',
     expiresOn: "Date d'expiration",
     day: 'JJ',

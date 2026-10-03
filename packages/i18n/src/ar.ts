@@ -72,8 +72,6 @@ export const ar: Catalog = {
     transportType: 'نوع النقل',
     plate: 'رقم المنجمية',
     platePlaceholder: '123 تونس 4567',
-    model: 'الموديل',
-    color: 'اللون',
     seats: 'البلايص',
     expiresOn: 'تاريخ انتهاء الصلوحية',
     day: 'يوم',

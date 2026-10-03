@@ -9,6 +9,7 @@ import type {
 } from '@fi-thnitek/contracts';
 import {
   DEFAULT_REQUIRED_DOCUMENTS,
+  DEFAULT_SEATS,
   EXPIRING_DOCUMENTS,
   type VerificationState,
   canEditVerification,
@@ -93,14 +94,7 @@ export class VerificationService {
       legalFirstName: profile.legalFirstName,
       legalLastName: profile.legalLastName,
       cinLast4: profile.cinLast4,
-      vehicle: vehicle
-        ? {
-            plateDisplay: vehicle.plateDisplay,
-            model: vehicle.model,
-            color: vehicle.color,
-            seats: vehicle.seats,
-          }
-        : null,
+      vehicle: vehicle ? { plateDisplay: vehicle.plateDisplay, seats: vehicle.seats } : null,
       documents: docs.map(toDocumentView),
       requiredDocuments: [...DEFAULT_REQUIRED_DOCUMENTS[profile.transportType]],
       missingDocuments: missingDocuments(profile.transportType, docs, tunisDate(now)),
@@ -145,7 +139,7 @@ export class VerificationService {
           .onConflictDoUpdate({ target: driverProfiles.userId, set: values });
         await tx
           .update(vehicles)
-          .set({ transportType: input.transportType })
+          .set({ transportType: input.transportType, seats: DEFAULT_SEATS[input.transportType] })
           .where(eq(vehicles.driverUserId, userId));
       });
     } catch (error) {
@@ -174,9 +168,7 @@ export class VerificationService {
       transportType: profile.transportType,
       plateNormalized: plate,
       plateDisplay: displayPlate(plate),
-      model: input.model,
-      color: input.color,
-      seats: input.seats,
+      seats: DEFAULT_SEATS[profile.transportType],
       updatedAt: new Date(),
     };
     try {

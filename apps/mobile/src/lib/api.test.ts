@@ -180,7 +180,8 @@ describe('driver verification calls', () => {
       uploadedAt: '2026-10-03T10:00:00.000Z',
     };
     const fetchImpl = vi.fn(() => Promise.resolve(json(201, doc)));
-    const client = createApiClient('http://api', { fetchImpl, tokens });
+    const fileFromUri = vi.fn(() => new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: 'image/jpeg' }));
+    const client = createApiClient('http://api', { fetchImpl, tokens, fileFromUri });
     await expect(
       client.uploadDocument({ type: 'INSURANCE', uri: 'file:///photo.jpg', expiresOn: '2030-01-01' }),
     ).resolves.toEqual(doc);
@@ -189,5 +190,8 @@ describe('driver verification calls', () => {
     expect(init.body).toBeInstanceOf(FormData);
     expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined();
     expect((init.body as FormData).get('type')).toBe('INSURANCE');
+    // A real Blob part (Expo's fetch rejects React Native's { uri } objects).
+    expect(fileFromUri).toHaveBeenCalledWith('file:///photo.jpg');
+    expect((init.body as FormData).get('file')).toBeInstanceOf(Blob);
   });
 });

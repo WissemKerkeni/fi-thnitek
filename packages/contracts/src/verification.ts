@@ -25,12 +25,9 @@ export const DriverProfileInput = z.object({
 });
 export type DriverProfileInput = z.infer<typeof DriverProfileInput>;
 
-/** PUT /v1/driver/vehicle */
+/** PUT /v1/driver/vehicle. Only the plate: seats follow the vehicle type (ADR-216). */
 export const VehicleInput = z.object({
   plate: z.string().min(3).max(24),
-  model: z.string().trim().min(2).max(60),
-  color: z.string().trim().min(2).max(30),
-  seats: z.number().int().min(1).max(80),
 });
 export type VehicleInput = z.infer<typeof VehicleInput>;
 
@@ -55,9 +52,8 @@ export type DocumentView = z.infer<typeof DocumentView>;
 
 export const VehicleView = z.object({
   plateDisplay: z.string(),
-  model: z.string(),
-  color: z.string(),
-  seats: z.number().int(),
+  /** Taxi 4, louage 8, bus null (not asked). */
+  seats: z.number().int().nullable(),
 });
 export type VehicleView = z.infer<typeof VehicleView>;
 

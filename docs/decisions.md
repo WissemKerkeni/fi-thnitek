@@ -87,6 +87,13 @@ Pinned 2026-10-02 after checking peer compatibility:
 - **Expiry (R-064):** a daily job (07:00 Africa/Tunis) reminds once `document_expiry_reminder_days` before expiry and moves VERIFIED → EXPIRED when an accepted document expires; idempotent conditional updates.
 - **Use fake documents only** until the INPDP declaration is filed (docs/research-tunisia.md, legal question 4).
 
+### ADR-216: A shorter driver file · Accepted (product owner, 2026-10-03)
+Drivers found the form too long. The file now asks only: legal first and last name, CIN number, transport type, **CIN photos (front and back)**, **driving licence**, and per type: taxi/louage → **professional card**, **carte grise**, **operating card**; bus → **operator authorisation**; plus the **plate**. Expiry dates stay for the licence and cards (R-064 reminders).
+- **Removed:** selfie, insurance, vehicle photo, vehicle model and colour.
+- **Seats are not asked:** taxi 4, louage 8 (`DEFAULT_SEATS`); bus none (bus passengers never request).
+- **Trade-off accepted:** without a selfie the admin cannot match the CIN photo to the person, and without a plate photo cannot confirm the vehicle; admins rely on the CIN/licence/card consistency and on reports. Revisit if fake accounts appear (anti-abuse scenario 13).
+- The removed document types stay in the database enum (no destructive enum migration) but are neither required nor accepted.
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 

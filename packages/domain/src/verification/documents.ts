@@ -24,36 +24,33 @@ export const DOCUMENT_TYPES = [
 ] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
-const IDENTITY: DocumentType[] = ['CIN_FRONT', 'CIN_BACK', 'SELFIE', 'DRIVING_LICENCE'];
+/**
+ * Kept short on purpose (product decision, ADR-216): drivers are not asked for a selfie, insurance or a
+ * vehicle photo. Those types stay in DOCUMENT_TYPES (database enum) but are no longer required or accepted.
+ */
+const IDENTITY: DocumentType[] = ['CIN_FRONT', 'CIN_BACK', 'DRIVING_LICENCE'];
+const LICENSED_VEHICLE: DocumentType[] = ['PROFESSIONAL_CARD', 'VEHICLE_REGISTRATION', 'OPERATING_CARD'];
 
 export const DEFAULT_REQUIRED_DOCUMENTS: Readonly<Record<TransportType, readonly DocumentType[]>> = {
-  TAXI: [
-    ...IDENTITY,
-    'PROFESSIONAL_CARD',
-    'VEHICLE_REGISTRATION',
-    'INSURANCE',
-    'OPERATING_CARD',
-    'VEHICLE_PHOTO',
-  ],
-  LOUAGE: [
-    ...IDENTITY,
-    'PROFESSIONAL_CARD',
-    'VEHICLE_REGISTRATION',
-    'INSURANCE',
-    'OPERATING_CARD',
-    'VEHICLE_PHOTO',
-  ],
-  BUS: [...IDENTITY, 'OPERATOR_AUTHORISATION', 'VEHICLE_PHOTO'],
+  TAXI: [...IDENTITY, ...LICENSED_VEHICLE],
+  LOUAGE: [...IDENTITY, ...LICENSED_VEHICLE],
+  BUS: [...IDENTITY, 'OPERATOR_AUTHORISATION'],
 };
 
 /** Documents that carry an expiry date the driver must enter (R-064 reminders and expiry). */
 export const EXPIRING_DOCUMENTS: ReadonlySet<DocumentType> = new Set<DocumentType>([
   'DRIVING_LICENCE',
   'PROFESSIONAL_CARD',
-  'INSURANCE',
   'OPERATING_CARD',
   'OPERATOR_AUTHORISATION',
 ]);
+
+/** Seats are not asked: taxi 4, louage 8 (ADR-216). Bus passengers never request, so no seat count. */
+export const DEFAULT_SEATS: Readonly<Record<TransportType, number | null>> = {
+  TAXI: 4,
+  LOUAGE: 8,
+  BUS: null,
+};
 
 export type DocumentStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED';
 

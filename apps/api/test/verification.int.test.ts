@@ -59,11 +59,7 @@ async function completeFile(s: SignInResponse, cin: string, plate: string): Prom
     .set(bearer(s))
     .send({ legalFirstName: 'Hédi', legalLastName: 'Ben Salah', cin, transportType: 'TAXI' })
     .expect(200);
-  await request(t.server())
-    .put('/v1/driver/vehicle')
-    .set(bearer(s))
-    .send({ plate, model: 'Dacia Logan', color: 'Jaune', seats: 4 })
-    .expect(200);
+  await request(t.server()).put('/v1/driver/vehicle').set(bearer(s)).send({ plate }).expect(200);
   const docs: DocumentView[] = [];
   for (const type of DEFAULT_REQUIRED_DOCUMENTS.TAXI) {
     const res = await upload(
@@ -109,7 +105,7 @@ describe('driver file (R-060, R-064)', () => {
     await request(t.server())
       .put('/v1/driver/vehicle')
       .set(bearer(a))
-      .send({ plate: '200 تونس 1234', model: 'Kia Rio', color: 'Jaune', seats: 4 })
+      .send({ plate: '200 تونس 1234' })
       .expect(200);
 
     const b = await signIn();
@@ -128,7 +124,7 @@ describe('driver file (R-060, R-064)', () => {
     res = await request(t.server())
       .put('/v1/driver/vehicle')
       .set(bearer(b))
-      .send({ plate: '200 TU 1234', model: 'Kia Rio', color: 'Jaune', seats: 4 })
+      .send({ plate: '200 TU 1234' })
       .expect(409);
     expect(problem(res.body).code).toBe('PLATE_ALREADY_REGISTERED');
   });
@@ -141,13 +137,35 @@ describe('driver file (R-060, R-064)', () => {
       .send({ legalFirstName: 'Mehdi', legalLastName: 'Jaziri', cin: '05554433', transportType: 'BUS' })
       .expect(200);
 
-    let res = await upload(s, 'SELFIE', Buffer.from('%PDF-1.7 fake')).expect(415);
+    let res = await upload(s, 'CIN_FRONT', Buffer.from('%PDF-1.7 fake')).expect(415);
     expect(problem(res.body).code).toBe('UNSUPPORTED_MEDIA_TYPE');
     res = await upload(s, 'DRIVING_LICENCE', jpegWithExif('x')).expect(400);
     expect(problem(res.body).errors?.[0]?.path).toBe('expiresOn');
     await upload(s, 'DRIVING_LICENCE', jpegWithExif('x'), '2020-01-01').expect(400);
     res = await upload(s, 'PROFESSIONAL_CARD', jpegWithExif('x'), FUTURE).expect(400); // not for buses
     expect(problem(res.body).errors?.[0]?.path).toBe('type');
+  });
+
+  it('asks only for the plate and sets seats from the vehicle type (ADR-216)', async () => {
+    const s = await signIn();
+    await request(t.server())
+      .put('/v1/driver/profile')
+      .set(bearer(s))
+      .send({ legalFirstName: 'Karim', legalLastName: 'Dridi', cin: '06665544', transportType: 'LOUAGE' })
+      .expect(200);
+    let res = await request(t.server())
+      .put('/v1/driver/vehicle')
+      .set(bearer(s))
+      .send({ plate: '210 تونس 777' })
+      .expect(200);
+    expect(MyVerification.parse(res.body).vehicle).toEqual({ plateDisplay: '210 تونس 777', seats: 8 });
+
+    res = await request(t.server())
+      .put('/v1/driver/profile')
+      .set(bearer(s))
+      .send({ legalFirstName: 'Karim', legalLastName: 'Dridi', cin: '06665544', transportType: 'TAXI' })
+      .expect(200);
+    expect(MyVerification.parse(res.body).vehicle?.seats).toBe(4);
   });
 
   it('refuses to submit an incomplete file', async () => {
@@ -192,7 +210,7 @@ describe('review flow (R-061…R-063)', () => {
       canEdit: false,
       missingDocuments: [],
     });
-    const locked = await upload(driver, 'SELFIE', jpegWithExif('again')).expect(409);
+    const locked = await upload(driver, 'CIN_BACK', jpegWithExif('again')).expect(409);
     expect(problem(locked.body).code).toBe('VERIFICATION_LOCKED');
     const me = await request(t.server()).get('/v1/me').set(bearer(driver)).expect(200);
     expect(Me.parse(me.body).driverVerification).toBe('UNDER_REVIEW');
@@ -246,14 +264,14 @@ describe('review flow (R-061…R-063)', () => {
       .expect(400);
     expect(problem(res.body).code).toBe('VALIDATION_FAILED');
 
-    const selfie = docs.find((d) => d.type === 'SELFIE')!;
+    const selfie = docs.find((d) => d.type === 'CIN_BACK')!;
     res = await request(t.server())
       .post(`/v1/admin/verifications/${driver.me.id}/decision`)
       .set(bearer(admin))
       .send({
         decision: 'REQUEST_CHANGES',
-        reason: 'Selfie floue',
-        documents: [{ documentId: selfie.id, status: 'REJECTED', reason: 'Visage non visible' }],
+        reason: 'CIN verso floue',
+        documents: [{ documentId: selfie.id, status: 'REJECTED', reason: 'Photo illisible' }],
       })
       .expect(200);
     expect(AdminVerificationDetail.parse(res.body).state).toBe('CHANGES_REQUESTED');
@@ -264,15 +282,15 @@ describe('review flow (R-061…R-063)', () => {
     expect(mine).toMatchObject({
       state: 'CHANGES_REQUESTED',
       canEdit: true,
-      decisionReason: 'Selfie floue',
-      missingDocuments: ['SELFIE'],
+      decisionReason: 'CIN verso floue',
+      missingDocuments: ['CIN_BACK'],
     });
-    expect(mine.documents.find((d) => d.id === selfie.id)?.rejectionReason).toBe('Visage non visible');
+    expect(mine.documents.find((d) => d.id === selfie.id)?.rejectionReason).toBe('Photo illisible');
     expect(t.push.sent.at(-1)?.data.event).toBe('VERIFICATION_CHANGES_REQUESTED');
   });
 
   it('accepts a corrected file and approves it: VERIFIED, all documents accepted, push sent', async () => {
-    await upload(driver, 'SELFIE', jpegWithExif('new selfie')).expect(201);
+    await upload(driver, 'CIN_BACK', jpegWithExif('new cin back')).expect(201);
     await request(t.server()).post('/v1/driver/verification/submit').set(bearer(driver)).expect(200);
 
     const res = await request(t.server())
@@ -329,10 +347,10 @@ describe('review flow (R-061…R-063)', () => {
 
   it('expires the driver when an accepted document expires, reminding once beforehand (job)', async () => {
     const job = t.app.get(DocumentExpiryJob);
-    // Insurance expires on 2031-01-20; the other dated documents much later.
+    // The operating card expires on 2031-01-20; the other dated documents much later.
     await t.pool.query(
       `UPDATE driver_documents
-       SET expires_on = CASE WHEN type = 'INSURANCE' THEN DATE '2031-01-20' ELSE DATE '2033-06-30' END, reminded_at = NULL
+       SET expires_on = CASE WHEN type = 'OPERATING_CARD' THEN DATE '2031-01-20' ELSE DATE '2033-06-30' END, reminded_at = NULL
        WHERE driver_user_id = $1 AND expires_on IS NOT NULL`,
       [driver.me.id],
     );

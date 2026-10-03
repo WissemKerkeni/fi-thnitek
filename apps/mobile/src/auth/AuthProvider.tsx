@@ -4,6 +4,7 @@ import {
   isCancelledResponse,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
+import { File } from 'expo-file-system';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { type ApiClient, type ApiError, createApiClient } from '../lib/api';
 import { API_URL, GOOGLE_WEB_CLIENT_ID } from '../lib/config';
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () =>
       createApiClient(API_URL, {
         tokens,
+        fileFromUri: (uri) => new File(uri),
         onSessionEnded: (error: ApiError) => {
           setEndedReason(error.problem?.code ?? null);
           setSession({ status: 'signedOut' });
