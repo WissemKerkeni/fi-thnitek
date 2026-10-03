@@ -88,7 +88,8 @@ stateDiagram-v2
 - **pickup_records** (**admin-only**): `request_id`, `driver_user_id`, `min_distance_m`, `recorded_at`. PK (`request_id`, `driver_user_id`). Created automatically when a request closes `MOVED_AWAY`, for **every** sharing driver within 50 m of the anchor during the last 2 min. Never exposed through user-facing endpoints; admin reads are audited.
 
 ### Places
-- **places**: `id`, `kind`, `name_ar`, `name_fr`, `aliases[]`, `location`, `parent_id`, `governorate_code`, `popularity`, `source`.
+- **places**: `id`, `kind` (GOVERNORATE · DELEGATION · CITY · NEIGHBOURHOOD · LOUAGE_STATION · BUS_STATION · AIRPORT · LANDMARK), `name_ar`, `name_fr`, `aliases[]`, `location` geography(Point,4326) (GiST), `parent_id`, `governorate_code`, `popularity` 0–100, `source` (unique provenance: `osm:<type>/<id>` or `admin:<id>`), `search_text` (all names folded by `normalizeSearchText`, pg_trgm GIN), `locked` (edited by an admin → skipped by re-imports), `created_at`, `updated_at`.
+  Public reference data, not personal. Imported from `data/places/tn-places.json` by `pnpm db:seed` (upsert by `source`); search and pick-on-map take coordinates in POST bodies only (ADR-217).
 
 ### Trust & ops
 - **reports**: `id`, `reporter_user_id`, `target_user_id`, `request_id?`, `session_id?`, `category` (`NOBODY_THERE`|`FAKE_PROFILE`|`HARASSMENT`|`UNSAFE`|`SPAM`|`OTHER`), `description`, `status`, `handled_by`, `handled_at`.
