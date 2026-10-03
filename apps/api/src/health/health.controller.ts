@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/s
 import { type HealthResponse } from '@fi-thnitek/contracts';
 import type { Response } from 'express';
 import type { Pool } from 'pg';
+import { Public } from '../auth/decorators.js';
 import { ENV, type Env } from '../config/env.js';
 import { PG_POOL } from '../db/db.module.js';
 import { schemaRef } from '../openapi/zod-openapi.js';
@@ -10,6 +11,7 @@ import { schemaRef } from '../openapi/zod-openapi.js';
 const DB_CHECK_TIMEOUT_MS = 2_000;
 
 @ApiTags('health')
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

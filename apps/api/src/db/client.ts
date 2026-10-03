@@ -12,3 +12,7 @@ export function createPool(connectionString: string, max = 10): Pool {
 export function createDatabase(pool: Pool): Database {
   return drizzle(pool, { schema });
 }
+
+/** A transaction handle, for helpers that must run inside the caller's transaction. */
+export type Tx = Parameters<Parameters<Database['transaction']>[0]>[0];
+export type Executor = Database | Tx;

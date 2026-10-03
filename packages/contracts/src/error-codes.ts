@@ -14,6 +14,17 @@ export const ErrorCode = z.enum([
   'RATE_LIMITED',
   'INTERNAL_ERROR',
   'SERVICE_UNAVAILABLE',
+  // Auth (docs/architecture.md §3)
+  'INVALID_GOOGLE_TOKEN',
+  /** The access token expired: refresh and retry. */
+  'TOKEN_EXPIRED',
+  /** Unknown, expired or revoked refresh token: sign in again. */
+  'REFRESH_TOKEN_INVALID',
+  /** A rotated refresh token was replayed: the whole session was revoked. */
+  'REFRESH_TOKEN_REUSED',
+  'ACCOUNT_SUSPENDED',
+  'ACCOUNT_BANNED',
+  'ADMIN_REQUIRED',
   // Domain (docs/domain-model.md §2)
   'SHARING_REQUIRED',
   'COOLDOWN_ACTIVE',

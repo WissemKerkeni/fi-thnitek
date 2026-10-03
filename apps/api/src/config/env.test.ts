@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { InvalidEnvError, loadEnv } from './env.js';
+import { DEV_JWT_SECRET, InvalidEnvError, loadEnv } from './env.js';
 
-const valid = { DATABASE_URL: 'postgres://app:secret@localhost:5432/fi' };
+const valid = { DATABASE_URL: 'postgres://app:secret@localhost:5432/fi', JWT_SECRET: DEV_JWT_SECRET };
 
 describe('loadEnv', () => {
   it('applies defaults', () => {
@@ -36,11 +36,34 @@ describe('loadEnv', () => {
     expect(() => loadEnv({ DATABASE_URL: 'mysql://localhost/fi' })).toThrow(InvalidEnvError);
   });
 
+  it('splits Google client IDs and lowercases admin emails', () => {
+    const env = loadEnv({
+      ...valid,
+      GOOGLE_CLIENT_IDS: 'a.apps.googleusercontent.com',
+      ADMIN_EMAILS: ' Admin@Example.TN ,x@y.tn',
+    });
+    expect(env.GOOGLE_CLIENT_IDS).toEqual(['a.apps.googleusercontent.com']);
+    expect(env.ADMIN_EMAILS).toEqual(['admin@example.tn', 'x@y.tn']);
+    expect(env).toMatchObject({ ACCESS_TOKEN_TTL_S: 900, REFRESH_TOKEN_TTL_DAYS: 60 });
+  });
+
+  it('requires a JWT secret of at least 32 characters', () => {
+    expect(() => loadEnv({ ...valid, JWT_SECRET: 'short' })).toThrow(InvalidEnvError);
+  });
+
+  it('refuses the development JWT secret in production', () => {
+    expect(() => loadEnv({ ...valid, NODE_ENV: 'production' })).toThrow(/JWT_SECRET/);
+    expect(loadEnv({ ...valid, NODE_ENV: 'production', JWT_SECRET: 'p'.repeat(48) }).NODE_ENV).toBe(
+      'production',
+    );
+  });
+
   it('never echoes secret values in the error', () => {
     try {
-      loadEnv({ DATABASE_URL: 'postgres://app:hunter2@', PORT: '0' });
+      loadEnv({ DATABASE_URL: 'postgres://app:hunter2@', PORT: '0', JWT_SECRET: 'tooshort-hunter3' });
     } catch (error) {
       expect((error as Error).message).not.toContain('hunter2');
+      expect((error as Error).message).not.toContain('hunter3');
     }
   });
 });
