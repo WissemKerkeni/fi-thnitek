@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from '../src/auth/AuthProvider';
 import { initI18n } from '../src/i18n';
 import { queryClient } from '../src/lib/query';
 import { colors } from '../src/theme/tokens';
@@ -33,14 +34,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <StatusBar style="dark" />
-        <Stack
-          screenOptions={{
-            headerStyle: { backgroundColor: colors.surface },
-            headerTintColor: colors.primary,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        />
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{
+              headerStyle: { backgroundColor: colors.surface },
+              headerTintColor: colors.primary,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          />
+        </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

@@ -18,7 +18,14 @@ const config: ExpoConfig = {
     ],
   },
   ios: { bundleIdentifier: 'tn.fithnitek.app', supportsTablet: false },
-  plugins: ['expo-router', 'expo-localization', '@maplibre/maplibre-react-native'],
+  plugins: [
+    'expo-router',
+    'expo-localization',
+    '@maplibre/maplibre-react-native',
+    '@react-native-google-signin/google-signin',
+    // Keeps the refresh token out of Android backups.
+    ['expo-secure-store', { configureAndroidBackup: true }],
+  ],
   extra: {
     // Lets I18nManager.forceRTL take effect for Arabic.
     supportsRTL: true,
