@@ -10,10 +10,21 @@ import { useChooseHeading } from '../src/sharing/useChooseHeading';
 import { langOf, placeNames } from '../src/places/format';
 import { useDebouncedValue } from '../src/places/useDebouncedValue';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
-import { Icon } from '../src/ui/Icon';
+import { Icon, type IconName } from '../src/ui/Icon';
 import { Text } from '../src/ui/Text';
 
 const MIN_CHARS = 2;
+
+const KIND_ICON: Record<Place['kind'], IconName> = {
+  GOVERNORATE: 'map-outline',
+  DELEGATION: 'map-marker-outline',
+  CITY: 'city-variant-outline',
+  NEIGHBOURHOOD: 'home-group',
+  LOUAGE_STATION: 'van-passenger',
+  BUS_STATION: 'bus-stop',
+  AIRPORT: 'airplane',
+  LANDMARK: 'star-outline',
+};
 
 /**
  * Destination search (R-011): accent/hamza-insensitive suggestions in AR and FR, or pick on the map.
@@ -56,17 +67,30 @@ export default function DestinationScreen() {
     <View style={styles.flex}>
       <Stack.Screen options={{ title: heading ? t('sharing.headingTo') : t('places.searchTitle') }} />
       <View style={styles.header}>
-        <TextInput
-          value={text}
-          onChangeText={setText}
-          autoFocus
-          autoCorrect={false}
-          returnKeyType="search"
-          placeholder={t('map.searchPlaceholder')}
-          accessibilityLabel={t('places.searchLabel')}
-          placeholderTextColor={colors.textMuted}
-          style={styles.input}
-        />
+        <View style={styles.searchBox}>
+          <Icon name="magnify" color={colors.primary} />
+          <TextInput
+            value={text}
+            onChangeText={setText}
+            autoFocus
+            autoCorrect={false}
+            returnKeyType="search"
+            placeholder={t('map.searchPlaceholder')}
+            accessibilityLabel={t('places.searchLabel')}
+            placeholderTextColor={colors.textMuted}
+            style={styles.input}
+          />
+          {text ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('map.clearDestination')}
+              onPress={() => setText('')}
+              hitSlop={spacing.sm}
+            >
+              <Icon name="close-circle" size={20} color={colors.textMuted} />
+            </Pressable>
+          ) : null}
+        </View>
         <Pressable
           accessibilityRole="button"
           onPress={() =>
@@ -74,10 +98,13 @@ export default function DestinationScreen() {
           }
           style={styles.pickRow}
         >
-          <Icon name="map-marker-radius" color={colors.primary} />
-          <Text variant="bodyStrong" style={styles.pickText}>
+          <View style={styles.pickIcon}>
+            <Icon name="map-marker-radius" color={colors.primary} />
+          </View>
+          <Text variant="bodyStrong" style={[styles.pickText, styles.flex1]}>
             {t('places.pickOnMap')}
           </Text>
+          <Icon name="chevron-right" color={colors.textMuted} />
         </Pressable>
       </View>
       <FlatList
@@ -92,9 +119,16 @@ export default function DestinationScreen() {
         }
         ListEmptyComponent={
           empty ? (
-            <Text muted style={styles.empty}>
-              {empty}
-            </Text>
+            <View style={styles.empty}>
+              <Icon
+                name={ready ? 'map-search-outline' : 'keyboard-outline'}
+                size={40}
+                color={colors.textMuted}
+              />
+              <Text muted style={styles.center}>
+                {empty}
+              </Text>
+            </View>
           ) : null
         }
         renderItem={({ item }) => {
@@ -107,12 +141,15 @@ export default function DestinationScreen() {
               onPress={() => choose(item)}
               style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
             >
-              <Text variant="bodyStrong" style={styles.rowText}>
-                {name}
-              </Text>
-              <Text muted style={styles.rowText}>
-                {other ? `${kind} · ${other}` : kind}
-              </Text>
+              <View style={styles.kindIcon}>
+                <Icon name={KIND_ICON[item.kind]} color={colors.primary} />
+              </View>
+              <View style={styles.flex1}>
+                <Text variant="bodyStrong">{name}</Text>
+                <Text variant="caption" muted>
+                  {other ? `${kind} · ${other}` : kind}
+                </Text>
+              </View>
             </Pressable>
           );
         }}
@@ -123,30 +160,58 @@ export default function DestinationScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
-  header: { padding: spacing.md, gap: spacing.sm, backgroundColor: colors.surface },
-  input: {
-    ...typography.body,
-    minHeight: sizes.primaryButtonHeight,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md,
-    color: colors.text,
-    textAlign: 'auto',
-  },
-  pickRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: sizes.minTouchTarget },
-  pickText: { color: colors.primary },
-  list: { paddingVertical: spacing.sm },
-  spinner: { marginVertical: spacing.sm },
-  empty: { padding: spacing.md, textAlign: 'center' },
-  row: {
-    minHeight: sizes.minTouchTarget,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  flex1: { flex: 1 },
+  center: { textAlign: 'center' },
+  header: {
+    padding: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minHeight: sizes.primaryButtonHeight,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+  },
+  input: { ...typography.body, flex: 1, color: colors.text, textAlign: 'auto' },
+  pickRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: sizes.minTouchTarget },
+  pickIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceVariant,
+  },
+  pickText: { color: colors.primary },
+  list: { padding: spacing.md, gap: spacing.sm },
+  spinner: { marginVertical: spacing.sm },
+  empty: { alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: 64,
+    padding: spacing.sm + 4,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
   },
   rowPressed: { backgroundColor: colors.primaryContainer },
-  rowText: { textAlign: 'auto' },
+  kindIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surfaceVariant,
+  },
 });

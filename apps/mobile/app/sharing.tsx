@@ -461,6 +461,9 @@ function BreakView({ status }: { status: SharingStatus }) {
         <StatusPill label={t('sharing.notVisible')} on={false} />
       </View>
 
+      <Banner icon="weather-night" tone="warning">
+        {t('sharing.breakModeActive')}
+      </Banner>
       <Card style={styles.breakCard}>
         <View style={styles.breakIcon}>
           <Icon name="coffee" size={36} color={colors.warning} />
@@ -468,11 +471,13 @@ function BreakView({ status }: { status: SharingStatus }) {
         <Text variant="title" style={styles.center}>
           {t('sharing.onBreakUntil', { time: clockTime(until, lang) })}
         </Text>
-        {!over ? (
-          <Text variant="display" accessibilityLiveRegion="polite">
-            {countdown(until, now)}
-          </Text>
-        ) : null}
+        <View style={[styles.ring, over && styles.ringDone]} accessibilityLiveRegion="polite">
+          {over ? (
+            <Icon name="play-circle-outline" size={48} color={colors.success} />
+          ) : (
+            <Text variant="display">{countdown(until, now)}</Text>
+          )}
+        </View>
         <Text muted style={styles.center}>
           {t('sharing.breakHint')}
         </Text>
@@ -593,6 +598,17 @@ const styles = StyleSheet.create({
   grabber: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border },
   breakOptions: { flexDirection: 'row', gap: spacing.sm },
   breakCard: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xl },
+  ring: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 10,
+    borderColor: colors.warning,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
+  },
+  ringDone: { borderColor: colors.success },
   breakIcon: {
     width: 72,
     height: 72,

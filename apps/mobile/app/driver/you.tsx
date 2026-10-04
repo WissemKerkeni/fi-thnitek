@@ -9,8 +9,11 @@ import { DocumentList } from '../../src/driver/DocumentList';
 import { StepHeader } from '../../src/driver/StepHeader';
 import { driverErrorMessage } from '../../src/driver/errors';
 import { useVerification } from '../../src/driver/useVerification';
+import { VehicleBadge } from '../../src/map/VehicleBadge';
 import { colors, radii, sizes, spacing } from '../../src/theme/tokens';
 import { Button } from '../../src/ui/Button';
+import { Icon } from '../../src/ui/Icon';
+import { Banner, Card, SectionTitle } from '../../src/ui/kit';
 import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
 import { TextField } from '../../src/ui/TextField';
@@ -72,53 +75,74 @@ function YouForm({ file }: { file: MyVerification }) {
     <Screen>
       <Stack.Screen options={{ title: t('driver.title') }} />
       <StepHeader step={1} />
-      <TextField
-        label={t('driver.legalFirstName')}
-        value={firstName}
-        onChangeText={setFirstName}
-        autoComplete="given-name"
-      />
-      <TextField
-        label={t('driver.legalLastName')}
-        value={lastName}
-        onChangeText={setLastName}
-        autoComplete="family-name"
-      />
-      <TextField
-        label={t('driver.cin')}
-        value={cin}
-        onChangeText={(v) => setCin(v.replace(/\D/g, ''))}
-        keyboardType="number-pad"
-        maxLength={8}
-        placeholder={file.cinLast4 ? `••••${file.cinLast4}` : '01234567'}
-        secureTextEntry={false}
-      />
-      <Text muted>{t('driver.transportType')}</Text>
-      <View style={styles.chips}>
-        {TRANSPORT_TYPES.map((tt) => (
-          <Pressable
-            key={tt}
-            onPress={() => setType(tt)}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: type === tt }}
-            style={[styles.chip, type === tt && styles.chipOn]}
-          >
-            <Text style={type === tt ? styles.chipTextOn : undefined}>{t(`driver.type_${tt}`)}</Text>
-          </Pressable>
-        ))}
-      </View>
-      <Text muted>{t('driver.publicNameNote')}</Text>
+      <Card>
+        <SectionTitle icon="account-outline" title={t('driver.stepYou')} />
+        <TextField
+          label={t('driver.legalFirstName')}
+          value={firstName}
+          onChangeText={setFirstName}
+          autoComplete="given-name"
+        />
+        <TextField
+          label={t('driver.legalLastName')}
+          value={lastName}
+          onChangeText={setLastName}
+          autoComplete="family-name"
+        />
+        <TextField
+          label={t('driver.cin')}
+          value={cin}
+          onChangeText={(v) => setCin(v.replace(/\D/g, ''))}
+          keyboardType="number-pad"
+          maxLength={8}
+          placeholder={file.cinLast4 ? `••••${file.cinLast4}` : '01234567'}
+          secureTextEntry={false}
+        />
+      </Card>
+      <Card>
+        <SectionTitle icon="car-outline" title={t('driver.transportType')} />
+        <View style={styles.tiles} accessibilityRole="radiogroup">
+          {TRANSPORT_TYPES.map((tt) => {
+            const on = type === tt;
+            return (
+              <Pressable
+                key={tt}
+                onPress={() => setType(tt)}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: on }}
+                style={[styles.tile, on && styles.tileOn]}
+              >
+                <VehicleBadge type={tt} size={40} />
+                <Text variant="label" style={on ? styles.tileTextOn : undefined}>
+                  {t(`driver.type_${tt}`)}
+                </Text>
+                <View style={[styles.check, on && styles.checkOn]}>
+                  {on ? <Icon name="check" size={16} color={colors.onPrimary} /> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+      </Card>
+      <Banner icon="account-eye-outline">{t('driver.publicNameNote')}</Banner>
       {error ? (
-        <Text style={styles.error} accessibilityRole="alert">
+        <Banner icon="alert-circle-outline" tone="danger">
           {error}
-        </Text>
+        </Banner>
       ) : null}
       {savedProfile ? (
         <DocumentList file={file} types={['CIN_FRONT', 'CIN_BACK']} onUploaded={() => void refresh()} />
       ) : (
-        <Button label={t('driver.save')} onPress={() => void save()} loading={busy} />
+        <Button
+          icon="content-save-outline"
+          variant="tonal"
+          label={t('driver.save')}
+          onPress={() => void save()}
+          loading={busy}
+        />
       )}
       <Button
+        icon="arrow-right"
         label={t('driver.next')}
         onPress={() => void next()}
         loading={busy}
@@ -129,17 +153,28 @@ function YouForm({ file }: { file: MyVerification }) {
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
-  chip: {
+  tiles: { flexDirection: 'row', gap: spacing.sm },
+  tile: {
+    flex: 1,
+    alignItems: 'center',
+    gap: spacing.xs,
     minHeight: sizes.minTouchTarget,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.pill,
-    borderWidth: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 2,
     borderColor: colors.border,
-    justifyContent: 'center',
     backgroundColor: colors.surface,
   },
-  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipTextOn: { color: colors.onPrimary, fontWeight: '700' },
-  error: { color: colors.danger },
+  tileOn: { borderColor: colors.primary, backgroundColor: colors.primaryContainer },
+  tileTextOn: { color: colors.primary },
+  check: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkOn: { borderColor: colors.primary, backgroundColor: colors.primary },
 });

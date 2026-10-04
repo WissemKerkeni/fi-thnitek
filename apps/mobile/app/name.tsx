@@ -2,10 +2,12 @@ import { DisplayName } from '@fi-thnitek/contracts';
 import { Stack, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
 import { Button } from '../src/ui/Button';
+import { Icon } from '../src/ui/Icon';
+import { Banner } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 
@@ -35,7 +37,13 @@ export default function NameScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('onboarding.nameTitle') }} />
-      <Text muted>{t('onboarding.nameHint')}</Text>
+      <View style={styles.hero}>
+        <View style={styles.avatar}>
+          <Icon name="account" size={40} color={colors.onPrimary} />
+        </View>
+        <Text variant="title">{t('onboarding.nameTitle')}</Text>
+      </View>
+      <Banner icon="incognito">{t('onboarding.nameHint')}</Banner>
       <TextInput
         value={name}
         onChangeText={setName}
@@ -50,26 +58,34 @@ export default function NameScreen() {
         returnKeyType="done"
       />
       {error ? (
-        <Text style={styles.error} accessibilityRole="alert">
+        <Banner icon="alert-circle-outline" tone="danger">
           {error}
-        </Text>
+        </Banner>
       ) : null}
-      <Button label={t('common.continue')} onPress={() => void save()} loading={busy} />
+      <Button icon="arrow-right" label={t('common.continue')} onPress={() => void save()} loading={busy} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  hero: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
   input: {
-    ...typography.body,
-    minHeight: sizes.minTouchTarget,
+    ...typography.headline,
+    minHeight: sizes.primaryButtonHeight,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
     color: colors.text,
-    textAlign: 'auto',
+    textAlign: 'center',
   },
-  error: { color: colors.danger },
 });

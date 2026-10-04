@@ -13,7 +13,8 @@ import { setDestination, useDestination } from '../src/places/destination';
 import { useHeadingTo } from '../src/sharing/headingTo';
 import { useChooseHeading } from '../src/sharing/useChooseHeading';
 import { distanceParts, langOf, placeNames } from '../src/places/format';
-import { colors, radii, spacing } from '../src/theme/tokens';
+import { colors, elevation, radii, spacing } from '../src/theme/tokens';
+import { Icon } from '../src/ui/Icon';
 import { Button } from '../src/ui/Button';
 import { Text } from '../src/ui/Text';
 
@@ -94,17 +95,28 @@ export default function PickOnMapScreen() {
       </View>
 
       <View style={styles.hint} pointerEvents="none">
-        <Text style={styles.hintText}>{t('places.pickHint')}</Text>
+        <Icon name="gesture-swipe" size={18} color={colors.onPrimary} />
+        <Text variant="caption" style={styles.hintText}>
+          {t('places.pickHint')}
+        </Text>
       </View>
 
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.sheet, elevation, { paddingBottom: insets.bottom + spacing.md }]}>
+        <View style={styles.grabber} />
         <View style={styles.labelRow} accessibilityLiveRegion="polite">
-          {nearest.isFetching ? <ActivityIndicator color={colors.primary} /> : null}
+          <View style={styles.pinIcon}>
+            {nearest.isFetching ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <Icon name="map-marker" color={colors.danger} />
+            )}
+          </View>
           <Text variant="bodyStrong" style={styles.label}>
             {label ?? ' '}
           </Text>
         </View>
         <Button
+          icon="check"
           label={t('places.confirm')}
           onPress={confirm}
           disabled={nearest.isPending || (heading && !nearest.data?.place)}
@@ -122,10 +134,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.md,
     alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
-    backgroundColor: colors.onPrimaryContainer,
+    backgroundColor: colors.text,
   },
   hintText: { color: colors.onPrimary },
   sheet: {
@@ -135,10 +150,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     padding: spacing.md,
     gap: spacing.md,
-    borderTopStartRadius: radii.lg,
-    borderTopEndRadius: radii.lg,
+    borderTopStartRadius: radii.xl,
+    borderTopEndRadius: radii.xl,
     backgroundColor: colors.surface,
   },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 24 },
+  grabber: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 48 },
+  pinIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.dangerContainer,
+  },
   label: { flex: 1, textAlign: 'auto' },
 });

@@ -21,7 +21,7 @@ export default function StepLicences() {
           onUploaded={() => void refresh()}
         />
       ) : null}
-      <Button label={t('driver.next')} onPress={() => router.push('/driver/vehicle')} />
+      <Button icon="arrow-right" label={t('driver.next')} onPress={() => router.push('/driver/vehicle')} />
       <Button label={t('driver.back')} variant="secondary" onPress={() => router.back()} />
     </Screen>
   );
