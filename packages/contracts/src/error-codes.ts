@@ -51,6 +51,16 @@ export const ErrorCode = z.enum([
   // Routine routes (R-065…R-068)
   /** At most `routine_max` routines per driver. */
   'ROUTINE_LIMIT',
+  // Passenger requests (R-030…R-042)
+  /** Driver accounts, suspended accounts and buses cannot be requested (`detail` says which). */
+  'REQUEST_NOT_ALLOWED',
+  /** One open request per passenger (R-031). */
+  'REQUEST_ALREADY_OPEN',
+  /** Daily request limit reached (R-040). */
+  'REQUEST_LIMIT',
+  'NO_OPEN_REQUEST',
+  /** No renewal left, or the request already expired. */
+  'RENEW_NOT_ALLOWED',
   'INVALID_STATE_TRANSITION',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

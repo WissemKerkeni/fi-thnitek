@@ -73,7 +73,7 @@ stateDiagram-v2
   Max 5 routines per driver. One-off routines are over once their time has passed. A CHECK keeps each kind's fields consistent.
 
 ### Passengers
-- **passenger_requests**: `id`, `passenger_user_id`, `transport_types[]` (⊆ {TAXI, LOUAGE}, non-empty), `destination_point`, `destination_place_id`, `destination_label`, `seats`, `note`, **`show_identity`** (bool, default **false**: name and note hidden from drivers unless true), `status`, `anchor_point?`, `anchor_accuracy_m?`, `visible_at?`, `last_point?`, `last_accuracy_m?`, `last_ping_at?`, `away_since?`, `created_at`, `expires_at`, `renew_count`, `closed_at?`.
+- **passenger_requests**: `id`, `passenger_user_id`, `transport_types[]` (⊆ {TAXI, LOUAGE}, non-empty), `destination_point` (+ lat/lng), `destination_place_id?`, `seats` (1–8), `note?` (≤ 80), **`show_identity`** (bool, default **false**: name and note hidden from drivers unless true), `status`, `anchor_point?` (+ lat/lng, `anchor_accuracy_m`), `visible_at?`, `last_point?` (+ lat/lng, `last_accuracy_m`, `last_fix_at`), `last_ping_at?`, `away_since?`, `created_at`, `expires_at`, `expiry_reminded_at?`, `renew_count`, `closed_at?`.
   **Partial unique index `(passenger_user_id) WHERE status = 'OPEN'`** → one open request per passenger.
 
 ```mermaid
@@ -115,7 +115,7 @@ stateDiagram-v2
 8. Pings with no active mode are rejected with `stop: true` and not stored.
 
 ## 3. Configurable thresholds (admin "Content → thresholds")
-`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `ping_gap_s=120`, `driver_ping_moving_s=10`, `driver_ping_stationary_s=30`, `driver_distance_filter_m=10`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `still_working_answer_min=10`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `map_max_span_km=25`, `document_expiry_reminder_days=30`.
+`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `anchor_timeout_s=60`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `request_expiry_reminder_min=10`, `request_daily_limit_new=5`, `request_daily_limit=15`, `request_new_account_days=3`, `passenger_ping_s=5`, `passenger_distance_filter_m=3`, `passenger_buffer_max_min=5`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `ping_gap_s=120`, `driver_ping_moving_s=10`, `driver_ping_stationary_s=30`, `driver_distance_filter_m=10`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `still_working_answer_min=10`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `map_max_span_km=25`, `document_expiry_reminder_days=30`.
 
 ## 4. Retention (proposed; confirm with a lawyer)
 | Data | Retention |

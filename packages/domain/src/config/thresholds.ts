@@ -18,8 +18,20 @@ export const ThresholdsSchema = z
     anchor_max_accuracy_m: positiveInt,
     /** Passenger: no location for this long → LOCATION_LOST. */
     location_lost_min: positiveInt,
+    /** Passenger: no anchor (accurate fix) this long after posting → NO_GPS_FIX (R-033). */
+    anchor_timeout_s: positiveInt,
     request_ttl_min: positiveInt,
     request_max_renewals: z.number().int().nonnegative(),
+    /** Passenger: the "Renew?" push this many minutes before expiry (R-036). */
+    request_expiry_reminder_min: positiveInt,
+    /** Passenger: requests per Tunis day for accounts younger than `request_new_account_days`, then for all (R-040). */
+    request_daily_limit_new: positiveInt,
+    request_daily_limit: positiveInt,
+    request_new_account_days: positiveInt,
+    /** Passenger device cadence (R-032): every N s, a 3 m filter, a 5-minute offline buffer. */
+    passenger_ping_s: positiveInt,
+    passenger_distance_filter_m: positiveInt,
+    passenger_buffer_max_min: positiveInt,
     /** Driver: a fix older than this is not "fresh" (SHARING_REQUIRED). */
     driver_fresh_s: positiveInt,
     driver_buffer_max_min: positiveInt,
@@ -67,8 +79,16 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     move_away_confirm_s: 10,
     anchor_max_accuracy_m: 30,
     location_lost_min: 5,
+    anchor_timeout_s: 60,
     request_ttl_min: 60,
     request_max_renewals: 3,
+    request_expiry_reminder_min: 10,
+    request_daily_limit_new: 5,
+    request_daily_limit: 15,
+    request_new_account_days: 3,
+    passenger_ping_s: 5,
+    passenger_distance_filter_m: 3,
+    passenger_buffer_max_min: 5,
     driver_fresh_s: 120,
     driver_buffer_max_min: 60,
     ping_gap_s: 120,

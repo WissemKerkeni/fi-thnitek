@@ -54,6 +54,11 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   BREAK_NOT_OVER: 'Break not over',
   BREAK_RESUME_EXPIRED: 'Resume window passed',
   ROUTINE_LIMIT: 'Too many routine routes',
+  REQUEST_NOT_ALLOWED: 'Request not allowed',
+  REQUEST_ALREADY_OPEN: 'A request is already open',
+  REQUEST_LIMIT: 'Daily request limit reached',
+  NO_OPEN_REQUEST: 'No open request',
+  RENEW_NOT_ALLOWED: 'Renewal not allowed',
   INVALID_STATE_TRANSITION: 'Invalid state transition',
 };
 

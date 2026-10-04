@@ -133,6 +133,8 @@ export const riskFlags = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     type: riskFlagType('type').notNull(),
     sessionId: uuid('session_id').references(() => sharingSessions.id, { onDelete: 'set null' }),
+    /** For passenger flags (a mock location on a request). */
+    requestId: uuid('request_id'),
     evidence: jsonb('evidence').$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),

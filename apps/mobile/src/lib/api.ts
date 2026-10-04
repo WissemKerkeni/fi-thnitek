@@ -3,6 +3,8 @@ import {
   type DocumentType,
   DocumentView,
   type DriverProfileInput,
+  type CreateRequestInput,
+  CurrentRequest,
   HealthResponse,
   type MapDriversRequest,
   MapDriversResponse,
@@ -14,6 +16,7 @@ import {
   PlaceSearchResponse,
   type PingsRequest,
   PingsResponse,
+  RequestHistory,
   type ResumeSharingRequest,
   type RoutineInput,
   RoutineList,
@@ -100,6 +103,12 @@ export interface ApiClient {
   updateRoutine(id: string, input: RoutineInput): Promise<RoutineView>;
   deleteRoutine(id: string): Promise<void>;
   answerStillRunning(id: string, running: boolean): Promise<RoutineView>;
+  // Passenger request (P3–P5, R-030…R-042)
+  createRequest(input: CreateRequestInput): Promise<CurrentRequest>;
+  currentRequest(): Promise<CurrentRequest>;
+  cancelRequest(): Promise<CurrentRequest>;
+  renewRequest(): Promise<CurrentRequest>;
+  requestHistory(): Promise<RequestHistory>;
 }
 
 /** A photo already resized/re-encoded on the device (local file URI). */
@@ -246,6 +255,11 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     createRoutine: (input) => authed('POST', '/driver/routines', RoutineView, input),
     updateRoutine: (id, input) => authed('PUT', `/driver/routines/${id}`, RoutineView, input),
     deleteRoutine: (id) => authed('DELETE', `/driver/routines/${id}`, NO_BODY),
+    createRequest: (input) => authed('POST', '/requests', CurrentRequest, input),
+    currentRequest: () => authed('GET', '/requests/current', CurrentRequest),
+    cancelRequest: () => authed('POST', '/requests/current/cancel', CurrentRequest),
+    renewRequest: () => authed('POST', '/requests/current/renew', CurrentRequest),
+    requestHistory: () => authed('GET', '/requests/history', RequestHistory),
     answerStillRunning: (id, running) =>
       authed('POST', `/driver/routines/${id}/still-running`, RoutineView, { running }),
 

@@ -15,9 +15,11 @@ import {
 } from './buffer';
 
 /**
- * Driver location while sharing (R-052, CLAUDE.md rule 7): started only by the driver's own "Start" tap,
- * inside an Android foreground service with a visible notification; never background location. Fixes
- * go to an on-device buffer (≤ 60 min, oldest first) and are uploaded after each delivery.
+ * Location while sharing (driver, R-052) or while a request is open (passenger, R-032), CLAUDE.md rule 7:
+ * started only by the user's own tap, inside an Android foreground service with a visible notification;
+ * never background location. Fixes go to an on-device buffer (oldest first) and are uploaded after each
+ * delivery; the server infers which mode applies. A driver account never has requests, so one task serves
+ * both.
  */
 export const SHARING_TASK = 'fi-thnitek.sharing-location';
 const BUFFER_KEY = 'fi-thnitek.sharing.buffer';
