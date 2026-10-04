@@ -195,3 +195,27 @@ describe('driver verification calls', () => {
     expect((init.body as FormData).get('file')).toBeInstanceOf(Blob);
   });
 });
+
+describe('live map polling', () => {
+  it('sends the last ETag for the same area and reuses the view on 304', async () => {
+    const view = { clustered: false, drivers: [], passengers: [], clusters: [] };
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(view), { status: 200, headers: { 'content-type': 'application/json', etag: 'W/"a"' } }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 304 }));
+    const tokens: TokenStore = {
+      getAccessToken: () => 'access',
+      getRefreshToken: () => Promise.resolve(null),
+      save: () => Promise.resolve(),
+      clear: () => Promise.resolve(),
+    };
+    const api = createApiClient('https://api.test', { fetchImpl, tokens });
+    const bbox = { south: 36.7, west: 10.1, north: 36.9, east: 10.3 };
+    expect(await api.liveMap({ bbox })).toEqual(view);
+    expect(await api.liveMap({ bbox })).toEqual(view);
+    const second = fetchImpl.mock.calls[1]![1]!.headers as Record<string, string>;
+    expect(second['If-None-Match']).toBe('W/"a"');
+  });
+});

@@ -122,20 +122,21 @@ When a request closes `MOVED_AWAY`, **every** sharing driver whose rolling-windo
 ## 5. Map & finder
 
 ### 5.1 Map endpoint
-`GET /v1/map?bbox=minLng,minLat,maxLng,maxLat&types=TAXI,LOUAGE,BUS&people=1`
-- The bbox span is capped (~20 km); beyond it the endpoint returns clusters (counts per H3 res-7 cell).
-- **Drivers** (sessions in `SHARING` with a fix < 2 min old, not blocked) → the same payload for **every viewer**:
-  `{id, type, lat, lng, heading, name, isFull, headingToLabel, lineLabel, vehicle, plate, photoUrl, nextRoutine?, updatedAgo}`.
+`POST /v1/map {bbox: {minLng, minLat, maxLng, maxLat}}` (POST keeps coordinates out of URLs and logs; ADR-221)
+- The bbox span is capped (`map_max_span_km`); beyond it the endpoint returns `clustered: true` and counts per cell of an N × N grid over the visible area (`map_cluster_cells`).
+- **Drivers** (sessions in `SHARING` with a fix < 2 min old, not blocked) → the same payload for **every viewer** (the viewer's own marker left out):
+  `{id (the session), type, lat, lng, headingDeg, name, isFull, headingTo, lineLabel, plateDisplay, nextRoutine, updatedAgoS}`.
   The driver's name is always included. Sharing drivers therefore see all other drivers.
-- **Requests** (OPEN and anchored, not blocked), serialised **per viewer**:
-  - a sharing taxi/louage driver whose type ∈ request types → `{lat, lng, destination, seats, waitingMin, nearerDriversCount}` + `{name, note}` **only if `show_identity = true`**;
-  - everyone else → `{latApprox, lngApprox (a ~100 m grid), destination}`, never a name or note.
+- **Requests** (OPEN and anchored, not blocked), serialised **per viewer** (`packages/domain/visibility/passengers.ts`):
+  - a sharing (not on break) taxi/louage driver whose type ∈ request types → `{exact: true, lat, lng, destination, seats, waitingMin, distanceM, closerDrivers}` + `{name, note}` **only if `show_identity = true`**;
+  - everyone else → `{exact: false, lat, lng}` snapped to a ~100 m grid cell centre, plus the destination, never a name or note;
+  - the passenger's own request is not on their map.
 - A driver account without an active, fresh, non-break session → **403** `SHARING_REQUIRED`.
-- `nearerDriversCount` = the number of other sharing, **non-full** drivers of a matching type closer to the passenger than the viewer. It helps drivers judge whether a passenger is worth going for.
-- Client polling every 5 s; ETag per bbox tile.
+- `closerDrivers` = the number of other sharing, **non-full** drivers of a matching type closer to the passenger than the viewer. It helps drivers judge whether a passenger is worth going for.
+- Client polling every 5 s with `If-None-Match`; an unchanged view answers 304 with no body.
 
 ### 5.2 Destination finder
-Inputs: passenger position `O`, destination `D`, types `T`.
+`POST /v1/finder {destination: {point, placeId?}, near}`. Inputs: `O` = `near` (the centre of the passenger's map, or null), destination `D`. The rules are pure functions in `packages/domain/finder`.
 ```
 live   = drivers in SHARING, fresh, type ∈ T, ST_DWithin(pos, O, r_origin)   -- 5 km taxi, 15 km louage/bus
   heading_ok := headingTo near D (2 km urban / 10 km intercity)
@@ -149,7 +150,7 @@ full drivers → shown last, with a Full badge
 Occurrence expansion: weekly routines store `days_mask` + `local_time` (Africa/Tunis); the server computes the next occurrences on the fly.
 
 ### 5.3 Driver list
-The same data as the map for the sharing driver, sorted by distance and grouped by destination place.
+The same data as the map for the sharing driver, sorted by distance and grouped by destination place (the queue under the driver map). Navigation hands off to Google Maps or Waze.
 
 ## 6. Data retention
 Latest points only; requests keep anchor/last point for 30 days and are then coarsened; pickup records are admin-only and kept 90 days; sessions metadata and session events (no coordinates) for 12 months. See [domain-model.md §4](domain-model.md).

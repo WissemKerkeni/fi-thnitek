@@ -5,15 +5,15 @@ import { useAuth } from '../auth/AuthProvider';
 import { ApiError } from '../lib/api';
 import { bboxKey } from './viewport';
 
-/** R-021: poll every 5 s, only while the map screen is visible. */
+/** R-021: poll every 5 s, only while the map screen is visible (unchanged answers cost a bodiless 304). */
 const POLL_MS = 5_000;
 
-export function useMapDrivers(bbox: BBox | null, enabled = true) {
+export function useLiveMap(bbox: BBox | null, enabled = true) {
   const { api } = useAuth();
   const focused = useIsFocused();
   return useQuery({
-    queryKey: ['map', 'drivers', bbox ? bboxKey(bbox) : null],
-    queryFn: () => api.mapDrivers({ bbox: bbox! }),
+    queryKey: ['map', bbox ? bboxKey(bbox) : null],
+    queryFn: () => api.liveMap({ bbox: bbox! }),
     enabled: enabled && focused && bbox !== null,
     refetchInterval: POLL_MS,
     placeholderData: keepPreviousData,

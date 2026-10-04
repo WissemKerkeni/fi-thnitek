@@ -1,4 +1,4 @@
-import type { MapDriver, SharingStatus } from '@fi-thnitek/contracts';
+import type { ExactPassenger, MapDriver, SharingStatus } from '@fi-thnitek/contracts';
 import {
   Camera,
   Map as MapView,
@@ -6,7 +6,7 @@ import {
   type ViewStateChangeEvent,
 } from '@maplibre/maplibre-react-native';
 import { Stack, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -15,6 +15,7 @@ import {
   Modal,
   type NativeSyntheticEvent,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
@@ -23,7 +24,11 @@ import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
 import { DriverCard } from '../src/map/DriverCard';
 import { DriverMarkers } from '../src/map/DriverMarkers';
 import { VehicleBadge } from '../src/map/VehicleBadge';
-import { useMapDrivers } from '../src/map/useMapDrivers';
+import { PassengerCard } from '../src/map/PassengerCard';
+import { ClusterMarkers, PassengerMarkers } from '../src/map/PassengerMarkers';
+import { PassengerQueue } from '../src/map/PassengerQueue';
+import { useAnimatedPositions } from '../src/map/useAnimatedPositions';
+import { useLiveMap } from '../src/map/useLiveMap';
 import { bboxAround, bboxOf } from '../src/map/viewport';
 import { langOf, placeNames } from '../src/places/format';
 import {
@@ -285,9 +290,15 @@ function LiveView({ status }: { status: SharingStatus }) {
   const showError = useErrorAlert();
   const [bbox, setBbox] = useState(() => bboxAround(TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
+  const [passenger, setPassenger] = useState<ExactPassenger | null>(null);
   const [breakOpen, setBreakOpen] = useState(false);
-  // R-025: drivers see each other while sharing with a fresh fix (else the API answers 403).
-  const drivers = useMapDrivers(bbox, s.fresh);
+  // R-025: drivers see each other (and their passengers) while sharing with a fresh fix (else 403).
+  const live = useLiveMap(bbox, s.fresh);
+  const drivers = useAnimatedPositions(useMemo(() => live.data?.drivers ?? [], [live.data]));
+  const exact = useMemo(
+    () => (live.data?.passengers ?? []).filter((p): p is ExactPassenger => p.exact),
+    [live.data],
+  );
   const heading = s.headingTo ? placeNames(s.headingTo, lang).name : null;
 
   function onRegionDidChange(e: NativeSyntheticEvent<ViewStateChangeEvent>) {
@@ -376,7 +387,12 @@ function LiveView({ status }: { status: SharingStatus }) {
             trackUserLocation="default"
           />
           <UserLocation accuracy heading />
-          <DriverMarkers drivers={drivers.data?.drivers ?? []} onSelect={setSelected} />
+          <DriverMarkers drivers={drivers} onSelect={setSelected} />
+          <PassengerMarkers
+            passengers={live.data?.passengers ?? []}
+            onSelect={(p) => (p.exact ? setPassenger(p) : undefined)}
+          />
+          <ClusterMarkers clusters={live.data?.clusters ?? []} />
         </MapView>
 
         <View style={styles.mapTop} pointerEvents="box-none">
@@ -402,7 +418,7 @@ function LiveView({ status }: { status: SharingStatus }) {
               <Icon name="chevron-right" size={20} color={colors.textMuted} />
             )}
           </Pressable>
-          {drivers.data?.tooWide ? (
+          {live.data?.clustered ? (
             <View style={styles.zoomPill}>
               <Text variant="caption" style={styles.zoomText}>
                 {t('live.zoomIn')}
@@ -411,11 +427,27 @@ function LiveView({ status }: { status: SharingStatus }) {
           ) : null}
         </View>
 
-        {selected ? (
-          <View style={[styles.mapBottom, { bottom: insets.bottom + spacing.md }]}>
-            <DriverCard driver={selected} onClose={() => setSelected(null)} />
+        {passenger || selected ? (
+          <View style={[styles.mapBottom, { bottom: spacing.md }]}>
+            {passenger ? (
+              <PassengerCard passenger={passenger} onClose={() => setPassenger(null)} />
+            ) : selected ? (
+              <DriverCard driver={selected} onClose={() => setSelected(null)} />
+            ) : null}
           </View>
         ) : null}
+      </View>
+
+      {/* Stitch D4: the passenger queue under the map, grouped by destination (docs/architecture.md §5.3). */}
+      <View style={[styles.queue, { paddingBottom: insets.bottom + spacing.sm }]}>
+        <SectionTitle
+          icon="human-handsup"
+          title={t('passenger.queueTitle')}
+          action={exact.length > 0 ? <Badge label={String(exact.length)} tone="success" /> : undefined}
+        />
+        <ScrollView style={styles.queueList} contentContainerStyle={styles.queueContent}>
+          <PassengerQueue passengers={exact} onSelect={setPassenger} />
+        </ScrollView>
       </View>
 
       <Modal transparent visible={breakOpen} animationType="fade" onRequestClose={() => setBreakOpen(false)}>
@@ -603,6 +635,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.text,
   },
   zoomText: { color: colors.onPrimary },
+  queue: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  queueList: { maxHeight: 220 },
+  queueContent: { gap: spacing.sm, paddingBottom: spacing.sm },
   mapBottom: { position: 'absolute', start: spacing.md, end: spacing.md },
   backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
   sheet: {

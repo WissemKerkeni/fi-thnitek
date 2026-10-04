@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MapDriversRequest } from './map.js';
+import { MapRequest } from './map.js';
 import { AdminSessionQuery, PingsRequest, PingsResponse, StartSharingRequest } from './sharing.js';
 
 const fix = { ts: 1_790_000_000_000, lat: 36.8, lng: 10.18, accuracyM: 8 };
@@ -37,7 +37,23 @@ describe('sharing contracts', () => {
 describe('map contracts', () => {
   it('requires an ordered bounding box', () => {
     const bbox = { south: 36.7, west: 10.1, north: 36.9, east: 10.3 };
-    expect(MapDriversRequest.safeParse({ bbox }).success).toBe(true);
-    expect(MapDriversRequest.safeParse({ bbox: { ...bbox, north: 36.6 } }).success).toBe(false);
+    expect(MapRequest.safeParse({ bbox }).success).toBe(true);
+    expect(MapRequest.safeParse({ bbox: { ...bbox, north: 36.6 } }).success).toBe(false);
+  });
+});
+
+describe('passenger markers', () => {
+  it('never carry a name or note in the approximate shape', async () => {
+    const { MapPassenger } = await import('./map.js');
+    const approx = MapPassenger.parse({
+      id: '0199a000-0000-7000-8000-000000000001',
+      exact: false,
+      lat: 36.8,
+      lng: 10.18,
+      types: ['LOUAGE'],
+      destination: null,
+      name: 'Marwen',
+    });
+    expect(approx).not.toHaveProperty('name');
   });
 });

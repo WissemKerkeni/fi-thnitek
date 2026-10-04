@@ -38,6 +38,14 @@ describe('DEFAULT_THRESHOLDS', () => {
       spoof_speed_kmh: 180,
       approx_grid_m: 100,
       map_max_span_km: 25,
+      map_cluster_cells: 8,
+      finder_near_urban_m: 2_000,
+      finder_near_intercity_m: 10_000,
+      finder_corridor_urban_m: 1_000,
+      finder_corridor_intercity_m: 5_000,
+      finder_radius_taxi_m: 5_000,
+      finder_radius_intercity_m: 15_000,
+      finder_routine_m: 15_000,
       document_expiry_reminder_days: 30,
     });
   });

@@ -1,6 +1,6 @@
 import {
   type FixInput,
-  MapDriversResponse,
+  MapView,
   ProblemDetails,
   RoutineList,
   RoutineView,
@@ -233,10 +233,10 @@ describe('heading-to pre-fill and use (R-051, R-067)', () => {
 
     // R-022 / R-066: the driver card shows the next departure.
     const passenger = await signIn();
-    const map = MapDriversResponse.parse(
+    const map = MapView.parse(
       (
         await request(t.server())
-          .post('/v1/map/drivers')
+          .post('/v1/map')
           .set(bearer(passenger))
           .send({ bbox: { south: 36.75, west: 10.1, north: 36.85, east: 10.25 } })
           .expect(200)

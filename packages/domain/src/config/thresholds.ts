@@ -59,6 +59,19 @@ export const ThresholdsSchema = z
     approx_grid_m: positiveInt,
     /** Live map: no markers for a visible area wider or taller than this (R-020, "zoom in"). */
     map_max_span_km: positiveInt,
+    /** Clustered map: the visible area is split into N × N cells (R-020). */
+    map_cluster_cells: positiveInt,
+    /** Finder (R-045): "heading to" near the destination: taxi (urban) / louage-bus (intercity). */
+    finder_near_urban_m: positiveInt,
+    finder_near_intercity_m: positiveInt,
+    /** Finder: half-width of the corridor from the driver to their "heading to". */
+    finder_corridor_urban_m: positiveInt,
+    finder_corridor_intercity_m: positiveInt,
+    /** Finder: drivers within this distance of the passenger: taxi / louage-bus. */
+    finder_radius_taxi_m: positiveInt,
+    finder_radius_intercity_m: positiveInt,
+    /** Finder: routine destinations and origins this close to the passenger's destination and position. */
+    finder_routine_m: positiveInt,
     /** Drivers get a reminder this many days before an accepted document expires (R-064). */
     document_expiry_reminder_days: positiveInt,
   })
@@ -108,6 +121,14 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     spoof_speed_kmh: 180,
     approx_grid_m: 100,
     map_max_span_km: 25,
+    map_cluster_cells: 8,
+    finder_near_urban_m: 2_000,
+    finder_near_intercity_m: 10_000,
+    finder_corridor_urban_m: 1_000,
+    finder_corridor_intercity_m: 5_000,
+    finder_radius_taxi_m: 5_000,
+    finder_radius_intercity_m: 15_000,
+    finder_routine_m: 15_000,
     document_expiry_reminder_days: 30,
   }),
 );

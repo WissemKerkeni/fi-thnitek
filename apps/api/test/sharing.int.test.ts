@@ -2,7 +2,7 @@ import {
   AdminSessionDetail,
   AdminSessionList,
   type FixInput,
-  MapDriversResponse,
+  MapView,
   PingsResponse,
   ProblemDetails,
   SharingStatus,
@@ -93,7 +93,7 @@ const api = (s: SignInResponse) => ({
   pings: (fixes: FixInput[], locationServicesOn = true) =>
     request(t.server()).post('/v1/location/pings').set(bearer(s)).send({ fixes, locationServicesOn }),
   map: (bbox = { south: 36.75, west: 10.1, north: 36.85, east: 10.25 }) =>
-    request(t.server()).post('/v1/map/drivers').set(bearer(s)).send({ bbox }),
+    request(t.server()).post('/v1/map').set(bearer(s)).send({ bbox }),
 });
 
 const statusOf = (body: unknown) => SharingStatus.parse(body);
@@ -490,14 +490,14 @@ describe('live map drivers (R-022, R-026, invariant 4)', () => {
     const id = statusOf((await api(d).start().expect(200)).body).session!.id;
     await api(d).full(true).expect(200);
     const passenger = await signIn();
-    const seen = MapDriversResponse.parse((await api(passenger).map().expect(200)).body);
+    const seen = MapView.parse((await api(passenger).map().expect(200)).body);
     const marker = seen.drivers.find((m) => m.id === id);
     expect(marker).toMatchObject({ type: 'LOUAGE', isFull: true, lineLabel: null });
     expect(marker?.name).toBe('Sami');
     expect(Object.keys(marker!)).not.toContain('userId');
 
     await api(d).breakFor(30).expect(200);
-    const after = MapDriversResponse.parse((await api(passenger).map().expect(200)).body);
+    const after = MapView.parse((await api(passenger).map().expect(200)).body);
     expect(after.drivers.find((m) => m.id === marker!.id)).toBeUndefined();
   });
 
@@ -505,7 +505,7 @@ describe('live map drivers (R-022, R-026, invariant 4)', () => {
     const d = await verifiedDriver();
     expect(problem((await api(d).map().expect(403)).body).code).toBe('SHARING_REQUIRED');
     await api(d).start().expect(200);
-    const seen = MapDriversResponse.parse((await api(d).map().expect(200)).body);
+    const seen = MapView.parse((await api(d).map().expect(200)).body);
     const own = statusOf((await api(d).status().expect(200)).body).session!.id;
     expect(seen.drivers.map((m) => m.id)).not.toContain(own);
     await api(d).breakFor(30).expect(200);
@@ -514,11 +514,11 @@ describe('live map drivers (R-022, R-026, invariant 4)', () => {
 
   it('asks to zoom in beyond the span limit and keeps coordinates out of the URL', async () => {
     const passenger = await signIn();
-    const wide = MapDriversResponse.parse(
+    const wide = MapView.parse(
       (await api(passenger).map({ south: 35, west: 9, north: 37, east: 11 }).expect(200)).body,
     );
-    expect(wide).toEqual({ drivers: [], tooWide: true });
-    await request(t.server()).get('/v1/map/drivers?south=36').set(bearer(passenger)).expect(404);
+    expect(wide).toMatchObject({ clustered: true, drivers: [], passengers: [] });
+    await request(t.server()).get('/v1/map?south=36').set(bearer(passenger)).expect(404);
   });
 });
 
