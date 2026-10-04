@@ -7,13 +7,16 @@ import {
   type ViewStateChangeEvent,
 } from '@maplibre/maplibre-react-native';
 import { Stack, router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type NativeSyntheticEvent, Pressable, StyleSheet, View } from 'react-native';
 import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
 import { DriverCard } from '../src/map/DriverCard';
 import { DriverMarkers } from '../src/map/DriverMarkers';
-import { useMapDrivers } from '../src/map/useMapDrivers';
+import { ClusterMarkers, PassengerMarkers } from '../src/map/PassengerMarkers';
+import { useAnimatedPositions } from '../src/map/useAnimatedPositions';
+import { useLiveMap } from '../src/map/useLiveMap';
+import { setMapCenter } from '../src/map/mapCenter';
 import { bboxAround, bboxOf } from '../src/map/viewport';
 import { DestinationPin } from '../src/places/DestinationPin';
 import { type Layer, LayerChips } from '../src/places/LayerChips';
@@ -45,14 +48,21 @@ export default function HomeScreen() {
   const [layers, setLayers] = useState<ReadonlySet<Layer>>(() => new Set(ALL_LAYERS));
   const [bbox, setBbox] = useState(() => bboxAround(TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
-  const live = useMapDrivers(bbox);
+  const live = useLiveMap(bbox);
   const current = useCurrentRequest();
   const open = current.data?.request ?? null;
-  const drivers = (live.data?.drivers ?? []).filter((d) => layers.has(LAYER_OF[d.type]));
+  const visibleDrivers = useMemo(
+    () => (live.data?.drivers ?? []).filter((d) => layers.has(LAYER_OF[d.type])),
+    [live.data, layers],
+  );
+  const drivers = useAnimatedPositions(visibleDrivers);
+  const passengers = layers.has('passengers') ? (live.data?.passengers ?? []) : [];
   const updatedS = live.dataUpdatedAt ? Math.max(0, Math.round((now - live.dataUpdatedAt) / 1000)) : null;
 
   function onRegionDidChange(e: NativeSyntheticEvent<ViewStateChangeEvent>) {
     setBbox(bboxOf(e.nativeEvent.bounds));
+    const [lng, lat] = e.nativeEvent.center;
+    setMapCenter({ lat, lng });
   }
 
   useEffect(() => {
@@ -95,6 +105,11 @@ export default function HomeScreen() {
         >
           <Camera ref={camera} initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} />
           <DriverMarkers drivers={drivers} onSelect={setSelected} />
+          <PassengerMarkers passengers={passengers} />
+          <ClusterMarkers
+            clusters={live.data?.clusters ?? []}
+            onPress={(c) => camera.current?.flyTo({ center: [c.lng, c.lat], zoom: 11, duration: 600 })}
+          />
           {destination ? (
             <Marker lngLat={[destination.point.lng, destination.point.lat]} anchor="bottom">
               <DestinationPin />
@@ -166,16 +181,24 @@ export default function HomeScreen() {
             </Pressable>
           ) : null}
           {!open && destination && !selected ? (
-            <Button
-              label={t('requests.ask')}
-              subtitle={t('requests.askSubtitle')}
-              icon="hail"
-              onPress={() => router.push('/request/new')}
-            />
+            <>
+              <Button
+                label={t('finder.title', { name: destinationName ?? '' })}
+                icon="account-search"
+                variant="secondary"
+                onPress={() => router.push('/finder')}
+              />
+              <Button
+                label={t('requests.ask')}
+                subtitle={t('requests.askSubtitle')}
+                icon="hail"
+                onPress={() => router.push('/request/new')}
+              />
+            </>
           ) : null}
           {selected ? (
             <DriverCard driver={selected} onClose={() => setSelected(null)} />
-          ) : live.data?.tooWide ? (
+          ) : live.data?.clustered ? (
             <View style={styles.livePill} pointerEvents="none">
               <Icon name="magnify-plus-outline" size={18} color={colors.onPrimary} />
               <Text variant="caption" style={styles.livePillText}>

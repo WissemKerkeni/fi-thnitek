@@ -6,8 +6,10 @@ import {
   type CreateRequestInput,
   CurrentRequest,
   HealthResponse,
-  type MapDriversRequest,
-  MapDriversResponse,
+  type FinderRequest,
+  FinderResponse,
+  type MapRequest,
+  MapView,
   Me,
   MyVerification,
   type NearestPlaceRequest,
@@ -96,7 +98,10 @@ export interface ApiClient {
   stopSharing(): Promise<SharingStatus>;
   sendPings(req: PingsRequest): Promise<PingsResponse>;
   // Live map (R-020…R-022): the visible area goes in the body
-  mapDrivers(req: MapDriversRequest): Promise<MapDriversResponse>;
+  /** Repeats with the last ETag for the same area; an unchanged answer (304) reuses the last view. */
+  liveMap(req: MapRequest): Promise<MapView>;
+  /** R-045: who goes to a destination (P2). */
+  finder(req: FinderRequest): Promise<FinderResponse>;
   // Routine routes (D5, R-065…R-068)
   listRoutines(): Promise<RoutineList>;
   createRoutine(input: RoutineInput): Promise<RoutineView>;
@@ -126,8 +131,14 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
   const tokens = options.tokens;
   let refreshing: Promise<boolean> | null = null;
 
-  async function send(method: string, path: string, body: unknown, accessToken: string | null) {
-    const headers: Record<string, string> = { Accept: 'application/json' };
+  async function send(
+    method: string,
+    path: string,
+    body: unknown,
+    accessToken: string | null,
+    extraHeaders: Record<string, string> = {},
+  ) {
+    const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders };
     const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
     // Multipart bodies set their own Content-Type (with the boundary).
     if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
@@ -171,10 +182,23 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     return refreshing;
   }
 
-  async function authed<T>(method: string, path: string, schema: ZodType<T>, body?: unknown): Promise<T> {
+  interface Conditional<T> {
+    headers?: Record<string, string>;
+    /** The cached value to return on 304 Not Modified. */
+    notModified?: () => T;
+    onResponse?: (res: Response) => void;
+  }
+
+  async function authed<T>(
+    method: string,
+    path: string,
+    schema: ZodType<T>,
+    body?: unknown,
+    conditional: Conditional<T> = {},
+  ): Promise<T> {
     if (!tokens?.getAccessToken()) await refreshOnce();
     const used = tokens?.getAccessToken() ?? null;
-    let res = await send(method, path, body, used);
+    let res = await send(method, path, body, used, conditional.headers);
     if (res.status === 401) {
       const error = await toError(res);
       if (error.problem?.code !== 'TOKEN_EXPIRED') {
@@ -186,7 +210,7 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
       // Another request may already have refreshed while this one was in flight.
       const renewed = tokens?.getAccessToken() !== used || (await refreshOnce());
       if (!renewed) throw error;
-      res = await send(method, path, body, tokens?.getAccessToken() ?? null);
+      res = await send(method, path, body, tokens?.getAccessToken() ?? null, conditional.headers);
     }
     if (res.status === 403) {
       const error = await toError(res);
@@ -197,9 +221,13 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
       }
       throw error;
     }
+    if (res.status === 304 && conditional.notModified) return conditional.notModified();
     if (!res.ok) throw await toError(res);
+    conditional.onResponse?.(res);
     return parse(res, schema);
   }
+
+  let lastMap: { key: string; etag: string; view: MapView } | null = null;
 
   return {
     async getHealth() {
@@ -250,7 +278,21 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     confirmStillWorking: () => authed('POST', '/driver/sharing/still-working', SharingStatus),
     stopSharing: () => authed('POST', '/driver/sharing/stop', SharingStatus),
     sendPings: (req) => authed('POST', '/location/pings', PingsResponse, req),
-    mapDrivers: (req) => authed('POST', '/map/drivers', MapDriversResponse, req),
+    async liveMap(req) {
+      const key = JSON.stringify(req.bbox);
+      const cached = lastMap?.key === key ? lastMap : null;
+      let etag: string | null = null;
+      const view = await authed('POST', '/map', MapView, req, {
+        headers: cached ? { 'If-None-Match': cached.etag } : undefined,
+        notModified: cached ? () => cached.view : undefined,
+        onResponse: (res) => {
+          etag = res.headers.get('etag');
+        },
+      });
+      if (etag) lastMap = { key, etag, view };
+      return view;
+    },
+    finder: (req) => authed('POST', '/finder', FinderResponse, req),
     listRoutines: () => authed('GET', '/driver/routines', RoutineList),
     createRoutine: (input) => authed('POST', '/driver/routines', RoutineView, input),
     updateRoutine: (id, input) => authed('PUT', `/driver/routines/${id}`, RoutineView, input),

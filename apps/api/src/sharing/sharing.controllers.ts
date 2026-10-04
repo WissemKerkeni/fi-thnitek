@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto';
 import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Inject,
@@ -10,14 +12,17 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   type AdminSessionDetail,
   type AdminSessionList,
   AdminSessionQuery,
-  MapDriversRequest,
-  type MapDriversResponse,
+  FinderRequest,
+  type FinderResponse,
+  MapRequest,
+  type MapView,
   PingsRequest,
   type PingsResponse,
   ResumeSharingRequest,
@@ -27,6 +32,7 @@ import {
   StartSharingRequest,
   UpdateSharingRequest,
 } from '@fi-thnitek/contracts';
+import type { Response } from 'express';
 import type { z } from 'zod';
 import { AdminOnly, type AuthContext, CurrentAuth } from '../auth/decorators.js';
 import { ApiException } from '../common/api-exception.js';
@@ -134,20 +140,40 @@ export class LocationController {
   }
 }
 
-/** The live map (R-020…R-026). The visible area travels in the body, never in the URL. */
+/** The live map (R-020…R-027) and the destination finder (R-045). Areas and positions travel in bodies only. */
 @ApiTags('map')
 @ApiBearerAuth()
-@Controller('map')
+@Controller()
 export class MapController {
   constructor(private readonly map: MapService) {}
 
-  @Post('drivers')
+  /** Polled every 5 s (R-021): an unchanged answer is a bodiless 304 when the phone sends its ETag. */
+  @Post('map')
   @HttpCode(HttpStatus.OK)
-  drivers(
+  async view(
     @CurrentAuth() auth: AuthContext,
-    @Body(new ZodValidationPipe(MapDriversRequest)) body: MapDriversRequest,
-  ): Promise<MapDriversResponse> {
-    return this.map.drivers(auth.userId, body.bbox);
+    @Body(new ZodValidationPipe(MapRequest)) body: MapRequest,
+    @Headers('if-none-match') ifNoneMatch: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<MapView | undefined> {
+    const view = await this.map.view(auth.userId, body.bbox);
+    const etag = `W/"${createHash('sha1').update(JSON.stringify(view)).digest('base64url')}"`;
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'private, no-cache');
+    if (ifNoneMatch === etag) {
+      res.status(HttpStatus.NOT_MODIFIED);
+      return undefined;
+    }
+    return view;
+  }
+
+  @Post('finder')
+  @HttpCode(HttpStatus.OK)
+  finder(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(FinderRequest)) body: z.output<typeof FinderRequest>,
+  ): Promise<FinderResponse> {
+    return this.map.finder(auth.userId, body);
   }
 }
 
