@@ -1,11 +1,12 @@
 import type { Place } from '@fi-thnitek/contracts';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { api } from '../src/lib/query';
+import { useAuth } from '../src/auth/AuthProvider';
 import { setDestination } from '../src/places/destination';
+import { useChooseHeading } from '../src/sharing/useChooseHeading';
 import { langOf, placeNames } from '../src/places/format';
 import { useDebouncedValue } from '../src/places/useDebouncedValue';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
@@ -13,9 +14,15 @@ import { Text } from '../src/ui/Text';
 
 const MIN_CHARS = 2;
 
-/** Destination search (R-011): accent/hamza-insensitive suggestions in AR and FR, or pick on the map. */
+/**
+ * Destination search (R-011): accent/hamza-insensitive suggestions in AR and FR, or pick on the map.
+ * With `purpose=heading` it picks a driver's "heading to" instead (R-051).
+ */
 export default function DestinationScreen() {
   const { t, i18n } = useTranslation();
+  const { api } = useAuth();
+  const heading = useLocalSearchParams<{ purpose?: string }>().purpose === 'heading';
+  const chooseHeading = useChooseHeading();
   const lang = langOf(i18n.language);
   const [text, setText] = useState('');
   const q = useDebouncedValue(text.trim(), 250);
@@ -30,7 +37,8 @@ export default function DestinationScreen() {
   });
 
   function choose(place: Place) {
-    setDestination({ point: place.location, place, distanceM: 0 });
+    if (heading) void chooseHeading(place).catch(() => undefined);
+    else setDestination({ point: place.location, place, distanceM: 0 });
     router.back();
   }
 
@@ -45,7 +53,7 @@ export default function DestinationScreen() {
 
   return (
     <View style={styles.flex}>
-      <Stack.Screen options={{ title: t('places.searchTitle') }} />
+      <Stack.Screen options={{ title: heading ? t('sharing.headingTo') : t('places.searchTitle') }} />
       <View style={styles.header}>
         <TextInput
           value={text}
@@ -58,7 +66,13 @@ export default function DestinationScreen() {
           placeholderTextColor={colors.textMuted}
           style={styles.input}
         />
-        <Pressable accessibilityRole="button" onPress={() => router.push('/pick-on-map')} style={styles.pickRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({ pathname: '/pick-on-map', params: heading ? { purpose: 'heading' } : {} })
+          }
+          style={styles.pickRow}
+        >
           <Text style={styles.pickIcon}>📍</Text>
           <Text variant="bodyStrong" style={styles.pickText}>
             {t('places.pickOnMap')}
@@ -71,7 +85,9 @@ export default function DestinationScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.list}
         ListHeaderComponent={
-          ready && results.isFetching ? <ActivityIndicator color={colors.primary} style={styles.spinner} /> : null
+          ready && results.isFetching ? (
+            <ActivityIndicator color={colors.primary} style={styles.spinner} />
+          ) : null
         }
         ListEmptyComponent={
           empty ? (

@@ -19,7 +19,7 @@ import { type SQL, and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiException } from '../common/api-exception.js';
-import type { Database } from '../db/client.js';
+import type { Database, Executor } from '../db/client.js';
 import { DB } from '../db/db.module.js';
 import { places } from '../db/schema/index.js';
 
@@ -54,6 +54,12 @@ const toPlace = (r: PlaceRow): Place => ({
   governorateCode: r.governorateCode,
   location: { lat: Number(r.lat), lng: Number(r.lng) },
 });
+
+/** One place by id (e.g. a driver's "heading to"), or null. */
+export async function findPlace(db: Executor, id: string): Promise<Place | null> {
+  const [row] = await db.select(placeColumns).from(places).where(eq(places.id, id));
+  return row ? toPlace(row) : null;
+}
 
 @Injectable()
 export class PlacesService {
@@ -102,7 +108,14 @@ export class PlacesService {
       .where(
         and(
           sql`ST_DWithin(${places.location}, ${point(at)}, ${maxDistanceM})`,
-          inArray(places.kind, ['CITY', 'NEIGHBOURHOOD', 'LOUAGE_STATION', 'BUS_STATION', 'AIRPORT', 'LANDMARK']),
+          inArray(places.kind, [
+            'CITY',
+            'NEIGHBOURHOOD',
+            'LOUAGE_STATION',
+            'BUS_STATION',
+            'AIRPORT',
+            'LANDMARK',
+          ]),
         ),
       )
       .orderBy(sql`${places.location} <-> ${point(at)}`)
@@ -118,13 +131,21 @@ export class PlacesService {
     const where = needle ? sql`${places.searchText} LIKE ${`%${needle}%`}` : undefined;
     const [rows, [count]] = await Promise.all([
       this.db
-        .select({ ...placeColumns, aliases: places.aliases, popularity: places.popularity, source: places.source })
+        .select({
+          ...placeColumns,
+          aliases: places.aliases,
+          popularity: places.popularity,
+          source: places.source,
+        })
         .from(places)
         .where(where)
         .orderBy(desc(places.popularity), asc(places.nameFr))
         .limit(pageSize)
         .offset((page - 1) * pageSize),
-      this.db.select({ n: sql<number>`count(*)::int` }).from(places).where(where),
+      this.db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(places)
+        .where(where),
     ]);
     return {
       places: rows.map((r) => ({
@@ -147,7 +168,13 @@ export class PlacesService {
         locked: true,
       });
       await this.audit.record(
-        { actorType: 'ADMIN', actorUserId: adminId, action: 'place.create', targetType: 'place', targetId: id },
+        {
+          actorType: 'ADMIN',
+          actorUserId: adminId,
+          action: 'place.create',
+          targetType: 'place',
+          targetId: id,
+        },
         tx,
       );
     });
@@ -163,7 +190,13 @@ export class PlacesService {
         .returning({ id: places.id });
       if (updated.length !== 1) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);
       await this.audit.record(
-        { actorType: 'ADMIN', actorUserId: adminId, action: 'place.update', targetType: 'place', targetId: id },
+        {
+          actorType: 'ADMIN',
+          actorUserId: adminId,
+          action: 'place.update',
+          targetType: 'place',
+          targetId: id,
+        },
         tx,
       );
     });
@@ -190,7 +223,12 @@ export class PlacesService {
 
   private async adminGet(id: string): Promise<AdminPlace> {
     const [r] = await this.db
-      .select({ ...placeColumns, aliases: places.aliases, popularity: places.popularity, source: places.source })
+      .select({
+        ...placeColumns,
+        aliases: places.aliases,
+        popularity: places.popularity,
+        source: places.source,
+      })
       .from(places)
       .where(eq(places.id, id));
     if (!r) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);

@@ -13,10 +13,15 @@ describe('DEFAULT_THRESHOLDS', () => {
       request_max_renewals: 3,
       driver_fresh_s: 120,
       driver_buffer_max_min: 60,
+      ping_gap_s: 120,
+      driver_ping_moving_s: 10,
+      driver_ping_stationary_s: 30,
+      driver_distance_filter_m: 10,
       cooldown_min: 60,
       break_options_min: [30, 60, 120],
       break_resume_window_min: 15,
       session_max_h: 12,
+      still_working_answer_min: 10,
       routine_max: 5,
       routine_stale_days: 30,
       routine_prompt_grace_days: 7,
@@ -24,6 +29,7 @@ describe('DEFAULT_THRESHOLDS', () => {
       pickup_radius_m: 50,
       spoof_speed_kmh: 180,
       approx_grid_m: 100,
+      map_max_span_km: 25,
       document_expiry_reminder_days: 30,
     });
   });

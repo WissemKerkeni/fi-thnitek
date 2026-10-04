@@ -14,7 +14,13 @@ const LAYERS: { id: Layer; icon: string; label: TranslationKey }[] = [
 ];
 
 /** R-020 layer toggles. "On" is shown by a check mark and a filled chip, never by colour alone. */
-export function LayerChips({ visible, onToggle }: { visible: ReadonlySet<Layer>; onToggle: (layer: Layer) => void }) {
+export function LayerChips({
+  visible,
+  onToggle,
+}: {
+  visible: ReadonlySet<Layer>;
+  onToggle: (layer: Layer) => void;
+}) {
   const { t } = useTranslation();
   return (
     <ScrollView

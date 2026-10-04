@@ -49,10 +49,11 @@ stateDiagram-v2
 Once `VERIFIED`, the account is **driver-only** (no passenger mode).
 
 ### Sharing
-- **sharing_sessions**: `id`, `driver_user_id`, `vehicle_id`, `transport_type_code`, `heading_to_place_id?`, `heading_to_point?`, `heading_to_label?`, `line_label?` (bus), `state` (`SHARING`|`ON_BREAK`), **`is_full`** (bool), `break_started_at?`, **`break_until?`**, `breaks_count`, `started_at`, `last_fix_at`, `still_working_confirmed_at?`, `ended_at?`, `end_reason?` (`MANUAL_STOP`|`LOCATION_OFF`|`PING_GAP`|`SPOOF_SUSPECTED`|`MAX_DURATION`|`BREAK_NOT_RESUMED`|`SUSPENDED`|`ADMIN`), `cooldown_applied` (bool).
-- **session_events** (audit trail of the session, no coordinates): `session_id`, `type` (`STARTED`|`FULL_ON`|`FULL_OFF`|`BREAK_STARTED`|`RESUMED`|`HEADING_CHANGED`|`HIDDEN_STALE`|`ENDED`), `at`, `meta` jsonb (e.g. break minutes).
+- **sharing_sessions**: `id`, `driver_user_id`, `vehicle_id`, `transport_type`, `heading_to_place_id?` (a known place, ADR-218), `line_label?` (bus), `state` (`SHARING`|`ON_BREAK`|`ENDED`), **`is_full`** (bool), `break_started_at?`, **`break_until?`**, `break_reminded_at?`, `breaks_count`, `started_at`, `last_fix_at`, `still_working_prompted_at?`, `still_working_confirmed_at?`, `ended_at?`, `end_reason?` (`MANUAL_STOP`|`LOCATION_OFF`|`PING_GAP`|`SPOOF_SUSPECTED`|`MAX_DURATION`|`BREAK_NOT_RESUMED`|`SUSPENDED`|`ADMIN`), `cooldown_applied` (bool).
+- **session_events** (audit trail of the session, no coordinates): `session_id`, `type` (`STARTED`|`FULL_ON`|`FULL_OFF`|`BREAK_STARTED`|`RESUMED`|`HEADING_CHANGED`|`STILL_WORKING_PROMPTED`|`STILL_WORKING_CONFIRMED`|`ENDED`), `at`, `meta` jsonb (e.g. break minutes, end reason).
   Partial unique index: one session per driver `WHERE ended_at IS NULL`.
-- **driver_live_locations** (hot, one row per sharing driver; deleted at session end; **no history table**): `driver_user_id` PK, `session_id`, `transport_type_code`, `point`, `accuracy_m`, `heading`, `speed_mps`, `fix_ts`, `recent_fixes` jsonb (a rolling window of the last ~2 min, overwritten), `updated_at`. GiST on `point`.
+- **driver_live_locations** (hot, one row per sharing driver; deleted at break start and session end; **no history table**): `driver_user_id` PK, `session_id`, `transport_type`, `point` (GiST), `lat`, `lng`, `accuracy_m`, `heading_deg`, `speed_mps`, `fix_ts`, `recent_fixes` jsonb (a rolling window of the last `driver_fresh_s`, overwritten), `updated_at`.
+- **driver_profiles.cooldown_until**: no "Start sharing" before it (ADR-218: a `PING_GAP` counts from the last good fix).
 
 ```mermaid
 stateDiagram-v2
@@ -64,6 +65,7 @@ stateDiagram-v2
   ON_BREAK --> NOT_SHARING: BREAK_NOT_RESUMED → no cooldown
   SHARING --> NOT_SHARING: MANUAL_STOP / LOCATION_OFF / PING_GAP / SPOOF_SUSPECTED → cooldown 1 h
   SHARING --> NOT_SHARING: MAX_DURATION (12 h unanswered) / SUSPENDED / ADMIN → no cooldown
+  ON_BREAK --> NOT_SHARING: MANUAL_STOP → cooldown 1 h; MAX_DURATION / SUSPENDED / ADMIN → no cooldown
 ```
 
 ### Routine routes
@@ -95,7 +97,7 @@ stateDiagram-v2
 - **reports**: `id`, `reporter_user_id`, `target_user_id`, `request_id?`, `session_id?`, `category` (`NOBODY_THERE`|`FAKE_PROFILE`|`HARASSMENT`|`UNSAFE`|`SPAM`|`OTHER`), `description`, `status`, `handled_by`, `handled_at`.
 - **sanctions**: `id`, `user_id`, `type` (`WARNING`|`REQUEST_PAUSE`|`SUSPENSION`|`BAN`), `reason`, `starts_at`, `ends_at?`, `created_by` (`SYSTEM` for `REQUEST_PAUSE` only; otherwise an admin), `revoked_at`.
 - **blocks**: `blocker_user_id`, `blocked_user_id`.
-- **risk_flags**: `id`, `user_id`, `type` (`MOCK_LOCATION`|`IMPOSSIBLE_JUMP`|`MULTI_ACCOUNT_DEVICE`|`NOBODY_THERE_CLUSTER`), `evidence` jsonb, `created_at`, `reviewed_at`.
+- **risk_flags**: `id`, `user_id`, `type` (`MOCK_LOCATION`|`IMPOSSIBLE_JUMP`|`MULTI_ACCOUNT_DEVICE`|`NOBODY_THERE_CLUSTER`), `session_id?`, `evidence` jsonb (measurements such as speed and interval, never coordinates), `created_at`, `reviewed_at`.
 - **notifications**, **audit_logs** (insert-only).
 
 ## 2. Invariants (each covered by a test)
@@ -113,7 +115,7 @@ stateDiagram-v2
 8. Pings with no active mode are rejected with `stop: true` and not stored.
 
 ## 3. Configurable thresholds (admin "Content → thresholds")
-`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `document_expiry_reminder_days=30`.
+`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `ping_gap_s=120`, `driver_ping_moving_s=10`, `driver_ping_stationary_s=30`, `driver_distance_filter_m=10`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `still_working_answer_min=10`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `map_max_span_km=25`, `document_expiry_reminder_days=30`.
 
 ## 4. Retention (proposed; confirm with a lawyer)
 | Data | Retention |

@@ -4,12 +4,20 @@ import {
   DocumentView,
   type DriverProfileInput,
   HealthResponse,
+  type MapDriversRequest,
+  MapDriversResponse,
   Me,
   MyVerification,
   type NearestPlaceRequest,
   NearestPlaceResponse,
   type PlaceSearchRequest,
   PlaceSearchResponse,
+  type PingsRequest,
+  PingsResponse,
+  type ResumeSharingRequest,
+  SharingStatus,
+  type StartSharingRequest,
+  type UpdateSharingRequest,
   PROBLEM_JSON,
   ProblemDetails,
   type RegisterDeviceRequest,
@@ -71,6 +79,18 @@ export interface ApiClient {
   // Places (R-011): coordinates go in the body, never in the URL
   searchPlaces(req: PlaceSearchRequest): Promise<PlaceSearchResponse>;
   nearestPlace(req: NearestPlaceRequest): Promise<NearestPlaceResponse>;
+  // Driver sharing (D3/D4, R-050…R-058): every action answers with the whole status
+  getSharing(): Promise<SharingStatus>;
+  startSharing(req: StartSharingRequest): Promise<SharingStatus>;
+  updateSharing(req: UpdateSharingRequest): Promise<SharingStatus>;
+  setFull(isFull: boolean): Promise<SharingStatus>;
+  startBreak(minutes: number): Promise<SharingStatus>;
+  resumeSharing(req: ResumeSharingRequest): Promise<SharingStatus>;
+  confirmStillWorking(): Promise<SharingStatus>;
+  stopSharing(): Promise<SharingStatus>;
+  sendPings(req: PingsRequest): Promise<PingsResponse>;
+  // Live map (R-020…R-022): the visible area goes in the body
+  mapDrivers(req: MapDriversRequest): Promise<MapDriversResponse>;
 }
 
 /** A photo already resized/re-encoded on the device (local file URI). */
@@ -203,6 +223,16 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     submitVerification: () => authed('POST', '/driver/verification/submit', MyVerification),
     searchPlaces: (req) => authed('POST', '/places/search', PlaceSearchResponse, req),
     nearestPlace: (req) => authed('POST', '/places/nearest', NearestPlaceResponse, req),
+    getSharing: () => authed('GET', '/driver/sharing', SharingStatus),
+    startSharing: (req) => authed('POST', '/driver/sharing/start', SharingStatus, req),
+    updateSharing: (req) => authed('PATCH', '/driver/sharing', SharingStatus, req),
+    setFull: (isFull) => authed('POST', '/driver/sharing/full', SharingStatus, { isFull }),
+    startBreak: (minutes) => authed('POST', '/driver/sharing/break', SharingStatus, { minutes }),
+    resumeSharing: (req) => authed('POST', '/driver/sharing/resume', SharingStatus, req),
+    confirmStillWorking: () => authed('POST', '/driver/sharing/still-working', SharingStatus),
+    stopSharing: () => authed('POST', '/driver/sharing/stop', SharingStatus),
+    sendPings: (req) => authed('POST', '/location/pings', PingsResponse, req),
+    mapDrivers: (req) => authed('POST', '/map/drivers', MapDriversResponse, req),
 
     uploadDocument(upload) {
       const form = new FormData();

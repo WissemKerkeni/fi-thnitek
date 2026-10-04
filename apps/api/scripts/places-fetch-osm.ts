@@ -33,11 +33,21 @@ interface Category {
 }
 
 const isLouage = (t: Record<string, string>) =>
-  /louage|لواج|اللواج/i.test(`${t.name ?? ''} ${t['name:fr'] ?? ''} ${t['name:ar'] ?? ''} ${t.description ?? ''}`);
+  /louage|لواج|اللواج/i.test(
+    `${t.name ?? ''} ${t['name:fr'] ?? ''} ${t['name:ar'] ?? ''} ${t.description ?? ''}`,
+  );
 
 const CATEGORIES: Category[] = [
-  { name: 'governorates', query: 'relation["admin_level"="4"]["boundary"="administrative"](area.tn);', kind: () => 'GOVERNORATE' },
-  { name: 'delegations', query: 'relation["admin_level"="5"]["boundary"="administrative"](area.tn);', kind: () => 'DELEGATION' },
+  {
+    name: 'governorates',
+    query: 'relation["admin_level"="4"]["boundary"="administrative"](area.tn);',
+    kind: () => 'GOVERNORATE',
+  },
+  {
+    name: 'delegations',
+    query: 'relation["admin_level"="5"]["boundary"="administrative"](area.tn);',
+    kind: () => 'DELEGATION',
+  },
   { name: 'cities', query: 'node["place"~"^(city|town)$"]["name"](area.tn);', kind: () => 'CITY' },
   { name: 'villages', query: 'node["place"="village"]["name"](area.tn);', kind: () => 'CITY' },
   {
@@ -53,7 +63,11 @@ const CATEGORIES: Category[] = [
     kind: (t) => (isLouage(t) ? 'LOUAGE_STATION' : 'BUS_STATION'),
   },
   { name: 'airports', query: 'nwr["aeroway"="aerodrome"]["iata"](area.tn);', kind: () => 'AIRPORT' },
-  { name: 'landmarks', query: 'nwr["amenity"~"^(hospital|university)$"]["name"](area.tn);', kind: () => 'LANDMARK' },
+  {
+    name: 'landmarks',
+    query: 'nwr["amenity"~"^(hospital|university)$"]["name"](area.tn);',
+    kind: () => 'LANDMARK',
+  },
 ];
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -66,7 +80,10 @@ async function overpass(query: string): Promise<OsmElement[]> {
       const res = await fetch(mirror, {
         method: 'POST',
         body,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'fi-thnitek-places/0.1' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'fi-thnitek-places/0.1',
+        },
         signal: AbortSignal.timeout(240_000),
       });
       if (res.ok) {
@@ -79,7 +96,9 @@ async function overpass(query: string): Promise<OsmElement[]> {
         process.stdout.write(`  ${mirror} → HTTP ${res.status}, retrying\n`);
       }
     } catch (error) {
-      process.stdout.write(`  ${mirror} → ${error instanceof Error ? error.message : String(error)}, retrying\n`);
+      process.stdout.write(
+        `  ${mirror} → ${error instanceof Error ? error.message : String(error)}, retrying\n`,
+      );
     }
     await sleep(5_000 * (attempt + 1));
   }
@@ -94,9 +113,20 @@ function toRecord(e: OsmElement, kind: PlaceKind): PlaceRecord | null {
   const lng = e.lon ?? e.center?.lon;
   if (lat === undefined || lng === undefined) return null;
   const nameAr = strip(t['name:ar']) ?? (/[؀-ۿ]/.test(t.name ?? '') ? strip(t.name) : undefined);
-  const nameFr = strip(t['name:fr']) ?? strip(t['name:en']) ?? (/[A-Za-z]/.test(t.name ?? '') ? strip(t.name) : undefined);
+  const nameFr =
+    strip(t['name:fr']) ?? strip(t['name:en']) ?? (/[A-Za-z]/.test(t.name ?? '') ? strip(t.name) : undefined);
   if (!nameAr && !nameFr) return null;
-  const aliases = [t.name, t['name:en'], t['name:fr'], t['name:ar'], t.alt_name, t.old_name, t.short_name, t.official_name, t.iata]
+  const aliases = [
+    t.name,
+    t['name:en'],
+    t['name:fr'],
+    t['name:ar'],
+    t.alt_name,
+    t.old_name,
+    t.short_name,
+    t.official_name,
+    t.iata,
+  ]
     .flatMap((v) => (v ? v.split(';') : []))
     .map((v) => v.trim())
     .filter((v) => v && v !== nameAr && v !== nameFr);

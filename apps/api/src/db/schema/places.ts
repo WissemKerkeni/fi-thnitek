@@ -31,7 +31,10 @@ export const places = pgTable(
     kind: placeKind('kind').notNull(),
     nameAr: text('name_ar').notNull(),
     nameFr: text('name_fr').notNull(),
-    aliases: text('aliases').array().notNull().default(sql`'{}'::text[]`),
+    aliases: text('aliases')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     location: geographyPoint('location').notNull(),
     parentId: uuid('parent_id'),
     governorateCode: text('governorate_code'),

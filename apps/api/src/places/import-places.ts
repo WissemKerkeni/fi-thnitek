@@ -12,7 +12,10 @@ const BATCH = 500;
  * Upserts a dataset by `source`. Rows an admin edited (`locked`) are left untouched, so re-importing a
  * refreshed OSM extract never overwrites a manual fix. Places that disappeared from the dataset are kept.
  */
-export async function importPlaces(db: Database, records: readonly PlaceRecord[]): Promise<{ upserted: number }> {
+export async function importPlaces(
+  db: Database,
+  records: readonly PlaceRecord[],
+): Promise<{ upserted: number }> {
   let upserted = 0;
   for (let i = 0; i < records.length; i += BATCH) {
     const rows = await db

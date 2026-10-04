@@ -26,6 +26,8 @@ export const driverProfiles = pgTable('driver_profiles', {
   reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
   reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
   decisionReason: text('decision_reason'),
+  /** No "Start sharing" before this (1 h after an undeclared stop, R-057); an admin can clear it. */
+  cooldownUntil: timestamp('cooldown_until', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });

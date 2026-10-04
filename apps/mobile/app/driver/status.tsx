@@ -80,6 +80,9 @@ export default function VerificationStatus() {
       {file.state === 'CHANGES_REQUESTED' ? (
         <Button label={t('driver.fixFile')} onPress={() => router.replace('/driver/you')} />
       ) : null}
+      {file.state === 'VERIFIED' ? (
+        <Button label={t('sharing.startTitle')} variant="accent" onPress={() => router.replace('/sharing')} />
+      ) : null}
       {file.state === 'EXPIRED' ? (
         <Button label={t('driver.renewFile')} onPress={() => router.replace('/driver/licences')} />
       ) : null}

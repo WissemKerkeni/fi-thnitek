@@ -9,6 +9,8 @@ import { GOOGLE_VERIFIER, GoogleTokenVerifier } from '../src/auth/google-verifie
 import { DEV_CIN_ENCRYPTION_KEY, DEV_CIN_HMAC_KEY, DEV_JWT_SECRET, ENV, loadEnv } from '../src/config/env.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { PUSH_TRANSPORT, RecordingTransport } from '../src/notifications/push.service.js';
+import { PING_MIN_INTERVAL_MS } from '../src/sharing/ping-rate-limiter.js';
+import { SharingSweepJob } from '../src/sharing/sharing-sweep.job.js';
 import { TEST_S3, startGarage } from './garage.js';
 import { startPostgis } from './postgis.js';
 
@@ -66,6 +68,11 @@ export async function startTestApp(): Promise<TestApp> {
     .useValue(verifier)
     .overrideProvider(PUSH_TRANSPORT)
     .useValue(push)
+    // Tests send batches back to back, and drive the sweep themselves with a chosen clock.
+    .overrideProvider(PING_MIN_INTERVAL_MS)
+    .useValue(0)
+    .overrideProvider(SharingSweepJob)
+    .useValue({})
     .compile();
   const app = moduleRef.createNestApplication({ bufferLogs: true });
   configureApp(app);

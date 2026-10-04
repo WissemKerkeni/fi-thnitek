@@ -15,7 +15,10 @@ export type PushEvent =
   | 'VERIFICATION_CHANGES_REQUESTED'
   | 'VERIFICATION_REJECTED'
   | 'DOCUMENT_EXPIRING'
-  | 'DOCUMENT_EXPIRED';
+  | 'DOCUMENT_EXPIRED'
+  | 'SHARING_ENDED'
+  | 'BREAK_OVER'
+  | 'STILL_WORKING';
 
 const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   VERIFICATION_APPROVED: 'verificationApproved',
@@ -23,6 +26,9 @@ const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   VERIFICATION_REJECTED: 'verificationRejected',
   DOCUMENT_EXPIRING: 'documentExpiring',
   DOCUMENT_EXPIRED: 'documentExpired',
+  SHARING_ENDED: 'sharingEnded',
+  BREAK_OVER: 'breakOver',
+  STILL_WORKING: 'stillWorking',
 };
 
 /** What a transport receives: already localised, already PII-free. */

@@ -155,7 +155,11 @@ describe('place search (R-011)', () => {
 
   it('honours the limit and rejects bad input', async () => {
     expect(await search({ q: 'a', limit: 1 })).toHaveLength(1);
-    const res = await request(t.server()).post('/v1/places/search').set(bearer(user)).send({ q: '' }).expect(400);
+    const res = await request(t.server())
+      .post('/v1/places/search')
+      .set(bearer(user))
+      .send({ q: '' })
+      .expect(400);
     expect(ProblemDetails.parse(res.body).code).toBe('VALIDATION_FAILED');
   });
 
