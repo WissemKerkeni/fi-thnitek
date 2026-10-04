@@ -15,6 +15,9 @@ import {
   type PingsRequest,
   PingsResponse,
   type ResumeSharingRequest,
+  type RoutineInput,
+  RoutineList,
+  RoutineView,
   SharingStatus,
   type StartSharingRequest,
   type UpdateSharingRequest,
@@ -91,6 +94,12 @@ export interface ApiClient {
   sendPings(req: PingsRequest): Promise<PingsResponse>;
   // Live map (R-020…R-022): the visible area goes in the body
   mapDrivers(req: MapDriversRequest): Promise<MapDriversResponse>;
+  // Routine routes (D5, R-065…R-068)
+  listRoutines(): Promise<RoutineList>;
+  createRoutine(input: RoutineInput): Promise<RoutineView>;
+  updateRoutine(id: string, input: RoutineInput): Promise<RoutineView>;
+  deleteRoutine(id: string): Promise<void>;
+  answerStillRunning(id: string, running: boolean): Promise<RoutineView>;
 }
 
 /** A photo already resized/re-encoded on the device (local file URI). */
@@ -233,6 +242,12 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     stopSharing: () => authed('POST', '/driver/sharing/stop', SharingStatus),
     sendPings: (req) => authed('POST', '/location/pings', PingsResponse, req),
     mapDrivers: (req) => authed('POST', '/map/drivers', MapDriversResponse, req),
+    listRoutines: () => authed('GET', '/driver/routines', RoutineList),
+    createRoutine: (input) => authed('POST', '/driver/routines', RoutineView, input),
+    updateRoutine: (id, input) => authed('PUT', `/driver/routines/${id}`, RoutineView, input),
+    deleteRoutine: (id) => authed('DELETE', `/driver/routines/${id}`, NO_BODY),
+    answerStillRunning: (id, running) =>
+      authed('POST', `/driver/routines/${id}/still-running`, RoutineView, { running }),
 
     uploadDocument(upload) {
       const form = new FormData();

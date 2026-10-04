@@ -6,8 +6,11 @@ import { useAuth } from '../../src/auth/AuthProvider';
 import { StepHeader } from '../../src/driver/StepHeader';
 import { driverErrorMessage } from '../../src/driver/errors';
 import { useVerification } from '../../src/driver/useVerification';
+import { VehicleBadge } from '../../src/map/VehicleBadge';
 import { colors, radii, spacing } from '../../src/theme/tokens';
 import { Button } from '../../src/ui/Button';
+import { Icon } from '../../src/ui/Icon';
+import { Banner, Card, SectionTitle } from '../../src/ui/kit';
 import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
 
@@ -39,50 +42,83 @@ export default function StepReview() {
     <Screen>
       <Stack.Screen options={{ title: t('driver.title') }} />
       <StepHeader step={4} />
-      <View style={styles.card}>
-        <Text variant="bodyStrong">
-          {file.legalFirstName} {file.legalLastName}
-        </Text>
-        {file.transportType ? <Text>{t(`driver.type_${file.transportType}`)}</Text> : null}
-        {file.cinLast4 ? <Text muted>CIN ••••{file.cinLast4}</Text> : null}
-        {file.vehicle ? (
-          <Text>
-            {file.vehicle.plateDisplay}
-            {file.vehicle.seats ? ` · ${file.vehicle.seats} ${t('driver.seats')}` : ''}
-          </Text>
-        ) : null}
-      </View>
-      {complete ? (
-        <Text style={styles.ok}>✓ {t('driver.complete')}</Text>
-      ) : (
-        <View style={styles.card}>
-          <Text variant="bodyStrong">{t('driver.missing')}</Text>
-          {file.vehicle === null ? <Text>• {t('driver.stepVehicle')}</Text> : null}
-          {file.missingDocuments.map((type) => (
-            <Text key={type}>• {t(`driver.docType_${type}`)}</Text>
-          ))}
+      <Card>
+        <SectionTitle icon="clipboard-check-outline" title={t('driver.stepReview')} />
+        <View style={styles.row}>
+          <Icon name="account-outline" color={colors.primary} />
+          <View style={styles.flex}>
+            <Text variant="bodyStrong">
+              {file.legalFirstName} {file.legalLastName}
+            </Text>
+            {file.cinLast4 ? (
+              <Text variant="caption" muted>
+                CIN ••••{file.cinLast4}
+              </Text>
+            ) : null}
+          </View>
         </View>
+        {file.transportType ? (
+          <View style={styles.row}>
+            <VehicleBadge type={file.transportType} size={28} />
+            <View style={styles.flex}>
+              <Text variant="bodyStrong">{t(`driver.type_${file.transportType}`)}</Text>
+              {file.vehicle ? (
+                <Text variant="caption" muted>
+                  {file.vehicle.plateDisplay}
+                  {file.vehicle.seats ? ` · ${file.vehicle.seats} ${t('driver.seats')}` : ''}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+      </Card>
+      {complete ? (
+        <Banner icon="check-circle-outline" tone="success">
+          {t('driver.complete')}
+        </Banner>
+      ) : (
+        <Card>
+          <SectionTitle icon="alert-circle-outline" title={t('driver.missing')} />
+          {file.vehicle === null ? <MissingRow label={t('driver.stepVehicle')} /> : null}
+          {file.missingDocuments.map((type) => (
+            <MissingRow key={type} label={t(`driver.docType_${type}`)} />
+          ))}
+        </Card>
       )}
       {error ? (
-        <Text style={styles.error} accessibilityRole="alert">
+        <Banner icon="alert-circle-outline" tone="danger">
           {error}
-        </Text>
+        </Banner>
       ) : null}
-      <Button label={t('driver.submit')} onPress={() => void submit()} loading={busy} disabled={!complete} />
+      <Button
+        icon="send"
+        label={t('driver.submit')}
+        onPress={() => void submit()}
+        loading={busy}
+        disabled={!complete}
+      />
       <Button label={t('driver.back')} variant="secondary" onPress={() => router.back()} />
     </Screen>
   );
 }
 
+function MissingRow({ label }: { label: string }) {
+  return (
+    <View style={styles.row}>
+      <Icon name="close-circle-outline" size={20} color={colors.danger} />
+      <Text style={styles.flex}>{label}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    gap: spacing.xs,
+  flex: { flex: 1 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceVariant,
   },
-  ok: { color: colors.success, fontWeight: '700' },
-  error: { color: colors.danger },
 });

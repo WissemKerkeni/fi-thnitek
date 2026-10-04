@@ -1,19 +1,23 @@
-import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import type { TranslationKey } from '@fi-thnitek/i18n';
-import { colors, radii, sizes, spacing } from '../theme/tokens';
-import { Text } from '../ui/Text';
+import { useTranslation } from 'react-i18next';
+import { ScrollView, StyleSheet } from 'react-native';
+import { VehicleBadge } from '../map/VehicleBadge';
+import { colors, spacing } from '../theme/tokens';
+import { Icon } from '../ui/Icon';
+import { Chip } from '../ui/kit';
 
 export type Layer = 'taxi' | 'louage' | 'bus' | 'passengers';
 
-const LAYERS: { id: Layer; icon: string; label: TranslationKey }[] = [
-  { id: 'taxi', icon: '🚕', label: 'map.layerTaxi' },
-  { id: 'louage', icon: '🚐', label: 'map.layerLouage' },
-  { id: 'bus', icon: '🚌', label: 'map.layerBus' },
-  { id: 'passengers', icon: '🧍', label: 'map.layerPassengers' },
+const LAYERS: { id: Layer; label: TranslationKey }[] = [
+  { id: 'taxi', label: 'map.layerTaxi' },
+  { id: 'louage', label: 'map.layerLouage' },
+  { id: 'bus', label: 'map.layerBus' },
+  { id: 'passengers', label: 'map.layerPassengers' },
 ];
 
-/** R-020 layer toggles. "On" is shown by a check mark and a filled chip, never by colour alone. */
+const TYPE = { taxi: 'TAXI', louage: 'LOUAGE', bus: 'BUS' } as const;
+
+/** R-020 layer toggles as the Stitch filter chips. "On" = filled chip + check mark, not colour alone. */
 export function LayerChips({
   visible,
   onToggle,
@@ -29,22 +33,25 @@ export function LayerChips({
       contentContainerStyle={styles.row}
       accessibilityLabel={t('map.layersLabel')}
     >
-      {LAYERS.map(({ id, icon, label }) => {
+      {LAYERS.map(({ id, label }) => {
         const on = visible.has(id);
         return (
-          <Pressable
+          <Chip
             key={id}
+            label={t(label)}
+            selected={on}
             accessibilityRole="switch"
-            accessibilityState={{ checked: on }}
-            accessibilityLabel={t(label)}
             onPress={() => onToggle(id)}
-            style={[styles.chip, on ? styles.chipOn : styles.chipOff]}
-          >
-            <Text style={on ? styles.textOn : undefined}>
-              {on ? '✓ ' : ''}
-              {icon} {t(label)}
-            </Text>
-          </Pressable>
+            icon={
+              on ? (
+                <Icon name="check" size={18} color={colors.onPrimary} />
+              ) : id === 'passengers' ? (
+                <Icon name="human-handsup" size={18} color={colors.primary} />
+              ) : (
+                <VehicleBadge type={TYPE[id]} size={22} />
+              )
+            }
+          />
         );
       })}
     </ScrollView>
@@ -53,14 +60,4 @@ export function LayerChips({
 
 const styles = StyleSheet.create({
   row: { gap: spacing.sm, paddingHorizontal: spacing.md },
-  chip: {
-    minHeight: sizes.minTouchTarget,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
-  chipOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipOff: { backgroundColor: colors.surface, borderColor: colors.border },
-  textOn: { color: colors.onPrimary, fontWeight: '600' },
 });

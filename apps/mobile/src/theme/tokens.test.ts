@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { contrastRatio } from './contrast.js';
-import { colors, sizes, typography } from './tokens.js';
+import { caption, colors, sizes, typography } from './tokens.js';
 
 const AA_TEXT = 4.5;
 
@@ -18,6 +18,13 @@ describe('colour contrast (WCAG AA, ADR-212)', () => {
     ['warning badge', 'onStatus', 'warning'],
     ['danger badge', 'onStatus', 'danger'],
     ['danger as text on surface', 'danger', 'surface'],
+    ['text on tinted fills', 'text', 'surfaceVariant'],
+    ['tinted fill label', 'onSurfaceVariant', 'surfaceVariant'],
+    ['primary on tinted fills', 'primary', 'surfaceVariant'],
+    ['danger on its container', 'danger', 'dangerContainer'],
+    ['success on its container', 'success', 'successContainer'],
+    ['warning on its container', 'warning', 'warningContainer'],
+    ['text on the accent container', 'text', 'accentContainer'],
   ];
 
   it.each(pairs)('%s ≥ 4.5:1', (_label, fg, bg) => {
@@ -41,5 +48,9 @@ describe('sizes (docs/ux.md §4)', () => {
     expect(sizes.minTouchTarget).toBeGreaterThanOrEqual(48);
     expect(sizes.primaryButtonHeight).toBeGreaterThanOrEqual(48);
     for (const style of Object.values(typography)) expect(style.fontSize).toBeGreaterThanOrEqual(16);
+  });
+
+  it('keeps secondary captions readable (≥ 14)', () => {
+    expect(caption.fontSize).toBeGreaterThanOrEqual(14);
   });
 });

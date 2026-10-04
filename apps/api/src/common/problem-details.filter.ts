@@ -53,6 +53,7 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   FIX_REJECTED: 'Location fix rejected',
   BREAK_NOT_OVER: 'Break not over',
   BREAK_RESUME_EXPIRED: 'Resume window passed',
+  ROUTINE_LIMIT: 'Too many routine routes',
   INVALID_STATE_TRANSITION: 'Invalid state transition',
 };
 

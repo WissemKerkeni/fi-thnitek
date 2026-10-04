@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { thresholdsProvider } from '../config/thresholds.provider.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
+import { RoutinesModule } from '../routines/routines.module.js';
 import { AdminSessionsService } from './admin-sessions.service.js';
 import { MapService } from './map.service.js';
 import { PING_MIN_INTERVAL_MS } from './ping-rate-limiter.js';
@@ -14,7 +15,7 @@ import { SharingSweepJob } from './sharing-sweep.job.js';
 import { SharingService } from './sharing.service.js';
 
 @Module({
-  imports: [NotificationsModule],
+  imports: [NotificationsModule, RoutinesModule],
   controllers: [DriverSharingController, LocationController, MapController, AdminSessionsController],
   providers: [
     SharingService,

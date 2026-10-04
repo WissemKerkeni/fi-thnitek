@@ -11,3 +11,4 @@ export function pgError(error: unknown): { code?: string; constraint?: string } 
 }
 
 export const UNIQUE_VIOLATION = '23505';
+export const FOREIGN_KEY_VIOLATION = '23503';

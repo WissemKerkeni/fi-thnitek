@@ -48,6 +48,9 @@ export const ErrorCode = z.enum([
   'BREAK_NOT_OVER',
   /** The resume window after the break has passed: the session has ended. */
   'BREAK_RESUME_EXPIRED',
+  // Routine routes (R-065…R-068)
+  /** At most `routine_max` routines per driver. */
+  'ROUTINE_LIMIT',
   'INVALID_STATE_TRANSITION',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

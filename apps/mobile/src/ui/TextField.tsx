@@ -1,24 +1,39 @@
+import { useState } from 'react';
 import { StyleSheet, TextInput, type TextInputProps, View } from 'react-native';
 import { colors, radii, sizes, spacing, typography } from '../theme/tokens';
 import { Text } from './Text';
 
-/** Labelled input: ≥ 48 dp, 16 sp, text aligned with the writing direction (RTL-safe). */
+/**
+ * Labelled input (Stitch fields): caption label, tinted field, primary border while focused; ≥ 48 dp,
+ * 16 sp, text aligned with the writing direction (RTL-safe).
+ */
 export function TextField({
   label,
   error,
   ...props
 }: TextInputProps & { label: string; error?: string | null }) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.wrap}>
-      <Text muted>{label}</Text>
+      <Text variant="caption" style={styles.label}>
+        {label}
+      </Text>
       <TextInput
         {...props}
         accessibilityLabel={label}
         placeholderTextColor={colors.textMuted}
-        style={[styles.input, error ? styles.inputError : null, props.style]}
+        onFocus={(e) => {
+          setFocused(true);
+          props.onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          props.onBlur?.(e);
+        }}
+        style={[styles.input, focused && styles.inputFocused, error ? styles.inputError : null, props.style]}
       />
       {error ? (
-        <Text style={styles.error} accessibilityRole="alert">
+        <Text variant="caption" style={styles.error} accessibilityRole="alert">
           {error}
         </Text>
       ) : null}
@@ -28,17 +43,19 @@ export function TextField({
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.xs },
+  label: { color: colors.onSurfaceVariant, fontWeight: '700' },
   input: {
     ...typography.body,
-    minHeight: sizes.minTouchTarget,
-    borderWidth: 1,
-    borderColor: colors.border,
+    minHeight: sizes.primaryButtonHeight,
+    borderWidth: 2,
+    borderColor: colors.surfaceVariant,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceVariant,
     color: colors.text,
     textAlign: 'auto',
   },
+  inputFocused: { borderColor: colors.primary, backgroundColor: colors.surface },
   inputError: { borderColor: colors.danger },
   error: { color: colors.danger },
 });

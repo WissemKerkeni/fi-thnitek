@@ -5,7 +5,9 @@ import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { ApiError } from '../src/lib/api';
 import { colors, spacing } from '../src/theme/tokens';
+import { AppLogo } from '../src/ui/AppHeader';
 import { Button } from '../src/ui/Button';
+import { Banner } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 
@@ -37,27 +39,35 @@ export default function SignInScreen() {
   const message = error ?? accountMessage(endedReason);
 
   return (
-    <Screen>
+    <Screen topInset>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.hero}>
-        <Text variant="title" style={styles.brand}>
-          {t('app.name')}
+        <AppLogo size={88} />
+        <Text variant="display" style={styles.brand}>
+          في ثنيتك
         </Text>
-        <Text variant="title">{t('auth.title')}</Text>
-        <Text muted>{t('auth.subtitle')}</Text>
+        <Text variant="headline" muted>
+          Fi thnitek
+        </Text>
+        <Text variant="title" style={styles.center}>
+          {t('auth.title')}
+        </Text>
+        <Text muted style={styles.center}>
+          {t('auth.subtitle')}
+        </Text>
       </View>
       {message ? (
-        <Text style={styles.error} accessibilityRole="alert">
+        <Banner icon="alert-circle-outline" tone="danger">
           {message}
-        </Text>
+        </Banner>
       ) : null}
-      <Button label={t('auth.google')} onPress={() => void onPress()} loading={busy} />
+      <Button label={t('auth.google')} icon="google" onPress={() => void onPress()} loading={busy} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { paddingVertical: spacing.xl, gap: spacing.sm },
+  hero: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.sm },
   brand: { color: colors.primary },
-  error: { color: colors.danger },
+  center: { textAlign: 'center' },
 });

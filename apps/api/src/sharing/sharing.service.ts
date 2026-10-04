@@ -44,6 +44,7 @@ import {
 } from '../db/schema/index.js';
 import { type PushEvent, PushService } from '../notifications/push.service.js';
 import { findPlace, point } from '../places/places.service.js';
+import { RoutinesService } from '../routines/routines.service.js';
 
 type Session = typeof sharingSessions.$inferSelect;
 type LiveSession = Session & { state: 'SHARING' | 'ON_BREAK' };
@@ -65,6 +66,7 @@ export class SharingService {
     @Inject(DB) private readonly db: Database,
     @Inject(THRESHOLDS) private readonly t: Thresholds,
     private readonly push: PushService,
+    private readonly routines: RoutinesService,
   ) {}
 
   async status(userId: string, now = new Date()): Promise<SharingStatus> {
@@ -102,6 +104,7 @@ export class SharingService {
     return {
       session: session ? await this.view(session, vehicle?.plateDisplay ?? '', now) : null,
       vehicle: vehicle ?? null,
+      suggestedHeadingTo: session ? null : await this.routines.suggestion(userId, now),
       blockers,
       cooldownUntil: iso(cooldown),
       lastEnded:
@@ -163,6 +166,7 @@ export class SharingService {
       });
       await this.storeLatest(tx, userId, id, vehicle.transportType, req.fix, [req.fix]);
       await event(tx, id, 'STARTED', now);
+      await this.routines.markUsed(tx, userId, req.headingToPlaceId, now);
     });
     return this.status(userId, now);
   }
@@ -185,6 +189,7 @@ export class SharingService {
       await tx.update(sharingSessions).set(patch).where(eq(sharingSessions.id, s.id));
       if (patch.headingToPlaceId !== undefined) {
         await event(tx, s.id, 'HEADING_CHANGED', now, { placeId: patch.headingToPlaceId });
+        await this.routines.markUsed(tx, userId, patch.headingToPlaceId ?? null, now);
       }
     });
     return this.status(userId, now);
