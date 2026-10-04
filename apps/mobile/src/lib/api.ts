@@ -6,6 +6,10 @@ import {
   HealthResponse,
   Me,
   MyVerification,
+  type NearestPlaceRequest,
+  NearestPlaceResponse,
+  type PlaceSearchRequest,
+  PlaceSearchResponse,
   PROBLEM_JSON,
   ProblemDetails,
   type RegisterDeviceRequest,
@@ -64,6 +68,9 @@ export interface ApiClient {
   uploadDocument(upload: DocumentUpload): Promise<DocumentView>;
   deleteDocument(id: string): Promise<void>;
   submitVerification(): Promise<MyVerification>;
+  // Places (R-011): coordinates go in the body, never in the URL
+  searchPlaces(req: PlaceSearchRequest): Promise<PlaceSearchResponse>;
+  nearestPlace(req: NearestPlaceRequest): Promise<NearestPlaceResponse>;
 }
 
 /** A photo already resized/re-encoded on the device (local file URI). */
@@ -194,6 +201,8 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     saveVehicle: (input) => authed('PUT', '/driver/vehicle', MyVerification, input),
     deleteDocument: (id) => authed('DELETE', `/driver/documents/${id}`, NO_BODY),
     submitVerification: () => authed('POST', '/driver/verification/submit', MyVerification),
+    searchPlaces: (req) => authed('POST', '/places/search', PlaceSearchResponse, req),
+    nearestPlace: (req) => authed('POST', '/places/nearest', NearestPlaceResponse, req),
 
     uploadDocument(upload) {
       const form = new FormData();

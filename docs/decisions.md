@@ -94,6 +94,15 @@ Drivers found the form too long. The file now asks only: legal first and last na
 - **Trade-off accepted:** without a selfie the admin cannot match the CIN photo to the person, and without a plate photo cannot confirm the vehicle; admins rely on the CIN/licence/card consistency and on reports. Revisit if fake accounts appear (anti-abuse scenario 13).
 - The removed document types stay in the database enum (no destructive enum migration) but are neither required nor accepted.
 
+### ADR-217: Places from OpenStreetMap, searched in PostgreSQL · Accepted (2026-10-03)
+- **Data:** cities, towns, villages, neighbourhoods, delegations, governorates, bus/louage stations, airports and major landmarks for Tunisia, extracted from **OpenStreetMap** with the Overpass API (`pnpm --filter @fi-thnitek/api places:fetch`) into `data/places/tn-places.json`, committed and reviewed by diff. Licence **ODbL 1.0**: attribution "© OpenStreetMap contributors" on the map and in `data/places/README.md`; the derived places table is shared under ODbL if it is ever published.
+- **Import:** `pnpm db:seed` upserts by `source`. Rows an admin edited are `locked` and never overwritten; places that disappear from OSM are kept (an admin deletes them).
+- **Search (R-011):** names are folded once in `packages/domain` (`normalizeSearchText`: Latin accents, Arabic harakat/tatweel, alef/hamza/ta marbuta/alef maqsura variants, Arabic-Indic digits, case and punctuation) into `search_text`. PostgreSQL ranks substring matches and `pg_trgm` word similarity (threshold `PLACE_SEARCH_MIN_SIMILARITY` = 0.4, via `SET LOCAL` so the GIN index is used), plus popularity, minus distance when `near` is given. No search engine, no external geocoder.
+- **Pick on map:** the nearest place (KNN `<->` on the GiST index, `ST_DWithin` ≤ 5 km by default) names a dropped pin; the pin itself is the destination.
+- **Privacy:** search text, `near` and pins travel in **POST bodies** (never URLs, CLAUDE.md rule 8) and are neither stored nor logged. The chosen destination stays in memory on the phone until a request exists.
+- **Admin:** "Content → Places" lists, creates, edits and deletes places; each write is audited.
+- **Rejected:** Nominatim/Google geocoding (cost, rate limits, sends user queries to third parties), Meilisearch/Typesense (an extra service for ~2–20 k rows).
+
 ### ADR-208: REST polling for the live map (5 s) and batched location uploads; no websockets at v0.x · Accepted
 Revisit with Redis tile caching → SSE/websockets when load requires it. *Supersedes ADR-106.*
 

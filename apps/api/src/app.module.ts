@@ -8,6 +8,7 @@ import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { LoggingModule } from './logging/logging.module.js';
+import { PlacesModule } from './places/places.module.js';
 import { UsersModule } from './users/users.module.js';
 import { VerificationModule } from './verification/verification.module.js';
 
@@ -22,6 +23,7 @@ import { VerificationModule } from './verification/verification.module.js';
     UsersModule,
     AuthModule,
     VerificationModule,
+    PlacesModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }],
 })

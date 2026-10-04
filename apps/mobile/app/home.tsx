@@ -1,107 +1,157 @@
-import { useQuery } from '@tanstack/react-query';
+import { Camera, type CameraRef, Map as MapView, Marker } from '@maplibre/maplibre-react-native';
 import { Stack, router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
-import { useAuth } from '../src/auth/AuthProvider';
-import { api } from '../src/lib/query';
-import { colors, radii, spacing } from '../src/theme/tokens';
-import { Button } from '../src/ui/Button';
-import { Screen } from '../src/ui/Screen';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
+import { DestinationPin } from '../src/places/DestinationPin';
+import { type Layer, LayerChips } from '../src/places/LayerChips';
+import { setDestination, useDestination } from '../src/places/destination';
+import { langOf, placeNames } from '../src/places/format';
+import { colors, radii, sizes, spacing } from '../src/theme/tokens';
 import { Text } from '../src/ui/Text';
 
-/** Placeholder home until the map home (P1) arrives: health, map, language and account (R-005). */
-export default function HomeScreen() {
-  const { t } = useTranslation();
-  const { session, signOut, deleteAccount } = useAuth();
-  const name = session.status === 'signedIn' ? session.me.displayName : null;
+const ALL_LAYERS: readonly Layer[] = ['taxi', 'louage', 'bus', 'passengers'];
 
-  function confirmDelete() {
-    Alert.alert(t('me.deleteConfirmTitle'), t('me.deleteConfirmBody'), [
-      { text: t('me.cancel'), style: 'cancel' },
-      {
-        text: t('me.confirmDelete'),
-        style: 'destructive',
-        onPress: () => void deleteAccount().then(() => router.replace('/')),
-      },
-    ]);
+/**
+ * P1 Map home (R-020 shell): search bar, layer toggles and the destination pin. Live drivers and
+ * passengers arrive with Phases 5–7; there is no user location on this screen yet.
+ */
+export default function HomeScreen() {
+  const { t, i18n } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const camera = useRef<CameraRef>(null);
+  const destination = useDestination();
+  const [layers, setLayers] = useState<ReadonlySet<Layer>>(() => new Set(ALL_LAYERS));
+
+  useEffect(() => {
+    if (destination) {
+      camera.current?.flyTo({
+        center: [destination.point.lng, destination.point.lat],
+        zoom: 13,
+        duration: 800,
+      });
+    }
+  }, [destination]);
+
+  function toggle(layer: Layer) {
+    setLayers((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(layer)) next.add(layer);
+      return next;
+    });
   }
 
-  const health = useQuery({ queryKey: ['health'], queryFn: () => api.getHealth() });
-
-  const up = health.data?.status === 'up';
-  const statusText = health.isPending
-    ? t('health.checking')
-    : health.isError
-      ? t('common.error')
-      : up
-        ? t('health.up')
-        : t('health.down');
+  const destinationName = destination
+    ? destination.place && destination.distanceM === 0
+      ? placeNames(destination.place, langOf(i18n.language)).name
+      : t('places.pinnedPoint')
+    : null;
 
   return (
-    <Screen>
-      <Stack.Screen options={{ title: t('app.name') }} />
-      {name ? <Text variant="title">{t('me.greeting', { name })}</Text> : null}
-      <View style={styles.card} accessibilityRole="summary">
-        <Text variant="bodyStrong">{t('health.title')}</Text>
-        <View style={styles.row}>
-          {/* Shape + colour: state is never conveyed by colour alone (docs/ux.md §4). */}
-          <View
-            style={[styles.badge, { backgroundColor: up ? colors.success : colors.danger }]}
-            accessibilityElementsHidden
-          >
-            <Text style={styles.badgeText}>{up ? '✓' : '!'}</Text>
-          </View>
-          <Text>{statusText}</Text>
-        </View>
-        {health.data ? (
-          <>
-            <Text muted>
-              {t('health.database')}: {health.data.checks.database}
-            </Text>
-            <Text muted>
-              {t('health.version')}: {health.data.version}
-            </Text>
-          </>
+    <View style={styles.flex}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <MapView style={styles.flex} mapStyle={MAP_STYLE_URL} attribution logo={false} compass>
+        <Camera ref={camera} initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} />
+        {destination ? (
+          <Marker lngLat={[destination.point.lng, destination.point.lat]} anchor="bottom">
+            <DestinationPin />
+          </Marker>
         ) : null}
+      </MapView>
+
+      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]} pointerEvents="box-none">
+        <View style={styles.searchRow}>
+          <Pressable
+            accessibilityRole="search"
+            accessibilityLabel={t('map.searchPlaceholder')}
+            onPress={() => router.push('/destination')}
+            style={styles.search}
+          >
+            <Text style={styles.searchIcon}>🔍</Text>
+            <Text variant="bodyStrong" numberOfLines={1} style={styles.searchText}>
+              {destinationName
+                ? t('map.destinationTo', { name: destinationName })
+                : t('map.searchPlaceholder')}
+            </Text>
+            {destination ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('map.clearDestination')}
+                hitSlop={spacing.sm}
+                onPress={() => setDestination(null)}
+                style={styles.clear}
+              >
+                <Text muted>✕</Text>
+              </Pressable>
+            ) : null}
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('map.me')}
+            onPress={() => router.push('/me')}
+            style={styles.me}
+          >
+            <Text style={styles.meIcon}>👤</Text>
+          </Pressable>
+        </View>
+        <LayerChips visible={layers} onToggle={toggle} />
       </View>
-      <Button
-        label={t('common.retry')}
-        variant="secondary"
-        onPress={() => void health.refetch()}
-        loading={health.isFetching}
-      />
-      <Button label={t('map.title')} onPress={() => router.push('/map')} />
-      <Button
-        label={
-          session.status === 'signedIn' && session.me.driverVerification
-            ? t('driver.statusTitle')
-            : t('driver.entry')
-        }
-        variant="accent"
-        onPress={() => router.push('/driver')}
-        accessibilityHint={t('driver.entryHint')}
-      />
-      <Button label={t('language.title')} variant="secondary" onPress={() => router.push('/language')} />
-      <Button
-        label={t('me.signOut')}
-        variant="secondary"
-        onPress={() => void signOut().then(() => router.replace('/'))}
-      />
-      <Button label={t('me.deleteAccount')} variant="secondary" onPress={confirmDelete} />
-    </Screen>
+
+      <View style={[styles.notice, { bottom: insets.bottom + spacing.xl }]} pointerEvents="none">
+        <Text muted style={styles.noticeText}>
+          {t('map.liveSoon')}
+        </Text>
+      </View>
+    </View>
   );
 }
 
+const shadow = {
+  shadowColor: '#000',
+  shadowOpacity: 0.15,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 4,
+} as const;
+
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
+  flex: { flex: 1 },
+  top: { position: 'absolute', top: 0, start: 0, end: 0, gap: spacing.sm },
+  searchRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.md },
+  search: {
+    ...shadow,
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
+    minHeight: sizes.primaryButtonHeight,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
   },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  badge: { width: 28, height: 28, borderRadius: radii.pill, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: colors.onStatus, fontWeight: '700' },
+  searchIcon: { fontSize: 18 },
+  searchText: { flex: 1, textAlign: 'auto' },
+  clear: { minWidth: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center' },
+  me: {
+    ...shadow,
+    width: sizes.primaryButtonHeight,
+    height: sizes.primaryButtonHeight,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  meIcon: { fontSize: 22 },
+  notice: {
+    ...shadow,
+    position: 'absolute',
+    start: spacing.md,
+    end: spacing.md,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+  },
+  noticeText: { textAlign: 'center' },
 });
