@@ -7,6 +7,7 @@ export const fr = {
     retry: 'Réessayer',
     continue: 'Continuer',
     error: 'Une erreur est survenue',
+    back: 'Retour',
   },
   language: {
     title: 'Choisissez votre langue',
@@ -33,6 +34,7 @@ export const fr = {
     me: 'Mon compte',
     destinationTo: 'Vers {{name}}',
     clearDestination: 'Effacer la destination',
+    searchExamples: 'Sousse, Nabeul, Bardo…',
   },
   places: {
     searchTitle: 'Destination',
@@ -90,6 +92,7 @@ export const fr = {
     deleteConfirmBody: 'Votre profil et vos appareils seront effacés. Cette action est définitive.',
     cancel: 'Annuler',
     confirmDelete: 'Supprimer',
+    passenger: 'Passager',
   },
   driver: {
     entry: 'Je suis chauffeur',
@@ -225,6 +228,17 @@ export const fr = {
     error_BREAK_NOT_OVER: 'La pause n’est pas encore terminée.',
     error_BREAK_RESUME_EXPIRED: 'Trop tard pour reprendre : le partage s’est arrêté (sans attente).',
     error_COOLDOWN_ACTIVE: 'Attendez la fin de l’heure d’attente.',
+    driverMode: 'Espace chauffeur',
+    notVisible: 'Non visible',
+    notVisibleHint: 'Les passagers ne vous voient pas sur la carte tant que vous ne partagez pas.',
+    verified: 'Vérifié',
+    trip: 'Trajet actuel',
+    change: 'Modifier',
+    startSubtitle: 'Visible par les passagers sur la carte',
+    liveTitle: 'En partage',
+    visibleShort: 'Visible',
+    reconnectingShort: 'Reconnexion…',
+    onBreakShort: 'En pause',
   },
   live: {
     zoomIn: 'Zoomez pour voir les chauffeurs.',
@@ -233,6 +247,10 @@ export const fr = {
     updatedSeconds: 'il y a {{value}} s',
     updatedMinutes: 'il y a {{value}} min',
     close: 'Fermer',
+    live: 'En direct',
+    liveUpdated: 'En direct · il y a {{value}} s',
+    navMap: 'Carte',
+    navMe: 'Moi',
   },
   push: {
     verificationApproved: 'Votre dossier chauffeur est validé. Vous pouvez commencer le partage.',

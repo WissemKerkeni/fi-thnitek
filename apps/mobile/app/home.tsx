@@ -10,7 +10,6 @@ import { Stack, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { type NativeSyntheticEvent, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
 import { DriverCard } from '../src/map/DriverCard';
 import { DriverMarkers } from '../src/map/DriverMarkers';
@@ -20,26 +19,33 @@ import { DestinationPin } from '../src/places/DestinationPin';
 import { type Layer, LayerChips } from '../src/places/LayerChips';
 import { setDestination, useDestination } from '../src/places/destination';
 import { langOf, placeNames } from '../src/places/format';
-import { colors, radii, sizes, spacing } from '../src/theme/tokens';
+import { colors, elevation, radii, spacing } from '../src/theme/tokens';
+import { AppHeader } from '../src/ui/AppHeader';
+import { BottomNav } from '../src/ui/BottomNav';
+import { Icon } from '../src/ui/Icon';
+import { IconButton } from '../src/ui/kit';
 import { Text } from '../src/ui/Text';
+import { useNow } from '../src/ui/useNow';
 
 const ALL_LAYERS: readonly Layer[] = ['taxi', 'louage', 'bus', 'passengers'];
 const LAYER_OF: Record<TransportType, Layer> = { TAXI: 'taxi', LOUAGE: 'louage', BUS: 'bus' };
 
 /**
- * P1 Map home (R-020…R-022): search bar, layer toggles, the destination pin and the sharing drivers,
- * polled every 5 s while visible. Passenger requests arrive with Phase 6; no user location here yet.
+ * P1 Map home (R-020…R-022), as the Stitch "Map home" screen: top bar, search card, layer chips, the map
+ * with live drivers (polled every 5 s while visible), a "live" freshness pill and the bottom navigation.
+ * Passenger requests arrive with Phase 6; there is no user location on this screen yet.
  */
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
-  const insets = useSafeAreaInsets();
   const camera = useRef<CameraRef>(null);
   const destination = useDestination();
+  const now = useNow();
   const [layers, setLayers] = useState<ReadonlySet<Layer>>(() => new Set(ALL_LAYERS));
   const [bbox, setBbox] = useState(() => bboxAround(TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
   const live = useMapDrivers(bbox);
   const drivers = (live.data?.drivers ?? []).filter((d) => layers.has(LAYER_OF[d.type]));
+  const updatedS = live.dataUpdatedAt ? Math.max(0, Math.round((now - live.dataUpdatedAt) / 1000)) : null;
 
   function onRegionDidChange(e: NativeSyntheticEvent<ViewStateChangeEvent>) {
     setBbox(bboxOf(e.nativeEvent.bounds));
@@ -70,120 +76,147 @@ export default function HomeScreen() {
     : null;
 
   return (
-    <View style={styles.flex}>
+    <View style={styles.screen}>
       <Stack.Screen options={{ headerShown: false }} />
-      <MapView
-        style={styles.flex}
-        mapStyle={MAP_STYLE_URL}
-        attribution
-        logo={false}
-        compass
-        onRegionDidChange={onRegionDidChange}
-      >
-        <Camera ref={camera} initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} />
-        <DriverMarkers drivers={drivers} onSelect={setSelected} />
-        {destination ? (
-          <Marker lngLat={[destination.point.lng, destination.point.lat]} anchor="bottom">
-            <DestinationPin />
-          </Marker>
-        ) : null}
-      </MapView>
+      <AppHeader title={t('app.name')} subtitle={t('map.title')} showProfile />
 
-      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <View style={styles.searchRow}>
-          <Pressable
-            accessibilityRole="search"
-            accessibilityLabel={t('map.searchPlaceholder')}
-            onPress={() => router.push('/destination')}
-            style={styles.search}
-          >
-            <Text style={styles.searchIcon}>🔍</Text>
-            <Text variant="bodyStrong" numberOfLines={1} style={styles.searchText}>
-              {destinationName
-                ? t('map.destinationTo', { name: destinationName })
-                : t('map.searchPlaceholder')}
-            </Text>
+      <View style={styles.flex}>
+        <MapView
+          style={styles.flex}
+          mapStyle={MAP_STYLE_URL}
+          attribution
+          logo={false}
+          compass
+          onRegionDidChange={onRegionDidChange}
+        >
+          <Camera ref={camera} initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} />
+          <DriverMarkers drivers={drivers} onSelect={setSelected} />
+          {destination ? (
+            <Marker lngLat={[destination.point.lng, destination.point.lat]} anchor="bottom">
+              <DestinationPin />
+            </Marker>
+          ) : null}
+        </MapView>
+
+        <View style={styles.top} pointerEvents="box-none">
+          <View style={[styles.search, elevation]}>
+            <Pressable
+              accessibilityRole="search"
+              accessibilityLabel={t('map.searchPlaceholder')}
+              onPress={() => router.push('/destination')}
+              style={styles.searchTap}
+            >
+              <View style={styles.searchIcon}>
+                <Icon name="magnify" color={colors.onPrimary} />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="bodyStrong" numberOfLines={1}>
+                  {destinationName
+                    ? t('map.destinationTo', { name: destinationName })
+                    : t('map.searchPlaceholder')}
+                </Text>
+                {!destinationName ? (
+                  <Text variant="caption" muted numberOfLines={1}>
+                    {t('map.searchExamples')}
+                  </Text>
+                ) : null}
+              </View>
+            </Pressable>
             {destination ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('map.clearDestination')}
-                hitSlop={spacing.sm}
+              <IconButton
+                icon="close"
+                label={t('map.clearDestination')}
+                variant="tonal"
                 onPress={() => setDestination(null)}
-                style={styles.clear}
-              >
-                <Text muted>✕</Text>
-              </Pressable>
-            ) : null}
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('map.me')}
-            onPress={() => router.push('/me')}
-            style={styles.me}
-          >
-            <Text style={styles.meIcon}>👤</Text>
-          </Pressable>
+              />
+            ) : (
+              <IconButton
+                icon="map-marker-radius"
+                label={t('places.pickOnMap')}
+                variant="tonal"
+                onPress={() => router.push('/pick-on-map')}
+              />
+            )}
+          </View>
+          <LayerChips visible={layers} onToggle={toggle} />
         </View>
-        <LayerChips visible={layers} onToggle={toggle} />
+
+        <View style={styles.bottom} pointerEvents="box-none">
+          {selected ? (
+            <DriverCard driver={selected} onClose={() => setSelected(null)} />
+          ) : live.data?.tooWide ? (
+            <View style={styles.livePill} pointerEvents="none">
+              <Icon name="magnify-plus-outline" size={18} color={colors.onPrimary} />
+              <Text variant="caption" style={styles.livePillText}>
+                {t('live.zoomIn')}
+              </Text>
+            </View>
+          ) : updatedS !== null && live.isSuccess ? (
+            <View style={styles.livePill} pointerEvents="none" accessibilityLiveRegion="polite">
+              <View style={styles.liveDot} />
+              <Text variant="caption" style={styles.livePillText}>
+                {t('live.liveUpdated', { value: updatedS })}
+              </Text>
+            </View>
+          ) : null}
+        </View>
       </View>
 
-      <View style={[styles.bottom, { bottom: insets.bottom + spacing.xl }]} pointerEvents="box-none">
-        {selected ? (
-          <DriverCard driver={selected} onClose={() => setSelected(null)} />
-        ) : live.data?.tooWide ? (
-          <View style={styles.notice} pointerEvents="none">
-            <Text muted style={styles.noticeText}>
-              {t('live.zoomIn')}
-            </Text>
-          </View>
-        ) : null}
-      </View>
+      <BottomNav
+        active="map"
+        items={[
+          { key: 'map', icon: 'map', label: t('live.navMap'), onPress: () => undefined },
+          {
+            key: 'me',
+            icon: 'account-circle-outline',
+            label: t('live.navMe'),
+            onPress: () => router.push('/me'),
+          },
+        ]}
+      />
     </View>
   );
 }
 
-const shadow = {
-  shadowColor: '#000',
-  shadowOpacity: 0.15,
-  shadowRadius: 6,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 4,
-} as const;
-
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  top: { position: 'absolute', top: 0, start: 0, end: 0, gap: spacing.sm },
-  searchRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.md },
+  top: { position: 'absolute', top: spacing.sm, start: 0, end: 0, gap: spacing.sm },
   search: {
-    ...shadow,
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    minHeight: sizes.primaryButtonHeight,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface,
-  },
-  searchIcon: { fontSize: 18 },
-  searchText: { flex: 1, textAlign: 'auto' },
-  clear: { minWidth: 32, minHeight: 32, alignItems: 'center', justifyContent: 'center' },
-  me: {
-    ...shadow,
-    width: sizes.primaryButtonHeight,
-    height: sizes.primaryButtonHeight,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  meIcon: { fontSize: 22 },
-  bottom: { position: 'absolute', start: spacing.md, end: spacing.md },
-  notice: {
-    ...shadow,
-    padding: spacing.md,
+    marginHorizontal: spacing.md,
+    padding: spacing.sm,
     borderRadius: radii.lg,
     backgroundColor: colors.surface,
   },
-  noticeText: { textAlign: 'center' },
+  searchTap: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 48 },
+  searchIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
+  bottom: {
+    position: 'absolute',
+    start: spacing.md,
+    end: spacing.md,
+    bottom: spacing.md,
+    alignItems: 'stretch',
+  },
+  livePill: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radii.pill,
+    backgroundColor: colors.text,
+  },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' },
+  livePillText: { color: colors.onPrimary },
 });

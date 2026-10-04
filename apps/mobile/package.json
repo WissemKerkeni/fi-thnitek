@@ -12,7 +12,9 @@
     "bundle:check": "expo export --platform android --output-dir dist"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "0.4.2",
     "@expo/metro-runtime": "~57.0.16",
+    "@expo/vector-icons": "15.0.2",
     "@fi-thnitek/contracts": "workspace:*",
     "@fi-thnitek/domain": "workspace:*",
     "@fi-thnitek/i18n": "workspace:*",

@@ -21,7 +21,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
 import { DriverCard } from '../src/map/DriverCard';
-import { DriverMarkers, TYPE_ICON } from '../src/map/DriverMarkers';
+import { DriverMarkers } from '../src/map/DriverMarkers';
+import { VehicleBadge } from '../src/map/VehicleBadge';
 import { useMapDrivers } from '../src/map/useMapDrivers';
 import { bboxAround, bboxOf } from '../src/map/viewport';
 import { langOf, placeNames } from '../src/places/format';
@@ -34,14 +35,20 @@ import {
   useSharingActions,
   useSharingStatus,
 } from '../src/sharing/useSharing';
-import { colors, radii, sizes, spacing } from '../src/theme/tokens';
+import { colors, elevation, radii, spacing } from '../src/theme/tokens';
+import { AppHeader } from '../src/ui/AppHeader';
 import { Button } from '../src/ui/Button';
+import { Icon } from '../src/ui/Icon';
+import { ActionTile, Badge, Banner, Card, IconButton, SectionTitle, StatusPill } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 import { TextField } from '../src/ui/TextField';
 import { useNow } from '../src/ui/useNow';
 
-/** The driver home: D3 "Start sharing", D4 the live map while sharing, and the break screen (R-050…R-058). */
+/**
+ * The driver home, as the Stitch screens "Commencer le partage" (D3), "En partage · Visible" (D4) and
+ * "On break" (R-050…R-058).
+ */
 export default function SharingScreen() {
   const { t } = useTranslation();
   const status = useSharingStatus();
@@ -52,8 +59,10 @@ export default function SharingScreen() {
         <Stack.Screen options={{ title: t('sharing.title') }} />
         {status.isError ? (
           <>
-            <Text>{t('common.error')}</Text>
-            <Button label={t('common.retry')} onPress={() => void status.refetch()} />
+            <Banner icon="wifi-off" tone="danger">
+              {t('common.error')}
+            </Banner>
+            <Button label={t('common.retry')} icon="refresh" onPress={() => void status.refetch()} />
           </>
         ) : (
           <ActivityIndicator color={colors.primary} />
@@ -100,104 +109,134 @@ function StartView({ status }: { status: SharingStatus }) {
     status.lastEnded && now - new Date(status.lastEnded.endedAt).getTime() < 12 * 3_600_000
       ? status.lastEnded
       : null;
+  const headingNames = headingTo ? placeNames(headingTo, lang) : null;
 
   return (
     <Screen>
-      <Stack.Screen
-        options={{
-          title: t('sharing.startTitle'),
-          headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('map.me')}
-              onPress={() => router.push('/me')}
-            >
-              <Text style={styles.meIcon}>👤</Text>
-            </Pressable>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ title: t('sharing.startTitle') }} />
+
+      <View style={styles.modeRow}>
+        <Text variant="bodyStrong" style={styles.flex}>
+          {t('sharing.driverMode')}
+        </Text>
+        <StatusPill label={t('sharing.notVisible')} on={false} />
+      </View>
+      <Banner icon="eye-off-outline">{t('sharing.notVisibleHint')}</Banner>
+
       {status.vehicle ? (
-        <View style={styles.card}>
-          <Text muted>{t('sharing.vehicle')}</Text>
+        <Card>
           <View style={styles.row}>
-            <Text style={styles.bigIcon}>{TYPE_ICON[status.vehicle.transportType]}</Text>
+            <VehicleBadge type={status.vehicle.transportType} size={48} />
             <View style={styles.flex}>
-              <Text variant="bodyStrong" style={styles.start}>
-                {t(`driver.type_${status.vehicle.transportType}`)}
+              <Text variant="headline">{t(`driver.type_${status.vehicle.transportType}`)}</Text>
+              <Text variant="caption" muted>
+                {t('sharing.vehicle')}
               </Text>
-              <Text style={styles.start}>{status.vehicle.plateDisplay}</Text>
             </View>
+            <Badge label={t('sharing.verified')} tone="success" icon="check-decagram" />
           </View>
-        </View>
+          <View style={styles.plate}>
+            <Icon name="card-account-details-outline" size={20} color={colors.onSurfaceVariant} />
+            <Text variant="bodyStrong" style={styles.flex}>
+              {status.vehicle.plateDisplay}
+            </Text>
+          </View>
+        </Card>
       ) : null}
 
-      <View style={styles.card}>
-        <Text muted>{t('sharing.headingTo')}</Text>
+      <Card>
+        <SectionTitle
+          icon="compass-outline"
+          title={t('sharing.trip')}
+          action={
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: '/destination', params: { purpose: 'heading' } })}
+              style={styles.changeChip}
+            >
+              <Icon name="pencil" size={16} color={colors.primary} />
+              <Text variant="caption" style={styles.link}>
+                {t('sharing.change')}
+              </Text>
+            </Pressable>
+          }
+        />
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push({ pathname: '/destination', params: { purpose: 'heading' } })}
-          style={styles.row}
+          style={styles.destination}
         >
-          <Text style={styles.bigIcon}>📍</Text>
-          <Text variant="bodyStrong" style={[styles.flex, styles.start, !headingTo && styles.link]}>
-            {headingTo ? placeNames(headingTo, lang).name : t('sharing.headingToChoose')}
-          </Text>
+          <Icon name="map-marker" size={28} color={colors.danger} />
+          <View style={styles.flex}>
+            <Text variant="caption" muted>
+              {t('sharing.headingTo')}
+            </Text>
+            <Text variant="headline">{headingNames ? headingNames.name : t('sharing.headingToChoose')}</Text>
+            {headingNames?.other ? (
+              <Text variant="caption" muted>
+                {headingNames.other}
+              </Text>
+            ) : !headingNames ? (
+              <Text variant="caption" muted>
+                {t('sharing.headingToNone')}
+              </Text>
+            ) : null}
+          </View>
           {headingTo ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('sharing.headingToClear')}
-              hitSlop={spacing.sm}
+            <IconButton
+              icon="close"
+              label={t('sharing.headingToClear')}
+              variant="surface"
               onPress={() => setHeadingTo(null)}
-            >
-              <Text muted>✕</Text>
-            </Pressable>
+            />
           ) : null}
         </Pressable>
-        {!headingTo ? <Text muted>{t('sharing.headingToNone')}</Text> : null}
-      </View>
-
-      {isBus ? (
-        <TextField
-          label={t('sharing.lineLabel')}
-          placeholder={t('sharing.linePlaceholder')}
-          value={line}
-          onChangeText={setLine}
-          maxLength={24}
-          autoCapitalize="characters"
-        />
-      ) : null}
+        {isBus ? (
+          <TextField
+            label={t('sharing.lineLabel')}
+            placeholder={t('sharing.linePlaceholder')}
+            value={line}
+            onChangeText={setLine}
+            maxLength={24}
+            autoCapitalize="characters"
+          />
+        ) : null}
+      </Card>
 
       {recentEnd ? (
-        <Text style={styles.notice}>
+        <Banner icon="information-outline" tone="warning">
           {t('sharing.lastEnded', { reason: t(`sharing.reason_${recentEnd.reason}`) })}
-        </Text>
+        </Banner>
       ) : null}
       {cooldownLeft && status.cooldownUntil ? (
-        <View style={[styles.card, styles.warnCard]} accessibilityLiveRegion="polite">
-          <Text variant="bodyStrong">
+        <Card style={styles.cooldown}>
+          <Icon name="timer-sand" size={28} color={colors.warning} />
+          <Text variant="bodyStrong" style={styles.center}>
             {t('sharing.cooldown', { time: clockTime(status.cooldownUntil, lang) })}
           </Text>
-          <Text variant="title">{countdown(status.cooldownUntil, now)}</Text>
-        </View>
+          <Text variant="display" accessibilityLiveRegion="polite">
+            {countdown(status.cooldownUntil, now)}
+          </Text>
+        </Card>
       ) : null}
       {hardBlockers.map((b) => (
-        <Text key={b} style={styles.notice}>
+        <Banner key={b} icon="alert-circle-outline" tone="danger">
           {t(`sharing.blocker_${b}`)}
-        </Text>
+        </Banner>
       ))}
       {hardBlockers.includes('NOT_VERIFIED') || hardBlockers.includes('NO_VEHICLE') ? (
         <Button
           label={t('sharing.myFile')}
+          icon="file-document-outline"
           variant="secondary"
           onPress={() => router.push('/driver/status')}
         />
       ) : null}
 
-      <Text muted>{t('sharing.startHint')}</Text>
       <Button
         label={t('sharing.start')}
-        variant="accent"
+        subtitle={t('sharing.startSubtitle')}
+        icon="access-point"
         loading={start.isPending}
         disabled={hardBlockers.length > 0 || !!cooldownLeft}
         onPress={() =>
@@ -207,6 +246,12 @@ function StartView({ status }: { status: SharingStatus }) {
           )
         }
       />
+      <View style={styles.gpsNote}>
+        <Icon name="crosshairs-gps" size={16} color={colors.textMuted} />
+        <Text variant="caption" muted style={styles.flex}>
+          {t('sharing.startHint')}
+        </Text>
+      </View>
     </Screen>
   );
 }
@@ -226,6 +271,7 @@ function LiveView({ status }: { status: SharingStatus }) {
   const [breakOpen, setBreakOpen] = useState(false);
   // R-025: drivers see each other while sharing with a fresh fix (else the API answers 403).
   const drivers = useMapDrivers(bbox, s.fresh);
+  const heading = s.headingTo ? placeNames(s.headingTo, lang).name : null;
 
   function onRegionDidChange(e: NativeSyntheticEvent<ViewStateChangeEvent>) {
     setBbox(bboxOf(e.nativeEvent.bounds));
@@ -252,123 +298,139 @@ function LiveView({ status }: { status: SharingStatus }) {
   }
 
   return (
-    <View style={styles.flex}>
+    <View style={styles.screen}>
       <Stack.Screen options={{ headerShown: false }} />
-      <MapView
-        style={styles.flex}
-        mapStyle={MAP_STYLE_URL}
-        attribution
-        logo={false}
-        compass
-        onRegionDidChange={onRegionDidChange}
-      >
-        <Camera initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} trackUserLocation="default" />
-        <UserLocation accuracy heading />
-        <DriverMarkers drivers={drivers.data?.drivers ?? []} onSelect={setSelected} />
-      </MapView>
+      <AppHeader
+        title={t('sharing.liveTitle')}
+        subtitle={s.fresh ? t('sharing.visibleShort') : t('sharing.reconnectingShort')}
+        showProfile
+      />
 
-      <View style={[styles.top, { paddingTop: insets.top + spacing.sm }]} pointerEvents="box-none">
-        <View style={styles.topRow}>
-          <View
-            style={[styles.statusPill, s.fresh ? styles.statusOk : styles.statusWarn]}
-            accessibilityLiveRegion="polite"
-          >
-            <Text style={styles.statusDot}>{s.fresh ? '●' : '…'}</Text>
-            <Text variant="label" numberOfLines={2} style={[styles.flex, styles.start]}>
-              {s.fresh ? t('sharing.visible') : t('sharing.reconnecting')}
-            </Text>
-            {s.isFull ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{t('sharing.fullBadge')}</Text>
-              </View>
-            ) : null}
-          </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('map.me')}
-            onPress={() => router.push('/me')}
-            style={styles.roundButton}
-          >
-            <Text style={styles.meIcon}>👤</Text>
-          </Pressable>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/destination', params: { purpose: 'heading' } })}
-          style={styles.headingChip}
+      <View style={styles.liveTop}>
+        <View
+          style={[styles.liveBanner, s.fresh ? styles.liveOk : styles.liveWarn]}
+          accessibilityLiveRegion="polite"
         >
-          <Text numberOfLines={1} style={[styles.flex, styles.start]}>
-            📍{' '}
-            {s.headingTo
-              ? t('live.headingTo', { name: placeNames(s.headingTo, lang).name })
-              : t('sharing.headingToChoose')}
-          </Text>
-          {s.headingTo ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('sharing.headingToClear')}
-              hitSlop={spacing.sm}
-              onPress={() => void chooseHeading(null).catch(showError)}
-            >
-              <Text muted>✕</Text>
-            </Pressable>
-          ) : null}
-        </Pressable>
-        {drivers.data?.tooWide ? <Text style={styles.zoomHint}>{t('live.zoomIn')}</Text> : null}
-      </View>
-
-      <View style={[styles.bottom, { paddingBottom: insets.bottom + spacing.md }]}>
-        {selected ? <DriverCard driver={selected} onClose={() => setSelected(null)} /> : null}
-        <View style={styles.sheet}>
-          <Button
+          <View style={[styles.liveDot, { backgroundColor: s.fresh ? colors.success : colors.warning }]} />
+          <View style={styles.flex}>
+            <Text variant="bodyStrong">{s.fresh ? t('sharing.visible') : t('sharing.reconnecting')}</Text>
+            <Text variant="caption" muted numberOfLines={1}>
+              {t(`driver.type_${s.transportType}`)} · {s.plateDisplay}
+              {s.lineLabel ? ` · ${s.lineLabel}` : ''}
+            </Text>
+          </View>
+          {s.isFull ? <Badge label={t('sharing.fullBadge')} tone="danger" icon="account-cancel" /> : null}
+        </View>
+        <View style={styles.tiles}>
+          <ActionTile
+            icon="power"
+            label={t('sharing.stop')}
+            tone="danger"
+            disabled={stop.isPending}
+            onPress={confirmStop}
+          />
+          <ActionTile
+            icon="coffee-outline"
+            label={t('sharing.break')}
+            disabled={takeBreak.isPending}
+            onPress={() => setBreakOpen(true)}
+          />
+          <ActionTile
+            icon={s.isFull ? 'account-check-outline' : 'account-cancel-outline'}
             label={s.isFull ? t('sharing.available') : t('sharing.imFull')}
-            variant={s.isFull ? 'secondary' : 'accent'}
-            loading={setFull.isPending}
+            active={s.isFull}
+            disabled={setFull.isPending}
             onPress={() => setFull.mutate(!s.isFull, { onError: showError })}
           />
-          <View style={styles.actions}>
-            <View style={styles.flex}>
-              <Button
-                label={t('sharing.break')}
-                variant="secondary"
-                loading={takeBreak.isPending}
-                onPress={() => setBreakOpen(true)}
-              />
-            </View>
-            <View style={styles.flex}>
-              <Button
-                label={t('sharing.stop')}
-                variant="secondary"
-                loading={stop.isPending}
-                onPress={confirmStop}
-              />
-            </View>
-          </View>
         </View>
+      </View>
+
+      <View style={styles.flex}>
+        <MapView
+          style={styles.flex}
+          mapStyle={MAP_STYLE_URL}
+          attribution
+          logo={false}
+          compass
+          onRegionDidChange={onRegionDidChange}
+        >
+          <Camera
+            initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }}
+            trackUserLocation="default"
+          />
+          <UserLocation accuracy heading />
+          <DriverMarkers drivers={drivers.data?.drivers ?? []} onSelect={setSelected} />
+        </MapView>
+
+        <View style={styles.mapTop} pointerEvents="box-none">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push({ pathname: '/destination', params: { purpose: 'heading' } })}
+            style={[styles.headingChip, elevation]}
+          >
+            <Icon name="map-marker" size={20} color={colors.danger} />
+            <Text variant="label" numberOfLines={1} style={styles.flex}>
+              {heading ? t('live.headingTo', { name: heading }) : t('sharing.headingToChoose')}
+            </Text>
+            {heading ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('sharing.headingToClear')}
+                hitSlop={spacing.sm}
+                onPress={() => void chooseHeading(null).catch(showError)}
+              >
+                <Icon name="close" size={20} color={colors.textMuted} />
+              </Pressable>
+            ) : (
+              <Icon name="chevron-right" size={20} color={colors.textMuted} />
+            )}
+          </Pressable>
+          {drivers.data?.tooWide ? (
+            <View style={styles.zoomPill}>
+              <Text variant="caption" style={styles.zoomText}>
+                {t('live.zoomIn')}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {selected ? (
+          <View style={[styles.mapBottom, { bottom: insets.bottom + spacing.md }]}>
+            <DriverCard driver={selected} onClose={() => setSelected(null)} />
+          </View>
+        ) : null}
       </View>
 
       <Modal transparent visible={breakOpen} animationType="fade" onRequestClose={() => setBreakOpen(false)}>
         <Pressable style={styles.backdrop} onPress={() => setBreakOpen(false)}>
-          <Pressable style={styles.modal} onPress={() => undefined}>
-            <Text variant="title">{t('sharing.breakTitle')}</Text>
-            <Text muted>{t('sharing.breakHint')}</Text>
-            {status.breakOptionsMin.map((minutes) => {
-              const label = breakLabel(minutes);
-              return (
-                <Button
-                  key={minutes}
-                  label={
-                    label.key === 'sharing.breakHours'
-                      ? t(label.key, { hours: label.value })
-                      : t(label.key, { minutes: label.value })
-                  }
-                  onPress={() => {
-                    setBreakOpen(false);
-                    takeBreak.mutate(minutes, { onError: showError });
-                  }}
-                />
-              );
-            })}
+          <Pressable
+            style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}
+            onPress={() => undefined}
+          >
+            <View style={styles.grabber} />
+            <SectionTitle icon="coffee-outline" title={t('sharing.breakTitle')} />
+            <Banner icon="eye-off-outline">{t('sharing.breakHint')}</Banner>
+            <View style={styles.breakOptions}>
+              {status.breakOptionsMin.map((minutes) => {
+                const label = breakLabel(minutes);
+                return (
+                  <View key={minutes} style={styles.flex}>
+                    <Button
+                      label={
+                        label.key === 'sharing.breakHours'
+                          ? t(label.key, { hours: label.value })
+                          : t(label.key, { minutes: label.value })
+                      }
+                      variant="tonal"
+                      onPress={() => {
+                        setBreakOpen(false);
+                        takeBreak.mutate(minutes, { onError: showError });
+                      }}
+                    />
+                  </View>
+                );
+              })}
+            </View>
             <Button label={t('sharing.cancel')} variant="secondary" onPress={() => setBreakOpen(false)} />
           </Pressable>
         </Pressable>
@@ -391,30 +453,49 @@ function BreakView({ status }: { status: SharingStatus }) {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: t('sharing.title') }} />
-      <View style={[styles.card, styles.breakCard]} accessibilityLiveRegion="polite">
-        <Text style={styles.bigIcon}>☕</Text>
-        <Text variant="title">{t('sharing.onBreakUntil', { time: clockTime(until, lang) })}</Text>
-        {!over ? <Text variant="title">{countdown(until, now)}</Text> : null}
-        <Text muted>{t('sharing.breakHint')}</Text>
-      </View>
-      {over && s.resumeDeadline ? (
-        <Text style={styles.notice}>
-          {t('sharing.resumeBefore', { time: clockTime(s.resumeDeadline, lang) })}
+      <Stack.Screen options={{ title: t('sharing.onBreakShort') }} />
+      <View style={styles.modeRow}>
+        <Text variant="bodyStrong" style={styles.flex}>
+          {t('sharing.driverMode')}
         </Text>
+        <StatusPill label={t('sharing.notVisible')} on={false} />
+      </View>
+
+      <Card style={styles.breakCard}>
+        <View style={styles.breakIcon}>
+          <Icon name="coffee" size={36} color={colors.warning} />
+        </View>
+        <Text variant="title" style={styles.center}>
+          {t('sharing.onBreakUntil', { time: clockTime(until, lang) })}
+        </Text>
+        {!over ? (
+          <Text variant="display" accessibilityLiveRegion="polite">
+            {countdown(until, now)}
+          </Text>
+        ) : null}
+        <Text muted style={styles.center}>
+          {t('sharing.breakHint')}
+        </Text>
+      </Card>
+
+      {over && s.resumeDeadline ? (
+        <Banner icon="alarm" tone="warning">
+          {t('sharing.resumeBefore', { time: clockTime(s.resumeDeadline, lang) })}
+        </Banner>
       ) : (
-        <Text muted>{t('sharing.resumeAt', { time: clockTime(until, lang) })}</Text>
+        <Banner icon="lock-clock">{t('sharing.resumeAt', { time: clockTime(until, lang) })}</Banner>
       )}
       <Button
         label={t('sharing.resume')}
-        variant="accent"
+        icon="play"
         disabled={!over}
         loading={resume.isPending}
         onPress={() => resume.mutate(undefined, { onError: showError })}
       />
       <Button
         label={t('sharing.stop')}
-        variant="secondary"
+        icon="power"
+        variant="danger"
         loading={stop.isPending}
         onPress={() =>
           Alert.alert(t('sharing.stopConfirmTitle'), t('sharing.stopConfirmBody'), [
@@ -431,100 +512,93 @@ function BreakView({ status }: { status: SharingStatus }) {
   );
 }
 
-const shadow = {
-  shadowColor: '#000',
-  shadowOpacity: 0.15,
-  shadowRadius: 6,
-  shadowOffset: { width: 0, height: 2 },
-  elevation: 4,
-} as const;
-
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
-  start: { textAlign: 'auto' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: sizes.minTouchTarget },
-  card: {
+  center: { textAlign: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  link: { color: colors.primary, fontWeight: '700' },
+  plate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceVariant,
+  },
+  changeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 36,
+    paddingHorizontal: spacing.sm + 2,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceVariant,
+  },
+  destination: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
     padding: spacing.md,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surfaceVariant,
+  },
+  cooldown: { alignItems: 'center', borderColor: colors.warning },
+  gpsNote: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, justifyContent: 'center' },
+  liveTop: {
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.surface,
   },
-  warnCard: { borderColor: colors.warning },
-  breakCard: { alignItems: 'center' },
-  bigIcon: { fontSize: 28 },
-  meIcon: { fontSize: 22 },
-  link: { color: colors.primary },
-  notice: { color: colors.warning, fontWeight: '600' },
-  top: { position: 'absolute', top: 0, start: 0, end: 0, gap: spacing.sm, paddingHorizontal: spacing.md },
-  topRow: { flexDirection: 'row', gap: spacing.sm },
-  statusPill: {
-    ...shadow,
-    flex: 1,
+  liveBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    minHeight: sizes.primaryButtonHeight,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.pill,
-    borderWidth: 2,
-    backgroundColor: colors.surface,
+    padding: spacing.sm + 2,
+    borderRadius: radii.md,
   },
-  statusOk: { borderColor: colors.success },
-  statusWarn: { borderColor: colors.warning },
-  statusDot: { color: colors.success, fontSize: 18 },
-  badge: { borderRadius: radii.sm, paddingHorizontal: spacing.sm, backgroundColor: colors.textMuted },
-  badgeText: { color: colors.onStatus, fontWeight: '700' },
-  roundButton: {
-    ...shadow,
-    width: sizes.primaryButtonHeight,
-    height: sizes.primaryButtonHeight,
-    borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-  },
+  liveOk: { backgroundColor: colors.successContainer },
+  liveWarn: { backgroundColor: colors.warningContainer },
+  liveDot: { width: 12, height: 12, borderRadius: 6 },
+  tiles: { flexDirection: 'row', gap: spacing.sm },
+  mapTop: { position: 'absolute', top: spacing.sm, start: spacing.md, end: spacing.md, gap: spacing.sm },
   headingChip: {
-    ...shadow,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    minHeight: sizes.minTouchTarget,
+    minHeight: 48,
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
     backgroundColor: colors.surface,
   },
-  zoomHint: {
+  zoomPill: {
     alignSelf: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-    color: colors.onPrimary,
-    backgroundColor: colors.onPrimaryContainer,
+    backgroundColor: colors.text,
   },
-  bottom: {
-    position: 'absolute',
-    start: 0,
-    end: 0,
-    bottom: 0,
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
+  zoomText: { color: colors.onPrimary },
+  mapBottom: { position: 'absolute', start: spacing.md, end: spacing.md },
+  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: colors.scrim },
   sheet: {
-    ...shadow,
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surface,
-  },
-  actions: { flexDirection: 'row', gap: spacing.sm },
-  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  modal: {
     gap: spacing.md,
     padding: spacing.lg,
-    borderTopStartRadius: radii.lg,
-    borderTopEndRadius: radii.lg,
+    borderTopStartRadius: radii.xl,
+    borderTopEndRadius: radii.xl,
     backgroundColor: colors.surface,
+  },
+  grabber: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border },
+  breakOptions: { flexDirection: 'row', gap: spacing.sm },
+  breakCard: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xl },
+  breakIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.warningContainer,
   },
 });

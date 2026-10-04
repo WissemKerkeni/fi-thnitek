@@ -8,6 +8,7 @@ export const ar: Catalog = {
     retry: 'عاود',
     continue: 'كمّل',
     error: 'صار مشكل',
+    back: 'رجوع',
   },
   language: {
     title: 'اختار اللغة',
@@ -34,6 +35,7 @@ export const ar: Catalog = {
     me: 'حسابي',
     destinationTo: 'ماشي لـ {{name}}',
     clearDestination: 'نحّي الوجهة',
+    searchExamples: 'سوسة، نابل، باردو…',
   },
   places: {
     searchTitle: 'الوجهة',
@@ -91,6 +93,7 @@ export const ar: Catalog = {
     deleteConfirmBody: 'بياناتك وأجهزتك باش يتمحاو. ما تنجمش ترجع.',
     cancel: 'بطّل',
     confirmDelete: 'امسح',
+    passenger: 'راكب',
   },
   driver: {
     entry: 'أنا سواق',
@@ -223,6 +226,17 @@ export const ar: Catalog = {
     error_BREAK_NOT_OVER: 'البوزة مازالت ما وفاتش.',
     error_BREAK_RESUME_EXPIRED: 'فات الوقت باش ترجع: المشاركة وقفت (بلاش انتظار).',
     error_COOLDOWN_ACTIVE: 'استنى حتى توفى ساعة الانتظار.',
+    driverMode: 'فضاء السوّاق',
+    notVisible: 'مش ظاهر',
+    notVisibleHint: 'الركّاب ما يشوفوكش على الخريطة كان ما تشاركش.',
+    verified: 'مثبّت',
+    trip: 'الثنية متاعك',
+    change: 'بدّل',
+    startSubtitle: 'ظاهر للركّاب على الخريطة',
+    liveTitle: 'في المشاركة',
+    visibleShort: 'ظاهر',
+    reconnectingShort: 'نعاودو نتصلو…',
+    onBreakShort: 'في بوزة',
   },
   live: {
     zoomIn: 'قرّب الخريطة باش تشوف السوّاقة.',
@@ -231,6 +245,10 @@ export const ar: Catalog = {
     updatedSeconds: 'قبل {{value}} ث',
     updatedMinutes: 'قبل {{value}} دق',
     close: 'سكّر',
+    live: 'مباشر',
+    liveUpdated: 'مباشر · قبل {{value}} ث',
+    navMap: 'الخريطة',
+    navMe: 'حسابي',
   },
   push: {
     verificationApproved: 'ملفك كسواق تقبل. تنجم تبدا تشارك.',

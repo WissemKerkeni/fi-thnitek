@@ -10,6 +10,7 @@ import { useChooseHeading } from '../src/sharing/useChooseHeading';
 import { langOf, placeNames } from '../src/places/format';
 import { useDebouncedValue } from '../src/places/useDebouncedValue';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
+import { Icon } from '../src/ui/Icon';
 import { Text } from '../src/ui/Text';
 
 const MIN_CHARS = 2;
@@ -73,7 +74,7 @@ export default function DestinationScreen() {
           }
           style={styles.pickRow}
         >
-          <Text style={styles.pickIcon}>📍</Text>
+          <Icon name="map-marker-radius" color={colors.primary} />
           <Text variant="bodyStrong" style={styles.pickText}>
             {t('places.pickOnMap')}
           </Text>
@@ -134,7 +135,6 @@ const styles = StyleSheet.create({
     textAlign: 'auto',
   },
   pickRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: sizes.minTouchTarget },
-  pickIcon: { fontSize: 18 },
   pickText: { color: colors.primary },
   list: { paddingVertical: spacing.sm },
   spinner: { marginVertical: spacing.sm },
