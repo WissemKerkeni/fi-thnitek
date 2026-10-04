@@ -109,7 +109,12 @@ export const PingsRequest = z.object({
 });
 export type PingsRequest = z.input<typeof PingsRequest>;
 
-export const PingStopReason = z.union([SessionEndReason, z.enum(['NOT_SHARING', 'ON_BREAK'])]);
+/** Why the phone must stop: a driver session end, a passenger request closure, or no active mode. */
+export const PingStopReason = z.union([
+  SessionEndReason,
+  z.enum(['MOVED_AWAY', 'LOCATION_LOST', 'NO_GPS_FIX', 'EXPIRED', 'CANCELLED', 'REMOVED']),
+  z.enum(['NOT_SHARING', 'ON_BREAK']),
+]);
 export type PingStopReason = z.infer<typeof PingStopReason>;
 
 /** `stop: true` → the phone stops its location service and drops its buffer. */

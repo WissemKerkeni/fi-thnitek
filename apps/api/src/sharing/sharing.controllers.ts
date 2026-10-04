@@ -34,6 +34,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { AdminSessionsService } from './admin-sessions.service.js';
 import { MapService } from './map.service.js';
 import { PING_MIN_INTERVAL_MS, PingRateLimiter } from './ping-rate-limiter.js';
+import { RequestsService } from '../requests/requests.service.js';
 import { SharingService } from './sharing.service.js';
 
 /** D3/D4 (R-050…R-058). Every action answers with the full status so the app has one source of truth. */
@@ -105,7 +106,7 @@ export class DriverSharingController {
   }
 }
 
-/** docs/architecture.md §4.2. The mode is inferred from server state; passenger requests join in Phase 6. */
+/** docs/architecture.md §4.2. The mode is inferred from server state: an open request, else a sharing session. */
 @ApiTags('location')
 @ApiBearerAuth()
 @Controller('location')
@@ -114,6 +115,7 @@ export class LocationController {
 
   constructor(
     private readonly sharing: SharingService,
+    private readonly requests: RequestsService,
     @Inject(PING_MIN_INTERVAL_MS) minIntervalMs: number,
   ) {
     this.limiter = new PingRateLimiter(minIntervalMs);
@@ -121,13 +123,14 @@ export class LocationController {
 
   @Post('pings')
   @HttpCode(HttpStatus.OK)
-  pings(
+  async pings(
     @CurrentAuth() auth: AuthContext,
     @Body(new ZodValidationPipe(PingsRequest)) body: z.output<typeof PingsRequest>,
   ): Promise<PingsResponse> {
     if (!this.limiter.allow(auth.userId))
       throw new ApiException('RATE_LIMITED', HttpStatus.TOO_MANY_REQUESTS);
-    return this.sharing.ingest(auth.userId, body);
+    // Driver accounts never have requests (invariant 3), so the two modes cannot overlap.
+    return (await this.requests.ingest(auth.userId, body)) ?? this.sharing.ingest(auth.userId, body);
   }
 }
 

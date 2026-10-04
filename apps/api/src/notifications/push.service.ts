@@ -19,7 +19,9 @@ export type PushEvent =
   | 'SHARING_ENDED'
   | 'BREAK_OVER'
   | 'STILL_WORKING'
-  | 'ROUTINE_STALE';
+  | 'ROUTINE_STALE'
+  | 'REQUEST_CLOSED'
+  | 'REQUEST_EXPIRING';
 
 const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   VERIFICATION_APPROVED: 'verificationApproved',
@@ -31,6 +33,8 @@ const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   BREAK_OVER: 'breakOver',
   STILL_WORKING: 'stillWorking',
   ROUTINE_STALE: 'routineStale',
+  REQUEST_CLOSED: 'requestClosed',
+  REQUEST_EXPIRING: 'requestExpiring',
 };
 
 /** What a transport receives: already localised, already PII-free. */

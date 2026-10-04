@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { LoggingModule } from './logging/logging.module.js';
 import { PlacesModule } from './places/places.module.js';
+import { RequestsModule } from './requests/requests.module.js';
 import { RoutinesModule } from './routines/routines.module.js';
 import { SharingModule } from './sharing/sharing.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -28,6 +29,7 @@ import { VerificationModule } from './verification/verification.module.js';
     PlacesModule,
     SharingModule,
     RoutinesModule,
+    RequestsModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }],
 })

@@ -18,12 +18,14 @@ import { bboxAround, bboxOf } from '../src/map/viewport';
 import { DestinationPin } from '../src/places/DestinationPin';
 import { type Layer, LayerChips } from '../src/places/LayerChips';
 import { setDestination, useDestination } from '../src/places/destination';
+import { useCurrentRequest } from '../src/requests/useRequest';
 import { langOf, placeNames } from '../src/places/format';
 import { colors, elevation, radii, spacing } from '../src/theme/tokens';
 import { AppHeader } from '../src/ui/AppHeader';
 import { BottomNav } from '../src/ui/BottomNav';
 import { Icon } from '../src/ui/Icon';
-import { IconButton } from '../src/ui/kit';
+import { Button } from '../src/ui/Button';
+import { IconButton, StatusPill } from '../src/ui/kit';
 import { Text } from '../src/ui/Text';
 import { useNow } from '../src/ui/useNow';
 
@@ -44,6 +46,8 @@ export default function HomeScreen() {
   const [bbox, setBbox] = useState(() => bboxAround(TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
   const live = useMapDrivers(bbox);
+  const current = useCurrentRequest();
+  const open = current.data?.request ?? null;
   const drivers = (live.data?.drivers ?? []).filter((d) => layers.has(LAYER_OF[d.type]));
   const updatedS = live.dataUpdatedAt ? Math.max(0, Math.round((now - live.dataUpdatedAt) / 1000)) : null;
 
@@ -142,6 +146,33 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.bottom} pointerEvents="box-none">
+          {open ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/request')}
+              style={[styles.requestCard, elevation]}
+            >
+              <View style={styles.requestIcon}>
+                <Icon name="bullhorn-outline" color={colors.onPrimary} />
+              </View>
+              <View style={styles.flex}>
+                <Text variant="bodyStrong">{t('requests.activeTitle')}</Text>
+                <StatusPill
+                  label={open.anchored ? t('requests.visible') : t('requests.waitingGps')}
+                  on={open.anchored}
+                />
+              </View>
+              <Icon name="chevron-right" color={colors.textMuted} />
+            </Pressable>
+          ) : null}
+          {!open && destination && !selected ? (
+            <Button
+              label={t('requests.ask')}
+              subtitle={t('requests.askSubtitle')}
+              icon="hail"
+              onPress={() => router.push('/request/new')}
+            />
+          ) : null}
           {selected ? (
             <DriverCard driver={selected} onClose={() => setSelected(null)} />
           ) : live.data?.tooWide ? (
@@ -166,6 +197,12 @@ export default function HomeScreen() {
         active="map"
         items={[
           { key: 'map', icon: 'map', label: t('live.navMap'), onPress: () => undefined },
+          {
+            key: 'request',
+            icon: 'bullhorn-outline',
+            label: t('requests.navTab'),
+            onPress: () => router.push('/request'),
+          },
           {
             key: 'me',
             icon: 'account-circle-outline',
@@ -206,6 +243,23 @@ const styles = StyleSheet.create({
     end: spacing.md,
     bottom: spacing.md,
     alignItems: 'stretch',
+    gap: spacing.sm,
+  },
+  requestCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surface,
+  },
+  requestIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
   },
   livePill: {
     alignSelf: 'center',

@@ -10,6 +10,7 @@ import { DEV_CIN_ENCRYPTION_KEY, DEV_CIN_HMAC_KEY, DEV_JWT_SECRET, ENV, loadEnv 
 import { runMigrations } from '../src/db/migrate.js';
 import { PUSH_TRANSPORT, RecordingTransport } from '../src/notifications/push.service.js';
 import { PING_MIN_INTERVAL_MS } from '../src/sharing/ping-rate-limiter.js';
+import { RequestsSweepJob } from '../src/requests/requests.module.js';
 import { SharingSweepJob } from '../src/sharing/sharing-sweep.job.js';
 import { TEST_S3, startGarage } from './garage.js';
 import { startPostgis } from './postgis.js';
@@ -72,6 +73,8 @@ export async function startTestApp(): Promise<TestApp> {
     .overrideProvider(PING_MIN_INTERVAL_MS)
     .useValue(0)
     .overrideProvider(SharingSweepJob)
+    .useValue({})
+    .overrideProvider(RequestsSweepJob)
     .useValue({})
     .compile();
   const app = moduleRef.createNestApplication({ bufferLogs: true });

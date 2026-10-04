@@ -16,6 +16,7 @@ const DRIVER_EVENTS = new Set([
 ]);
 /** Sharing events open the sharing screen (R-055, R-058). */
 const SHARING_EVENTS = new Set(['SHARING_ENDED', 'BREAK_OVER', 'STILL_WORKING']);
+const REQUEST_EVENTS = new Set(['REQUEST_CLOSED', 'REQUEST_EXPIRING']);
 
 Notifications.setNotificationHandler({
   handleNotification: () =>
@@ -60,11 +61,14 @@ export function usePushRegistration() {
     const received = Notifications.addNotificationReceivedListener(() => {
       void refreshMe().catch(() => undefined);
       void queryClient.invalidateQueries({ queryKey: ['sharing'] });
+      void queryClient.invalidateQueries({ queryKey: ['request'] });
     });
     const tapped = Notifications.addNotificationResponseReceivedListener((response) => {
       const event = (response.notification.request.content.data as { event?: string } | undefined)?.event;
       if (event && DRIVER_EVENTS.has(event)) router.push('/driver/status');
       if (event && SHARING_EVENTS.has(event)) router.push('/sharing');
+      if (event && REQUEST_EVENTS.has(event)) router.push('/request');
+      if (event === 'ROUTINE_STALE') router.push('/routines');
     });
     return () => {
       received.remove();

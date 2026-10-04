@@ -17,6 +17,7 @@ import { AuthProvider } from '../src/auth/AuthProvider';
 import { usePushRegistration } from '../src/push/usePushRegistration';
 import { initI18n } from '../src/i18n';
 import { queryClient } from '../src/lib/query';
+import { RequestSupervisor } from '../src/requests/RequestSupervisor';
 import { SharingSupervisor } from '../src/sharing/SharingSupervisor';
 import { colors } from '../src/theme/tokens';
 import { StackHeader } from '../src/ui/AppHeader';
@@ -56,6 +57,7 @@ export default function RootLayout() {
         <AuthProvider>
           <PushRegistration />
           <SharingSupervisor />
+          <RequestSupervisor />
           <StatusBar style="dark" />
           <Stack
             screenOptions={{
