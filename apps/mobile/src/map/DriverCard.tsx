@@ -6,6 +6,7 @@ import { shortDate, tunisParts } from '../routines/format';
 import { colors, elevation, radii, spacing } from '../theme/tokens';
 import { Icon } from '../ui/Icon';
 import { Badge, IconButton } from '../ui/kit';
+import { SafetyActions } from '../safety/SafetyActions';
 import { Text } from '../ui/Text';
 import { VehicleBadge } from './VehicleBadge';
 
@@ -57,6 +58,7 @@ export function DriverCard({ driver, onClose }: { driver: MapDriver; onClose: ()
           </Text>
         </View>
       ) : null}
+      <SafetyActions target={{ source: 'DRIVER_MARKER', sessionId: driver.id }} onBlocked={onClose} />
     </View>
   );
 }

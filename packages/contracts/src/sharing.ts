@@ -170,3 +170,19 @@ export type SessionEventView = z.infer<typeof SessionEventView>;
 
 export const AdminSessionDetail = AdminSession.extend({ events: z.array(SessionEventView) });
 export type AdminSessionDetail = z.infer<typeof AdminSessionDetail>;
+
+/** GET /v1/driver/sharing/history (R-070): the driver's own sessions of the last 30 days. No positions. */
+export const SharingHistory = z.object({
+  sessions: z.array(
+    z.object({
+      id: z.uuid(),
+      transportType: TransportType,
+      headingTo: Place.nullable(),
+      startedAt: z.iso.datetime(),
+      endedAt: z.iso.datetime().nullable(),
+      endReason: SessionEndReason.nullable(),
+      breaksCount: z.number().int(),
+    }),
+  ),
+});
+export type SharingHistory = z.infer<typeof SharingHistory>;

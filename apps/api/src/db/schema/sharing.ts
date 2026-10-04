@@ -1,4 +1,9 @@
-import { SESSION_END_REASONS, SESSION_EVENT_TYPES, SHARING_STATES } from '@fi-thnitek/domain';
+import {
+  RISK_FLAG_TYPES,
+  SESSION_END_REASONS,
+  SESSION_EVENT_TYPES,
+  SHARING_STATES,
+} from '@fi-thnitek/domain';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
@@ -21,12 +26,7 @@ import { geographyPoint, places } from './places.js';
 export const sharingState = pgEnum('sharing_state', SHARING_STATES);
 export const sessionEndReason = pgEnum('session_end_reason', SESSION_END_REASONS);
 export const sessionEventType = pgEnum('session_event_type', SESSION_EVENT_TYPES);
-export const riskFlagType = pgEnum('risk_flag_type', [
-  'MOCK_LOCATION',
-  'IMPOSSIBLE_JUMP',
-  'MULTI_ACCOUNT_DEVICE',
-  'NOBODY_THERE_CLUSTER',
-]);
+export const riskFlagType = pgEnum('risk_flag_type', RISK_FLAG_TYPES);
 
 /**
  * docs/domain-model.md § Sharing. Metadata only: positions live in `driver_live_locations` while the
@@ -138,6 +138,12 @@ export const riskFlags = pgTable(
     evidence: jsonb('evidence').$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
   },
-  (t) => [index('risk_flags_user_idx').on(t.userId)],
+  (t) => [
+    index('risk_flags_user_idx').on(t.userId),
+    index('risk_flags_open_idx')
+      .on(t.createdAt)
+      .where(sql`${t.reviewedAt} IS NULL`),
+  ],
 );

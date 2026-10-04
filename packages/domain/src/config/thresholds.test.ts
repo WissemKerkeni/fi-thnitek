@@ -46,6 +46,15 @@ describe('DEFAULT_THRESHOLDS', () => {
       finder_radius_taxi_m: 5_000,
       finder_radius_intercity_m: 15_000,
       finder_routine_m: 15_000,
+      report_daily_limit: 10,
+      nobody_there_reports: 3,
+      nobody_there_window_days: 7,
+      request_pause_h: 24,
+      report_flag_count: 3,
+      report_flag_window_days: 7,
+      device_max_accounts: 2,
+      device_window_days: 30,
+      pickup_retention_days: 90,
       document_expiry_reminder_days: 30,
     });
   });

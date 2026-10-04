@@ -34,9 +34,7 @@ export const MapDriver = z.object({
   plateDisplay: z.string(),
   updatedAgoS: z.number().int().nonnegative(),
   /** R-022 / R-066: the driver's next routine departure in the next 7 days. */
-  nextRoutine: z
-    .object({ toNameAr: z.string(), toNameFr: z.string(), at: z.iso.datetime() })
-    .nullable(),
+  nextRoutine: z.object({ toNameAr: z.string(), toNameFr: z.string(), at: z.iso.datetime() }).nullable(),
 });
 export type MapDriver = z.infer<typeof MapDriver>;
 

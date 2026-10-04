@@ -61,6 +61,13 @@ export const ErrorCode = z.enum([
   'NO_OPEN_REQUEST',
   /** No renewal left, or the request already expired. */
   'RENEW_NOT_ALLOWED',
+  /** A request pause is in force (anti-abuse §3); `pausedUntil` is in GET /v1/requests/current. */
+  'REQUEST_PAUSED',
+  // Safety (R-070…R-073)
+  /** Reporting yourself, or a category that does not fit (e.g. "nobody there" from a passenger). */
+  'REPORT_NOT_ALLOWED',
+  /** Daily report limit reached. */
+  'REPORT_LIMIT',
   'INVALID_STATE_TRANSITION',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

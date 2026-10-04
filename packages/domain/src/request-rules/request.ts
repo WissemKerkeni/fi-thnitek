@@ -42,7 +42,18 @@ export const requestMachine = defineMachine<RequestStatus, RequestCloseReason>('
 const MIN = 60_000;
 const DAY = 86_400_000;
 
-export type RequestBlocker = 'DRIVER_ACCOUNT' | 'ACCOUNT_SUSPENDED' | 'ALREADY_OPEN' | 'DAILY_LIMIT' | 'BUS';
+export const REQUEST_BLOCKERS = [
+  'DRIVER_ACCOUNT',
+  'ACCOUNT_SUSPENDED',
+  'ALREADY_OPEN',
+  'DAILY_LIMIT',
+  'BUS',
+  /** A request pause in force (anti-abuse §3: repeated "nobody there"). */
+  'PAUSED',
+  /** Too many accounts on this device, or a banned account on it (anti-abuse §2, scenario 14). */
+  'DEVICE_LIMIT',
+] as const;
+export type RequestBlocker = (typeof REQUEST_BLOCKERS)[number];
 
 /** R-031, R-040, R-041 and invariant 3: what prevents posting a request. */
 export function requestBlockers(c: {
@@ -52,6 +63,10 @@ export function requestBlockers(c: {
   types: readonly TransportType[];
   accountCreatedAt: Date;
   requestsToday: number;
+  /** The end of a request pause in force, if any. */
+  pausedUntil?: Date | null;
+  /** From `deviceProblem` (moderation). */
+  deviceProblem?: 'BANNED_ON_DEVICE' | 'TOO_MANY_ACCOUNTS' | null;
   now: Date;
   t: Pick<Thresholds, 'request_daily_limit_new' | 'request_daily_limit' | 'request_new_account_days'>;
 }): RequestBlocker[] {
@@ -61,6 +76,8 @@ export function requestBlockers(c: {
   if (c.types.length === 0 || c.types.some((t) => !(REQUESTABLE_TYPES as readonly string[]).includes(t))) {
     blockers.push('BUS');
   }
+  if (c.deviceProblem) blockers.push('DEVICE_LIMIT');
+  if (c.pausedUntil && c.pausedUntil.getTime() > c.now.getTime()) blockers.push('PAUSED');
   if (c.hasOpenRequest) blockers.push('ALREADY_OPEN');
   const young = c.now.getTime() - c.accountCreatedAt.getTime() < c.t.request_new_account_days * DAY;
   if (c.requestsToday >= (young ? c.t.request_daily_limit_new : c.t.request_daily_limit))

@@ -27,6 +27,7 @@ import {
   type PingsResponse,
   ResumeSharingRequest,
   SetFullRequest,
+  type SharingHistory,
   type SharingStatus,
   StartBreakRequest,
   StartSharingRequest,
@@ -53,6 +54,11 @@ export class DriverSharingController {
   @Get()
   status(@CurrentAuth() auth: AuthContext): Promise<SharingStatus> {
     return this.sharing.status(auth.userId);
+  }
+
+  @Get('history')
+  history(@CurrentAuth() auth: AuthContext): Promise<SharingHistory> {
+    return this.sharing.history(auth.userId);
   }
 
   @Post('start')

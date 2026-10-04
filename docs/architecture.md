@@ -152,11 +152,17 @@ Occurrence expansion: weekly routines store `days_mask` + `local_time` (Africa/T
 ### 5.3 Driver list
 The same data as the map for the sharing driver, sorted by distance and grouped by destination place (the queue under the driver map). Navigation hands off to Google Maps or Waze.
 
+### 5.4 Safety & moderation (ADR-222)
+- `POST /v1/reports`, `POST|GET /v1/blocks`, `DELETE /v1/blocks/:id`; markers are referenced by their session or request id, never a user id. `GET /v1/driver/sharing/history` and `GET /v1/requests/history` feed the "report a problem" flows.
+- `POST /v1/auth/appeal` (public, Google ID token): the contact form of a suspended or banned person.
+- Admin: `/v1/admin/reports`, `/pickups` (audited reads), `/users`, `/users/:id/sanctions`, `/sanctions/:id/revoke`, `/risk-flags`, `/appeals`, `/stats`.
+- The rules (priority, distinct reporters, pause, flag, device limit, sanction status) are pure functions in `packages/domain/moderation`.
+
 ## 6. Data retention
 Latest points only; requests keep anchor/last point for 30 days and are then coarsened; pickup records are admin-only and kept 90 days; sessions metadata and session events (no coordinates) for 12 months. See [domain-model.md §4](domain-model.md).
 
 ## 7. Jobs (`@nestjs/schedule`)
-Every 30 s: the passenger and driver rules above. Every 1 min: expiry reminders, 12 h prompts. Daily: document expiry, retention purges. All jobs are idempotent SQL.
+Every 30 s: the passenger and driver rules above. Every 1 min: expiry reminders, 12 h prompts. Every 5 min: expired suspensions end. Daily: document expiry, routine staleness, pick-up record retention (90 days unless an open report needs them). All jobs are idempotent SQL.
 
 ## 8. Capacity (pilot)
 - 500 sharing drivers × 1 upload/15 s ≈ 35 req/s.

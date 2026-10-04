@@ -13,7 +13,7 @@ export interface Fix {
   isMock: boolean;
 }
 
-export type RiskFlagType = 'MOCK_LOCATION' | 'IMPOSSIBLE_JUMP';
+export type FixFlagType = 'MOCK_LOCATION' | 'IMPOSSIBLE_JUMP';
 
 /** Evidence kept for the admin flag: measurements only, never coordinates. */
 export interface FlagEvidence {
@@ -31,7 +31,7 @@ export type DriverFixOutcome =
       reason: 'PING_GAP' | 'SPOOF_SUSPECTED' | 'LOCATION_OFF';
       /** The last fix that passed every check (the PING_GAP cooldown counts from it). */
       lastGoodTs: number | null;
-      flag?: { type: RiskFlagType; evidence: FlagEvidence };
+      flag?: { type: FixFlagType; evidence: FlagEvidence };
     };
 
 export interface DriverFixInput {

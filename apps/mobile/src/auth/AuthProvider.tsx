@@ -1,11 +1,11 @@
-import type { Me, UpdateMeRequest } from '@fi-thnitek/contracts';
+import type { AccountSanction, Me, UpdateMeRequest } from '@fi-thnitek/contracts';
 import {
   GoogleSignin,
   isCancelledResponse,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { ApiClient } from '../lib/api';
+import { type ApiClient, ApiError } from '../lib/api';
 import { GOOGLE_WEB_CLIENT_ID } from '../lib/config';
 import { hasStoredSession, onSessionEnded, signedInApi } from './client';
 import { deviceInfo } from './device';
@@ -19,6 +19,10 @@ interface AuthContextValue {
   api: ApiClient;
   /** Set when the server ended the session (e.g. ACCOUNT_SUSPENDED); shown on the sign-in screen. */
   endedReason: string | null;
+  /** With ACCOUNT_SUSPENDED / ACCOUNT_BANNED: why and until when (R-073). */
+  sanction: AccountSanction | null;
+  /** R-073, the contact form: proves the Google account again and sends the message. */
+  appeal: (message: string) => Promise<void>;
   signIn: () => Promise<SignInResult>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -32,6 +36,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SessionState>({ status: 'loading' });
   const [endedReason, setEndedReason] = useState<string | null>(null);
+  const [sanction, setSanction] = useState<AccountSanction | null>(null);
 
   const api = signedInApi;
 
@@ -39,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () =>
       onSessionEnded((error) => {
         setEndedReason(error.problem?.code ?? null);
+        setSanction(error.problem?.sanction ?? null);
         setSession({ status: 'signedOut' });
       }),
     [],
@@ -64,11 +70,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await GoogleSignin.signIn();
     if (isCancelledResponse(response)) return 'cancelled';
     if (!isSuccessResponse(response) || !response.data.idToken) throw new Error('No Google ID token');
-    const { me } = await api.signInWithGoogle(response.data.idToken, await deviceInfo());
+    let me: Me;
+    try {
+      ({ me } = await api.signInWithGoogle(response.data.idToken, await deviceInfo()));
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setEndedReason(error.problem?.code ?? null);
+        setSanction(error.problem?.sanction ?? null);
+      }
+      throw error;
+    }
     setEndedReason(null);
+    setSanction(null);
     setSession({ status: 'signedIn', me });
     return 'ok';
   }, [api]);
+
+  const appeal = useCallback(
+    async (message: string) => {
+      // The Google account is usually still signed in on the phone; ask again only if it is not.
+      const silent = await GoogleSignin.signInSilently();
+      const idToken =
+        silent.type === 'success'
+          ? silent.data.idToken
+          : await GoogleSignin.signIn().then((r) => (isSuccessResponse(r) ? r.data.idToken : null));
+      if (!idToken) throw new Error('No Google ID token');
+      await api.appeal({ idToken, message });
+    },
+    [api],
+  );
 
   const signOut = useCallback(async () => {
     await api.logout().catch(() => undefined);
@@ -97,8 +127,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [api]);
 
   const value = useMemo(
-    () => ({ session, api, endedReason, signIn, signOut, deleteAccount, updateMe, refreshMe }),
-    [session, api, endedReason, signIn, signOut, deleteAccount, updateMe, refreshMe],
+    () => ({
+      session,
+      api,
+      endedReason,
+      sanction,
+      appeal,
+      signIn,
+      signOut,
+      deleteAccount,
+      updateMe,
+      refreshMe,
+    }),
+    [session, api, endedReason, sanction, appeal, signIn, signOut, deleteAccount, updateMe, refreshMe],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

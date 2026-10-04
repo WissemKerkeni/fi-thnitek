@@ -74,7 +74,13 @@ export function useRequestActions() {
   };
 }
 
-const KNOWN = new Set(['REQUEST_ALREADY_OPEN', 'REQUEST_LIMIT', 'REQUEST_NOT_ALLOWED', 'RENEW_NOT_ALLOWED']);
+const KNOWN = new Set([
+  'REQUEST_ALREADY_OPEN',
+  'REQUEST_LIMIT',
+  'REQUEST_NOT_ALLOWED',
+  'REQUEST_PAUSED',
+  'RENEW_NOT_ALLOWED',
+]);
 
 export function requestErrorMessage(t: TFunction, error: unknown): string {
   if (error instanceof SharingSetupError) {
@@ -82,6 +88,13 @@ export function requestErrorMessage(t: TFunction, error: unknown): string {
     return error.kind === 'services-off' ? t('sharing.gpsOff') : t('sharing.noFix');
   }
   const code = error instanceof ApiError ? error.problem?.code : undefined;
+  if (
+    code === 'REQUEST_NOT_ALLOWED' &&
+    error instanceof ApiError &&
+    error.problem?.detail?.includes('DEVICE_LIMIT')
+  ) {
+    return t('safety.deviceLimit');
+  }
   if (code && KNOWN.has(code)) return t(`requests.error_${code}` as TranslationKey);
   return t('common.error');
 }

@@ -14,7 +14,8 @@ import {
   saveShowIdentity,
   takeNextRequestOptions,
 } from '../../src/requests/draft';
-import { requestErrorMessage, useRequestActions } from '../../src/requests/useRequest';
+import { requestErrorMessage, useCurrentRequest, useRequestActions } from '../../src/requests/useRequest';
+import { tunisParts } from '../../src/routines/format';
 import { SharingSetupError } from '../../src/sharing/useSharing';
 import { colors, radii, sizes, spacing } from '../../src/theme/tokens';
 import { Button } from '../../src/ui/Button';
@@ -32,6 +33,9 @@ export default function NewRequestScreen() {
   const lang = langOf(i18n.language);
   const destination = useDestination();
   const { post } = useRequestActions();
+  const current = useCurrentRequest();
+  const blockers = current.data?.blockers ?? [];
+  const pausedUntil = current.data?.pausedUntil ?? null;
   const [initial] = useState(() => takeNextRequestOptions());
   const [types, setTypes] = useState<RequestableType[]>(initial?.types ?? DEFAULT_OPTIONS.types);
   const [seats, setSeats] = useState(initial?.seats ?? DEFAULT_OPTIONS.seats);
@@ -100,6 +104,17 @@ export default function NewRequestScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('requests.newTitle') }} />
+
+      {pausedUntil ? (
+        <Banner icon="pause-circle-outline" tone="danger">
+          {t('safety.paused', { time: tunisParts(pausedUntil).time })}
+        </Banner>
+      ) : null}
+      {blockers.includes('DEVICE_LIMIT') ? (
+        <Banner icon="cellphone-lock" tone="danger">
+          {t('safety.deviceLimit')}
+        </Banner>
+      ) : null}
 
       {explainer ? (
         <Card tone="tinted">
@@ -215,7 +230,9 @@ export default function NewRequestScreen() {
         subtitle={t('requests.askSubtitle')}
         icon="bullhorn-outline"
         loading={post.isPending}
-        disabled={!destination || types.length === 0}
+        disabled={
+          !destination || types.length === 0 || pausedUntil !== null || blockers.includes('DEVICE_LIMIT')
+        }
         onPress={publish}
       />
     </Screen>

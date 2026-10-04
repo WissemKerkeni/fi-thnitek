@@ -26,5 +26,6 @@ import { ACCESS_TOKENS, AccessTokens } from './tokens.js';
     // Every route requires a valid session unless marked @Public().
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
+  exports: [GOOGLE_VERIFIER],
 })
 export class AuthModule {}

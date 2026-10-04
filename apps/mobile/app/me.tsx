@@ -85,6 +85,24 @@ export default function MeScreen() {
         {me?.driverVerification ? (
           <ListRow icon="steering" title={t('driver.statusTitle')} onPress={() => router.push('/driver')} />
         ) : null}
+        {driver ? (
+          <ListRow
+            icon="history"
+            title={t('safety.sessionHistory')}
+            onPress={() => router.push('/history/sessions')}
+          />
+        ) : (
+          <ListRow
+            icon="history"
+            title={t('safety.requestHistory')}
+            onPress={() => router.push('/history/requests')}
+          />
+        )}
+        <ListRow
+          icon="account-cancel-outline"
+          title={t('safety.blocksTitle')}
+          onPress={() => router.push('/blocks')}
+        />
         <ListRow icon="translate" title={t('language.title')} onPress={() => router.push('/language')} />
       </View>
 

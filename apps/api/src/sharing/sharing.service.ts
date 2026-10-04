@@ -4,6 +4,7 @@ import type {
   PingsResponse,
   ResumeSharingRequest,
   SessionView,
+  SharingHistory,
   SharingStatus,
   StartSharingRequest,
   UpdateSharingRequest,
@@ -25,7 +26,7 @@ import {
   stillWorkingDueAt,
   sweepSession,
 } from '@fi-thnitek/domain';
-import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import type { z } from 'zod';
 import { ApiException } from '../common/api-exception.js';
@@ -52,6 +53,9 @@ type LiveSession = Session & { state: 'SHARING' | 'ON_BREAK' };
 /** Sessions ended within this window are still reported to a phone that keeps pinging (stop reason). */
 const RECENT_END_MS = 12 * 3_600_000;
 const MIN = 60_000;
+const DAY_MS = 86_400_000;
+/** R-070: how far back the driver can report a problem during a session. */
+const HISTORY_DAYS = 30;
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null);
 
@@ -379,6 +383,42 @@ export class SharingService {
       if (pushEvent) await this.push.notifyUser(driverUserId, pushEvent);
     }
     return counts;
+  }
+
+  /** R-070: the driver's own sessions of the last 30 days, newest first, for "Report a problem". */
+  async history(userId: string, now = new Date()): Promise<SharingHistory> {
+    const rows = await this.db
+      .select()
+      .from(sharingSessions)
+      .where(
+        and(
+          eq(sharingSessions.driverUserId, userId),
+          gte(sharingSessions.startedAt, new Date(now.getTime() - HISTORY_DAYS * DAY_MS)),
+        ),
+      )
+      .orderBy(desc(sharingSessions.startedAt))
+      .limit(100);
+    return {
+      sessions: await Promise.all(
+        rows.map(async (s) => ({
+          id: s.id,
+          transportType: s.transportType,
+          headingTo: s.headingToPlaceId ? await findPlace(this.db, s.headingToPlaceId) : null,
+          startedAt: s.startedAt.toISOString(),
+          endedAt: s.endedAt?.toISOString() ?? null,
+          endReason: s.endReason,
+          breaksCount: s.breaksCount,
+        })),
+      ),
+    };
+  }
+
+  /** Ends the driver's active session, if any, inside `tx` (a suspension or a ban: no cooldown). */
+  async endActiveLocked(tx: Tx, driverUserId: string, reason: SessionEndReason, now: Date): Promise<boolean> {
+    const s = await this.activeSession(tx, driverUserId, true);
+    if (!s) return false;
+    await this.endLocked(tx, s, reason, now);
+    return true;
   }
 
   /** Ends a session whose row is locked by `tx`. Returns the cooldown end when one applies. */
