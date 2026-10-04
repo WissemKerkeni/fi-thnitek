@@ -65,6 +65,8 @@ export interface DriverMarkerSource {
   lineLabel: string | null;
   plateDisplay: string;
   fixTs: number;
+  /** The next routine departure in the next 7 days (R-066), if any. */
+  nextRoutine?: { toNameAr: string; toNameFr: string; at: Date } | null;
 }
 
 export interface DriverMarker {
@@ -79,6 +81,7 @@ export interface DriverMarker {
   lineLabel: string | null;
   plateDisplay: string;
   updatedAgoS: number;
+  nextRoutine: { toNameAr: string; toNameFr: string; at: string } | null;
 }
 
 /**
@@ -98,5 +101,12 @@ export function driverMarker(s: DriverMarkerSource, now: number): DriverMarker {
     lineLabel: s.type === 'BUS' ? s.lineLabel : null,
     plateDisplay: s.plateDisplay,
     updatedAgoS: Math.max(0, Math.round((now - s.fixTs) / 1000)),
+    nextRoutine: s.nextRoutine
+      ? {
+          toNameAr: s.nextRoutine.toNameAr,
+          toNameFr: s.nextRoutine.toNameFr,
+          at: s.nextRoutine.at.toISOString(),
+        }
+      : null,
   };
 }

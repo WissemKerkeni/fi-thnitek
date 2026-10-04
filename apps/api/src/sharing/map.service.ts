@@ -6,6 +6,7 @@ import { ApiException } from '../common/api-exception.js';
 import { THRESHOLDS } from '../config/thresholds.provider.js';
 import type { Database } from '../db/client.js';
 import { DB } from '../db/db.module.js';
+import { RoutinesService } from '../routines/routines.service.js';
 import {
   driverLiveLocations,
   driverProfiles,
@@ -24,6 +25,7 @@ export class MapService {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(THRESHOLDS) private readonly t: Thresholds,
+    private readonly routines: RoutinesService,
   ) {}
 
   async drivers(viewerId: string, bbox: BBox, now = new Date()): Promise<MapDriversResponse> {
@@ -33,6 +35,7 @@ export class MapService {
     const freshSince = new Date(now.getTime() - this.t.driver_fresh_s * 1000);
     const rows = await this.db
       .select({
+        driverUserId: driverLiveLocations.driverUserId,
         sessionId: sharingSessions.id,
         type: sharingSessions.transportType,
         lat: driverLiveLocations.lat,
@@ -66,12 +69,17 @@ export class MapService {
       )
       .limit(MAX_MARKERS);
 
+    const nextRoutines = await this.routines.nextFor(
+      rows.map((r) => r.driverUserId),
+      now,
+    );
     return {
       tooWide: false,
       drivers: rows.map((r) =>
         driverMarker(
           {
             ...r,
+            nextRoutine: nextRoutines.get(r.driverUserId) ?? null,
             fixTs: r.fixTs.getTime(),
             headingTo:
               r.headingNameAr !== null && r.headingNameFr !== null

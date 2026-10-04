@@ -1,12 +1,11 @@
 import type { Place } from '@fi-thnitek/contracts';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
-import { setDestination } from '../src/places/destination';
-import { useChooseHeading } from '../src/sharing/useChooseHeading';
+import { titleKey, useChoosePlace, usePlacePurpose } from '../src/places/purpose';
 import { langOf, placeNames } from '../src/places/format';
 import { useDebouncedValue } from '../src/places/useDebouncedValue';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
@@ -28,13 +27,13 @@ const KIND_ICON: Record<Place['kind'], IconName> = {
 
 /**
  * Destination search (R-011): accent/hamza-insensitive suggestions in AR and FR, or pick on the map.
- * With `purpose=heading` it picks a driver's "heading to" instead (R-051).
+ * With a `purpose` it picks a driver's "heading to" (R-051) or a routine's ends (R-065) instead.
  */
 export default function DestinationScreen() {
   const { t, i18n } = useTranslation();
   const { api } = useAuth();
-  const heading = useLocalSearchParams<{ purpose?: string }>().purpose === 'heading';
-  const chooseHeading = useChooseHeading();
+  const purpose = usePlacePurpose();
+  const choosePlace = useChoosePlace(purpose);
   const lang = langOf(i18n.language);
   const [text, setText] = useState('');
   const q = useDebouncedValue(text.trim(), 250);
@@ -49,8 +48,7 @@ export default function DestinationScreen() {
   });
 
   function choose(place: Place) {
-    if (heading) void chooseHeading(place).catch(() => undefined);
-    else setDestination({ point: place.location, place, distanceM: 0 });
+    choosePlace(place);
     router.back();
   }
 
@@ -65,7 +63,7 @@ export default function DestinationScreen() {
 
   return (
     <View style={styles.flex}>
-      <Stack.Screen options={{ title: heading ? t('sharing.headingTo') : t('places.searchTitle') }} />
+      <Stack.Screen options={{ title: t(titleKey(purpose)) }} />
       <View style={styles.header}>
         <View style={styles.searchBox}>
           <Icon name="magnify" color={colors.primary} />
@@ -94,7 +92,7 @@ export default function DestinationScreen() {
         <Pressable
           accessibilityRole="button"
           onPress={() =>
-            router.push({ pathname: '/pick-on-map', params: heading ? { purpose: 'heading' } : {} })
+            router.push({ pathname: '/pick-on-map', params: purpose === 'destination' ? {} : { purpose } })
           }
           style={styles.pickRow}
         >

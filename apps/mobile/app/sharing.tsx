@@ -6,7 +6,7 @@ import {
   type ViewStateChangeEvent,
 } from '@maplibre/maplibre-react-native';
 import { Stack, router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
@@ -26,7 +26,12 @@ import { VehicleBadge } from '../src/map/VehicleBadge';
 import { useMapDrivers } from '../src/map/useMapDrivers';
 import { bboxAround, bboxOf } from '../src/map/viewport';
 import { langOf, placeNames } from '../src/places/format';
-import { setHeadingTo, useHeadingTo } from '../src/sharing/headingTo';
+import {
+  applySuggestedHeadingTo,
+  setHeadingTo,
+  useHeadingTo,
+  useHeadingToSuggested,
+} from '../src/sharing/headingTo';
 import { breakLabel, clockTime, countdown } from '../src/sharing/time';
 import { useChooseHeading } from '../src/sharing/useChooseHeading';
 import {
@@ -99,7 +104,10 @@ function StartView({ status }: { status: SharingStatus }) {
   const lang = langOf(i18n.language);
   const now = useNow();
   const headingTo = useHeadingTo();
+  const suggested = useHeadingToSuggested();
   const [line, setLine] = useState('');
+
+  useEffect(() => applySuggestedHeadingTo(status.suggestedHeadingTo), [status.suggestedHeadingTo]);
   const { start } = useSharingActions();
   const showError = useErrorAlert();
   const isBus = status.vehicle?.transportType === 'BUS';
@@ -191,6 +199,9 @@ function StartView({ status }: { status: SharingStatus }) {
             />
           ) : null}
         </Pressable>
+        {suggested && headingTo ? (
+          <Badge label={t('sharing.suggested')} tone="success" icon="calendar-clock" />
+        ) : null}
         {isBus ? (
           <TextField
             label={t('sharing.lineLabel')}
@@ -252,6 +263,12 @@ function StartView({ status }: { status: SharingStatus }) {
           {t('sharing.startHint')}
         </Text>
       </View>
+      <Button
+        label={t('sharing.myRoutines')}
+        icon="calendar-clock"
+        variant="tonal"
+        onPress={() => router.push('/routines')}
+      />
     </Screen>
   );
 }

@@ -91,6 +91,8 @@ export const SharingStatus = z.object({
   session: SessionView.nullable(),
   /** The driver's vehicle (null until the driver file has one). */
   vehicle: z.object({ transportType: TransportType, plateDisplay: z.string() }).nullable(),
+  /** R-051: the destination of a routine departing within ±60 min, to pre-fill "heading to". */
+  suggestedHeadingTo: Place.nullable(),
   /** Why "Start sharing" is unavailable (empty when it is available or a session is active). */
   blockers: z.array(StartBlocker),
   cooldownUntil: z.iso.datetime().nullable(),

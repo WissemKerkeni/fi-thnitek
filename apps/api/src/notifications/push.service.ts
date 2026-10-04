@@ -18,7 +18,8 @@ export type PushEvent =
   | 'DOCUMENT_EXPIRED'
   | 'SHARING_ENDED'
   | 'BREAK_OVER'
-  | 'STILL_WORKING';
+  | 'STILL_WORKING'
+  | 'ROUTINE_STALE';
 
 const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   VERIFICATION_APPROVED: 'verificationApproved',
@@ -29,6 +30,7 @@ const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   SHARING_ENDED: 'sharingEnded',
   BREAK_OVER: 'breakOver',
   STILL_WORKING: 'stillWorking',
+  ROUTINE_STALE: 'routineStale',
 };
 
 /** What a transport receives: already localised, already PII-free. */

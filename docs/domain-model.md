@@ -69,8 +69,8 @@ stateDiagram-v2
 ```
 
 ### Routine routes
-- **driver_routines**: `id`, `driver_user_id`, `vehicle_id`, `transport_type_code`, `from_place_id`, `from_point`, `from_label`, `to_place_id`, `to_point`, `to_label`, `schedule_kind` (`ONE_OFF`|`WEEKLY`), `one_off_at?`, `days_mask?` (Mon=1…Sun=64), `local_time?` (Africa/Tunis), `seats?`, `note?`, `active` (bool), `last_used_at?` (the last sharing session matching it), `stale_prompted_at?`, `hidden_at?`, `created_at`.
-  Max 5 non-deleted routines per driver. One-off routines auto-deactivate after their time.
+- **driver_routines**: `id`, `driver_user_id`, `transport_type`, `from_place_id`, `to_place_id` (known places, ADR-219), `schedule_kind` (`ONE_OFF`|`WEEKLY`), `one_off_at?`, `days_mask?` (Mon=1…Sun=64), `local_time?` (Tunis-local "HH:MM"), `seats?`, `note?` (≤ 80), `active` (bool), `last_used_at?` (the last sharing session matching it, or the last "still running" answer), `stale_prompted_at?`, `hidden_at?`, `created_at`, `updated_at`.
+  Max 5 routines per driver. One-off routines are over once their time has passed. A CHECK keeps each kind's fields consistent.
 
 ### Passengers
 - **passenger_requests**: `id`, `passenger_user_id`, `transport_types[]` (⊆ {TAXI, LOUAGE}, non-empty), `destination_point`, `destination_place_id`, `destination_label`, `seats`, `note`, **`show_identity`** (bool, default **false**: name and note hidden from drivers unless true), `status`, `anchor_point?`, `anchor_accuracy_m?`, `visible_at?`, `last_point?`, `last_accuracy_m?`, `last_ping_at?`, `away_since?`, `created_at`, `expires_at`, `renew_count`, `closed_at?`.

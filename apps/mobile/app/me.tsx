@@ -75,6 +75,13 @@ export default function MeScreen() {
         {driver ? (
           <ListRow icon="access-point" title={t('sharing.title')} onPress={() => router.push('/sharing')} />
         ) : null}
+        {driver ? (
+          <ListRow
+            icon="calendar-clock"
+            title={t('routines.title')}
+            onPress={() => router.push('/routines')}
+          />
+        ) : null}
         {me?.driverVerification ? (
           <ListRow icon="steering" title={t('driver.statusTitle')} onPress={() => router.push('/driver')} />
         ) : null}

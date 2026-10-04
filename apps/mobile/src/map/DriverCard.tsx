@@ -2,6 +2,7 @@ import type { MapDriver } from '@fi-thnitek/contracts';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { langOf } from '../places/format';
+import { shortDate, tunisParts } from '../routines/format';
 import { colors, elevation, radii, spacing } from '../theme/tokens';
 import { Icon } from '../ui/Icon';
 import { Badge, IconButton } from '../ui/kit';
@@ -35,6 +36,17 @@ export function DriverCard({ driver, onClose }: { driver: MapDriver; onClose: ()
         ) : null}
         <Badge label={updated} tone="success" icon="access-point" />
       </View>
+      {driver.nextRoutine ? (
+        <View style={styles.heading}>
+          <Icon name="calendar-clock" size={20} color={colors.primary} />
+          <Text style={styles.flex}>
+            {t('live.nextRoutine', {
+              name: lang === 'ar' ? driver.nextRoutine.toNameAr : driver.nextRoutine.toNameFr,
+              when: `${shortDate(tunisParts(driver.nextRoutine.at).date)} ${tunisParts(driver.nextRoutine.at).time}`,
+            })}
+          </Text>
+        </View>
+      ) : null}
       {driver.headingTo ? (
         <View style={styles.heading}>
           <Icon name="map-marker" size={20} color={colors.danger} />

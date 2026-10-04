@@ -1,7 +1,7 @@
 import type { LatLng } from '@fi-thnitek/contracts';
 import { Camera, Map as MapView, type ViewStateChangeEvent } from '@maplibre/maplibre-react-native';
 import { useQuery } from '@tanstack/react-query';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, type NativeSyntheticEvent, StyleSheet, View } from 'react-native';
@@ -9,9 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
 import { useAuth } from '../src/auth/AuthProvider';
 import { DestinationPin, PIN_HEIGHT } from '../src/places/DestinationPin';
-import { setDestination, useDestination } from '../src/places/destination';
-import { useHeadingTo } from '../src/sharing/headingTo';
-import { useChooseHeading } from '../src/sharing/useChooseHeading';
+import { setDestination } from '../src/places/destination';
+import {
+  needsPlace,
+  titleKey,
+  useChoosePlace,
+  usePlacePurpose,
+  usePurposeStart,
+} from '../src/places/purpose';
 import { distanceParts, langOf, placeNames } from '../src/places/format';
 import { colors, elevation, radii, spacing } from '../src/theme/tokens';
 import { Icon } from '../src/ui/Icon';
@@ -23,17 +28,16 @@ const round = (v: number) => Math.round(v * 1e4) / 1e4;
 
 /**
  * "Pick on map" (R-011): a fixed centre pin, named after the closest known place. With
- * `purpose=heading` the closest place becomes the driver's "heading to" (a place is required then).
+ * `purpose` (heading-to, routine ends) the closest place is chosen instead (a known place is required).
  */
 export default function PickOnMapScreen() {
   const { t, i18n } = useTranslation();
   const { api } = useAuth();
   const insets = useSafeAreaInsets();
-  const heading = useLocalSearchParams<{ purpose?: string }>().purpose === 'heading';
-  const chooseHeading = useChooseHeading();
-  const destination = useDestination()?.point;
-  const headingTo = useHeadingTo()?.location;
-  const start = heading ? headingTo : destination;
+  const purpose = usePlacePurpose();
+  const choosePlace = useChoosePlace(purpose);
+  const start = usePurposeStart(purpose);
+  const placeOnly = needsPlace(purpose);
   const [center, setCenter] = useState<LatLng>(() => start ?? { lat: TUNIS_CENTER[1], lng: TUNIS_CENTER[0] });
   const point = { lat: round(center.lat), lng: round(center.lng) };
 
@@ -49,9 +53,10 @@ export default function PickOnMapScreen() {
   }
 
   function confirm() {
-    if (heading) {
-      if (nearest.data?.place) void chooseHeading(nearest.data.place).catch(() => undefined);
-      router.dismissTo('/sharing');
+    if (placeOnly) {
+      if (nearest.data?.place) choosePlace(nearest.data.place);
+      // Back past the search screen to the one that asked.
+      router.dismiss(2);
       return;
     }
     setDestination({
@@ -75,7 +80,9 @@ export default function PickOnMapScreen() {
 
   return (
     <View style={styles.flex}>
-      <Stack.Screen options={{ title: t('places.pickTitle') }} />
+      <Stack.Screen
+        options={{ title: purpose === 'destination' ? t('places.pickTitle') : t(titleKey(purpose)) }}
+      />
       <MapView
         style={styles.flex}
         mapStyle={MAP_STYLE_URL}
@@ -119,7 +126,7 @@ export default function PickOnMapScreen() {
           icon="check"
           label={t('places.confirm')}
           onPress={confirm}
-          disabled={nearest.isPending || (heading && !nearest.data?.place)}
+          disabled={nearest.isPending || (placeOnly && !nearest.data?.place)}
         />
       </View>
     </View>

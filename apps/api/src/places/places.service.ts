@@ -20,6 +20,7 @@ import { v7 as uuidv7 } from 'uuid';
 import { AuditService } from '../audit/audit.service.js';
 import { ApiException } from '../common/api-exception.js';
 import type { Database, Executor } from '../db/client.js';
+import { FOREIGN_KEY_VIOLATION, pgError } from '../db/pg-errors.js';
 import { DB } from '../db/db.module.js';
 import { places } from '../db/schema/index.js';
 
@@ -205,7 +206,17 @@ export class PlacesService {
 
   async remove(id: string, adminId: string): Promise<void> {
     await this.db.transaction(async (tx) => {
-      const deleted = await tx.delete(places).where(eq(places.id, id)).returning({ source: places.source });
+      const deleted = await tx
+        .delete(places)
+        .where(eq(places.id, id))
+        .returning({ source: places.source })
+        .catch((error: unknown) => {
+          // Routine routes point at places (ON DELETE RESTRICT).
+          if (pgError(error).code === FOREIGN_KEY_VIOLATION) {
+            throw new ApiException('CONFLICT', HttpStatus.CONFLICT, 'Place used by routine routes');
+          }
+          throw error;
+        });
       if (deleted.length !== 1) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);
       await this.audit.record(
         {

@@ -97,6 +97,7 @@ describe('driverMarker (R-022, invariant 9)', () => {
       'lineLabel',
       'lng',
       'name',
+      'nextRoutine',
       'plateDisplay',
       'type',
       'updatedAgoS',
