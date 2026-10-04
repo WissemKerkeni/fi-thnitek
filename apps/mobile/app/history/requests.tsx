@@ -10,6 +10,7 @@ import { Banner, Badge, Card } from '../../src/ui/kit';
 import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
 import { ReportLink } from '../../src/safety/ReportLink';
+import { arrow } from '../../src/ui/arrow';
 
 /** R-042 / R-070: the passenger's own requests of the last 30 days, each with "Report a problem". */
 export default function RequestHistoryScreen() {
@@ -36,7 +37,7 @@ export default function RequestHistoryScreen() {
               <View key={r.id} style={styles.row}>
                 <View style={styles.flex}>
                   <Text variant="bodyStrong">
-                    → {r.destination ? placeNames(r.destination, lang).name : t('places.pinnedPoint')}
+                    {arrow()} {r.destination ? placeNames(r.destination, lang).name : t('places.pinnedPoint')}
                   </Text>
                   <Text variant="caption" muted>
                     {shortDate(when.date)} · {when.time} ·{' '}

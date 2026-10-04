@@ -72,6 +72,7 @@ function VehicleForm({ file }: { file: MyVerification }) {
             </Text>
           </View>
           <TextInput
+            maxFontSizeMultiplier={1.6}
             value={plate}
             onChangeText={setPlate}
             placeholder={t('driver.platePlaceholder')}

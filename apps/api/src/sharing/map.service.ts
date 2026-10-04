@@ -50,6 +50,19 @@ const MAX_MARKERS = 300;
 const MAX_CLUSTERED = 5_000;
 /** Drivers this far outside the visible area still count as "closer drivers" for a visible passenger. */
 const CLOSER_MARGIN_DEG = 0.1;
+/** Viewports are widened to this grid so nearby viewers share one cache entry (architecture §8). */
+const TILE_DEG = 0.05;
+/** DI token: how long an area's drivers and requests are reused between polls (0 = no cache). */
+export const MAP_CACHE_MS = Symbol('MAP_CACHE_MS');
+
+type LiveDriverRow = Awaited<ReturnType<MapService['liveDrivers']>>[number];
+type OpenRequestRow = Awaited<ReturnType<MapService['openRequests']>>[number];
+interface AreaData {
+  around: LiveDriverRow[];
+  markers: Map<string, MapDriver>;
+  sharing: SharingDriverPosition[];
+  requests: OpenRequestRow[];
+}
 
 const headingOf = (ar: string | null, fr: string | null) =>
   ar !== null && fr !== null ? { nameAr: ar, nameFr: fr } : null;
@@ -64,7 +77,58 @@ export class MapService {
     @Inject(DB) private readonly db: Database,
     @Inject(THRESHOLDS) private readonly t: Thresholds,
     private readonly routines: RoutinesService,
+    @Inject(MAP_CACHE_MS) private readonly cacheMs: number,
   ) {}
+
+  private readonly cache = new Map<string, { until: number; data: Promise<AreaData> }>();
+
+  /**
+   * The drivers (with the closer-driver margin) and open requests of the viewport widened to the tile
+   * grid, reused for `cacheMs`: positions change every 10 s anyway, and concurrent polls of one area
+   * share a single query (the promise is cached).
+   */
+  private area(bbox: BBox, now: Date): Promise<AreaData> {
+    const tile = {
+      south: Math.floor(bbox.south / TILE_DEG) * TILE_DEG,
+      west: Math.floor(bbox.west / TILE_DEG) * TILE_DEG,
+      north: Math.ceil(bbox.north / TILE_DEG) * TILE_DEG,
+      east: Math.ceil(bbox.east / TILE_DEG) * TILE_DEG,
+    };
+    const key = `${tile.south.toFixed(2)},${tile.west.toFixed(2)},${tile.north.toFixed(2)},${tile.east.toFixed(2)}`;
+    const hit = this.cache.get(key);
+    if (this.cacheMs > 0 && hit && hit.until > now.getTime()) return hit.data;
+
+    const data = (async (): Promise<AreaData> => {
+      const margin = {
+        south: tile.south - CLOSER_MARGIN_DEG,
+        west: tile.west - CLOSER_MARGIN_DEG,
+        north: tile.north + CLOSER_MARGIN_DEG,
+        east: tile.east + CLOSER_MARGIN_DEG,
+      };
+      const around = await this.liveDrivers(this.inBox(margin), now, MAX_MARKERS * 4);
+      const markers = await this.markers(around, now);
+      return {
+        around,
+        markers: new Map(markers.map((m) => [m.id, m])),
+        sharing: around.map((d) => ({
+          userId: d.driverUserId,
+          type: d.type,
+          isFull: d.isFull,
+          position: { lat: d.lat, lng: d.lng },
+        })),
+        requests: await this.openRequests(tile, MAX_MARKERS * 4),
+      };
+    })();
+    if (this.cacheMs > 0) {
+      if (this.cache.size > 500) {
+        for (const [k, v] of this.cache) if (v.until <= now.getTime()) this.cache.delete(k);
+      }
+      this.cache.set(key, { until: now.getTime() + this.cacheMs, data });
+      // A failed query must not be served to the next viewers.
+      data.catch(() => this.cache.delete(key));
+    }
+    return data;
+  }
 
   async view(viewerId: string, bbox: BBox, now = new Date()): Promise<MapView> {
     const viewer = await this.viewerOf(viewerId, now);
@@ -84,28 +148,21 @@ export class MapService {
       return { clustered: true, drivers: [], passengers: [], clusters: clusterPoints(points, bbox, this.t) };
     }
 
-    const margin = {
-      south: bbox.south - CLOSER_MARGIN_DEG,
-      west: bbox.west - CLOSER_MARGIN_DEG,
-      north: bbox.north + CLOSER_MARGIN_DEG,
-      east: bbox.east + CLOSER_MARGIN_DEG,
-    };
-    const around = await this.liveDrivers(this.inBox(margin), now, MAX_MARKERS * 2);
-    const visible = around
-      .filter((d) => d.lat >= bbox.south && d.lat <= bbox.north && d.lng >= bbox.west && d.lng <= bbox.east)
-      .filter((d) => d.driverUserId !== viewerId && !hidden.has(d.driverUserId))
+    // What every viewer of this area sees alike comes from the area cache; what depends on the viewer
+    // (blocks, own markers, exact or approximate passengers) is applied below, on every poll.
+    const area = await this.area(bbox, now);
+    const inside = (p: { lat: number; lng: number }) =>
+      p.lat >= bbox.south && p.lat <= bbox.north && p.lng >= bbox.west && p.lng <= bbox.east;
+    const drivers = area.around
+      .filter((d) => inside(d) && d.driverUserId !== viewerId && !hidden.has(d.driverUserId))
+      .slice(0, MAX_MARKERS)
+      .map((d) => area.markers.get(d.sessionId)!);
+    const requests = area.requests
+      .filter((r) => inside({ lat: r.anchorLat!, lng: r.anchorLng! }))
       .slice(0, MAX_MARKERS);
-    const sharing: SharingDriverPosition[] = around.map((d) => ({
-      userId: d.driverUserId,
-      type: d.type,
-      isFull: d.isFull,
-      position: { lat: d.lat, lng: d.lng },
-    }));
-
-    const requests = await this.openRequests(bbox, MAX_MARKERS);
     return {
       clustered: false,
-      drivers: await this.markers(visible, now),
+      drivers,
       passengers: requests.flatMap((r) => {
         if (hidden.has(r.passengerUserId)) return [];
         const marker = passengerMarker(
@@ -122,7 +179,7 @@ export class MapService {
             note: r.note,
           },
           viewer,
-          sharing,
+          area.sharing,
           now,
           this.t,
         );

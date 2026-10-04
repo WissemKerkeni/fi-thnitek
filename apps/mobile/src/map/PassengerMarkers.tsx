@@ -6,6 +6,7 @@ import { langOf } from '../places/format';
 import { colors, elevation, radii, spacing } from '../theme/tokens';
 import { Icon } from '../ui/Icon';
 import { Text } from '../ui/Text';
+import { arrow } from '../ui/arrow';
 
 /**
  * Waiting passengers (R-023/R-024). Exact markers (for matching sharing drivers) are solid pins with the
@@ -22,7 +23,7 @@ export function PassengerMarkers({
   const lang = langOf(i18n.language);
   return passengers.map((p) => {
     const dest = p.destination ? (lang === 'ar' ? p.destination.nameAr : p.destination.nameFr) : null;
-    const label = `${t('map.layerPassengers')}${dest ? ` → ${dest}` : ''}`;
+    const label = `${t('map.layerPassengers')}${dest ? ` ${arrow()} ${dest}` : ''}`;
     return (
       <Marker key={p.id} id={`p-${p.id}`} lngLat={[p.lng, p.lat]} anchor={p.exact ? 'bottom' : 'center'}>
         <Pressable
@@ -50,7 +51,7 @@ export function PassengerMarkers({
           {dest ? (
             <View style={styles.label}>
               <Text variant="caption" numberOfLines={1} style={styles.labelText}>
-                → {dest}
+                {arrow()} {dest}
               </Text>
             </View>
           ) : null}

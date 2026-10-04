@@ -68,6 +68,7 @@ export default function DestinationScreen() {
         <View style={styles.searchBox}>
           <Icon name="magnify" color={colors.primary} />
           <TextInput
+            maxFontSizeMultiplier={1.6}
             value={text}
             onChangeText={setText}
             autoFocus

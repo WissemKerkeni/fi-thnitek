@@ -78,6 +78,20 @@
       "when": 1791131726897,
       "tag": "0010_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791134873535,
+      "tag": "0011_retention",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791135053119,
+      "tag": "0012_client_errors",
+      "breakpoints": true
     }
   ]
 }

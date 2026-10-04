@@ -11,6 +11,7 @@ import { colors, radii, spacing } from '../../src/theme/tokens';
 import { Banner, Card } from '../../src/ui/kit';
 import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
+import { arrow } from '../../src/ui/arrow';
 
 /** R-070: the driver's own sessions of the last 30 days; "Report a problem during this session" + a time. */
 export default function SessionHistoryScreen() {
@@ -43,7 +44,7 @@ export default function SessionHistoryScreen() {
                   </Text>
                   {s.headingTo ? (
                     <Text variant="caption" muted>
-                      → {placeNames(s.headingTo, lang).name}
+                      {arrow()} {placeNames(s.headingTo, lang).name}
                     </Text>
                   ) : null}
                   {s.endReason ? (

@@ -15,6 +15,15 @@ export default defineConfig({
           fileParallelism: false,
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'load',
+          include: ['test/load/**/*.load.test.ts'],
+          testTimeout: 600_000,
+          hookTimeout: 600_000,
+        },
+      },
     ],
   },
 });

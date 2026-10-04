@@ -333,3 +333,41 @@ export const AdminStats = z.object({
   }),
 });
 export type AdminStats = z.infer<typeof AdminStats>;
+
+/** GET /admin/field-metrics (Phase 9): what happened in the field over a period, to tune thresholds. */
+export const AdminFieldMetricsQuery = z.object({ from: z.iso.datetime(), to: z.iso.datetime() });
+export type AdminFieldMetricsQuery = z.infer<typeof AdminFieldMetricsQuery>;
+
+const Spread = z.object({ n: z.number().int(), p50: z.number().nullable(), p90: z.number().nullable() });
+export type Spread = z.infer<typeof Spread>;
+
+export const AdminFieldMetrics = z.object({
+  requests: z.object({
+    total: z.number().int(),
+    byStatus: z.record(z.string(), z.number().int()),
+    /** Posting → anchored (first accurate fix), seconds. Compare with `anchor_timeout_s`. */
+    anchorDelayS: Spread,
+    /** Accuracy of the anchoring fix, metres. Compare with `anchor_max_accuracy_m`. */
+    anchorAccuracyM: Spread,
+    /** Visible → closed as MOVED_AWAY, minutes: how long people waited before leaving. */
+    waitBeforeMovedAwayMin: Spread,
+    renewed: z.number().int(),
+  }),
+  sessions: z.object({
+    total: z.number().int(),
+    byEndReason: z.record(z.string(), z.number().int()),
+    durationMin: Spread,
+    breaksPerSession: z.number().nullable(),
+    cooldownsApplied: z.number().int(),
+  }),
+  pickups: z.object({
+    total: z.number().int(),
+    distanceM: Spread,
+    /** MOVED_AWAY requests with at least one driver recorded nearby. */
+    movedAwayWithDriver: z.number().int(),
+  }),
+  reports: z.object({ byCategory: z.record(z.string(), z.number().int()) }),
+  /** The thresholds in force, next to the measurements they relate to. */
+  thresholds: z.record(z.string(), z.unknown()),
+});
+export type AdminFieldMetrics = z.infer<typeof AdminFieldMetrics>;

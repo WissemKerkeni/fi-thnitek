@@ -54,5 +54,7 @@
 | 16 | **Driver abuses breaks** (e.g. repeated breaks to hide from certain passengers) | Session events | None automatic (breaks are legitimate) | Break frequency per day | Admin if reported | Warning | Contact form |
 | 17 | **Drivers argue over who takes a passenger** | Reports between drivers | None automatic | Session events, pick-up record | Admin | Warning; repeat → suspension | Contact form |
 
+Every scenario above is an end-to-end test in `apps/api/test/scenarios.int.test.ts` (ADR-223).
+
 ## 5. If abuse grows (not before)
 Optional phone OTP to request; Play Integrity device checks; stricter new-account limits in hot areas; a non-binding "on my way" marker if racing causes conflicts.

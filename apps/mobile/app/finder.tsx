@@ -17,6 +17,7 @@ import { Icon, type IconName } from '../src/ui/Icon';
 import { Badge, Banner, Card, SectionTitle } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
+import { arrow } from '../src/ui/arrow';
 
 /** P2 (Stitch "Tunis → Sousse", R-045/R-046): heading there now, taxis nearby, scheduled departures. */
 export default function FinderScreen() {
@@ -144,7 +145,7 @@ function DriverRow({ driver: d }: { driver: FinderDriver }) {
           {d.lineLabel ? ` · ${d.lineLabel}` : ''}
         </Text>
         <Text variant="caption" muted>
-          {d.headingTo ? `→ ${lang === 'ar' ? d.headingTo.nameAr : d.headingTo.nameFr} · ` : ''}
+          {d.headingTo ? `${arrow()} ${lang === 'ar' ? d.headingTo.nameAr : d.headingTo.nameFr} · ` : ''}
           {distance
             ? t('finder.distance', { distance: t(`places.${distance.unit}`, { value: distance.value }) })
             : t('finder.noDistance')}
@@ -174,7 +175,8 @@ function DepartureRow({ departure: r }: { departure: FinderDeparture }) {
       </View>
       <View style={styles.flex}>
         <Text variant="bodyStrong">
-          {lang === 'ar' ? r.from.nameAr : r.from.nameFr} → {lang === 'ar' ? r.to.nameAr : r.to.nameFr}
+          {lang === 'ar' ? r.from.nameAr : r.from.nameFr} {arrow()}{' '}
+          {lang === 'ar' ? r.to.nameAr : r.to.nameFr}
         </Text>
         <Text variant="caption" muted>
           {r.driverName} · {t(`driver.type_${r.type}`)}

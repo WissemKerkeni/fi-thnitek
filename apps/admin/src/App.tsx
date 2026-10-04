@@ -1,5 +1,7 @@
 import {
   AlertOutlined,
+  BarChartOutlined,
+  BugOutlined,
   CarOutlined,
   DashboardOutlined,
   EnvironmentOutlined,
@@ -17,7 +19,9 @@ import frFR from 'antd/locale/fr_FR';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router';
 import { authProvider } from './lib/auth-provider';
 import { AppealList } from './pages/AppealList';
+import { ClientErrorList } from './pages/ClientErrorList';
 import { Dashboard } from './pages/Dashboard';
+import { FieldMetrics } from './pages/FieldMetrics';
 import { FlagList } from './pages/FlagList';
 import { Login } from './pages/Login';
 import { PickupSearch } from './pages/PickupSearch';
@@ -85,6 +89,16 @@ export function App() {
                 meta: { label: 'Prises en charge', icon: <NodeIndexOutlined /> },
               },
               {
+                name: 'field-metrics',
+                list: '/field-metrics',
+                meta: { label: 'Mesures terrain', icon: <BarChartOutlined /> },
+              },
+              {
+                name: 'client-errors',
+                list: '/client-errors',
+                meta: { label: 'Erreurs', icon: <BugOutlined /> },
+              },
+              {
                 name: 'places',
                 list: '/places',
                 meta: { label: 'Lieux', icon: <EnvironmentOutlined /> },
@@ -112,6 +126,8 @@ export function App() {
                 <Route path="/users/:userId" element={<UserShow />} />
                 <Route path="/appeals" element={<AppealList />} />
                 <Route path="/pickups" element={<PickupSearch />} />
+                <Route path="/field-metrics" element={<FieldMetrics />} />
+                <Route path="/client-errors" element={<ClientErrorList />} />
                 <Route path="/places" element={<PlaceList />} />
               </Route>
               <Route

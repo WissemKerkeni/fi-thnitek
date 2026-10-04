@@ -303,6 +303,7 @@ function DateBox(props: {
 }) {
   return (
     <TextInput
+      maxFontSizeMultiplier={1.6}
       value={props.value}
       onChangeText={(v) => props.onChange(v.replace(/\D/g, ''))}
       placeholder={props.placeholder}
