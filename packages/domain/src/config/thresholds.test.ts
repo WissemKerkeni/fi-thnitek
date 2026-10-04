@@ -24,6 +24,7 @@ describe('DEFAULT_THRESHOLDS', () => {
       pickup_radius_m: 50,
       spoof_speed_kmh: 180,
       approx_grid_m: 100,
+      document_expiry_reminder_days: 30,
     });
   });
 

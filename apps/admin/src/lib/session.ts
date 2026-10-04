@@ -1,4 +1,5 @@
 import { Me, PROBLEM_JSON, ProblemDetails, SignInResponse, TokenPair } from '@fi-thnitek/contracts';
+import type { ZodType } from 'zod';
 import { API_URL } from './api';
 
 /** A non-2xx API response with its problem code, if any. */
@@ -76,10 +77,17 @@ export function createAdminSession(
     return refreshing;
   }
 
-  async function getAdminMe(): Promise<Me> {
+  /** Authenticated call: refreshes once on TOKEN_EXPIRED; a 401/403 ends the admin session. */
+  async function request<T>(method: string, path: string, schema: ZodType<T>, body?: unknown): Promise<T> {
     const call = () =>
-      fetchImpl(`${root}/admin/me`, {
-        headers: { Accept: 'application/json', Authorization: `Bearer ${load()?.accessToken ?? ''}` },
+      fetchImpl(`${root}${path}`, {
+        method,
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${load()?.accessToken ?? ''}`,
+          ...(body !== undefined && { 'Content-Type': 'application/json' }),
+        },
+        ...(body !== undefined && { body: JSON.stringify(body) }),
       });
     let res = await call();
     if (res.status === 401) {
@@ -92,11 +100,13 @@ export function createAdminSession(
     }
     if (!res.ok) {
       const error = await errorOf(res);
-      if (res.status === 401 || res.status === 403) clear();
+      if (res.status === 401 || (res.status === 403 && error.code !== 'VALIDATION_FAILED')) clear();
       throw error;
     }
-    return Me.parse(await res.json());
+    return schema.parse(res.status === 204 ? undefined : await res.json());
   }
+
+  const getAdminMe = () => request('GET', '/admin/me', Me);
 
   return {
     hasSession: () => load() !== null,
@@ -117,6 +127,7 @@ export function createAdminSession(
     },
 
     getAdminMe,
+    request,
 
     async signOut(): Promise<void> {
       const current = load();

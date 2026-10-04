@@ -4,8 +4,9 @@ import {
   isCancelledResponse,
   isSuccessResponse,
 } from '@react-native-google-signin/google-signin';
+import { File } from 'expo-file-system';
 import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { type ApiError, createApiClient } from '../lib/api';
+import { type ApiClient, type ApiError, createApiClient } from '../lib/api';
 import { API_URL, GOOGLE_WEB_CLIENT_ID } from '../lib/config';
 import { deviceInfo } from './device';
 import type { SessionState } from './next-route';
@@ -15,12 +16,16 @@ export type SignInResult = 'ok' | 'cancelled' | 'not-configured';
 
 interface AuthContextValue {
   session: SessionState;
+  /** The signed-in API client (tokens and refresh handled for you). */
+  api: ApiClient;
   /** Set when the server ended the session (e.g. ACCOUNT_SUSPENDED); shown on the sign-in screen. */
   endedReason: string | null;
   signIn: () => Promise<SignInResult>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
   updateMe: (patch: UpdateMeRequest) => Promise<Me>;
+  /** Re-reads /v1/me (e.g. after a verification decision push). */
+  refreshMe: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -35,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () =>
       createApiClient(API_URL, {
         tokens,
+        fileFromUri: (uri) => new File(uri),
         onSessionEnded: (error: ApiError) => {
           setEndedReason(error.problem?.code ?? null);
           setSession({ status: 'signedOut' });
@@ -90,9 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [api],
   );
 
+  const refreshMe = useCallback(async () => {
+    const me = await api.getMe();
+    setSession({ status: 'signedIn', me });
+  }, [api]);
+
   const value = useMemo(
-    () => ({ session, endedReason, signIn, signOut, deleteAccount, updateMe }),
-    [session, endedReason, signIn, signOut, deleteAccount, updateMe],
+    () => ({ session, api, endedReason, signIn, signOut, deleteAccount, updateMe, refreshMe }),
+    [session, api, endedReason, signIn, signOut, deleteAccount, updateMe, refreshMe],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

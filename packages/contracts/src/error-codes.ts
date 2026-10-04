@@ -25,6 +25,14 @@ export const ErrorCode = z.enum([
   'ACCOUNT_SUSPENDED',
   'ACCOUNT_BANNED',
   'ADMIN_REQUIRED',
+  // Driver verification (R-060…R-064)
+  'CIN_ALREADY_REGISTERED',
+  'PLATE_ALREADY_REGISTERED',
+  'VERIFICATION_INCOMPLETE',
+  /** The file cannot be edited in its current state (e.g. under review). */
+  'VERIFICATION_LOCKED',
+  'UNSUPPORTED_MEDIA_TYPE',
+  'FILE_TOO_LARGE',
   // Domain (docs/domain-model.md §2)
   'SHARING_REQUIRED',
   'COOLDOWN_ACTIVE',

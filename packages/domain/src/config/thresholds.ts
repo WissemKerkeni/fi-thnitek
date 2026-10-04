@@ -37,6 +37,8 @@ export const ThresholdsSchema = z
     pickup_radius_m: positiveInt,
     spoof_speed_kmh: positiveInt,
     approx_grid_m: positiveInt,
+    /** Drivers get a reminder this many days before an accepted document expires (R-064). */
+    document_expiry_reminder_days: positiveInt,
   })
   .strict();
 
@@ -70,6 +72,7 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     pickup_radius_m: 50,
     spoof_speed_kmh: 180,
     approx_grid_m: 100,
+    document_expiry_reminder_days: 30,
   }),
 );
 

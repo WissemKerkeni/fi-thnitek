@@ -22,3 +22,6 @@ apps/mobile/ios/
 .idea/shelf/
 .vscode/*
 !.vscode/extensions.json
+
+# Firebase client config (per environment)
+apps/mobile/google-services.json

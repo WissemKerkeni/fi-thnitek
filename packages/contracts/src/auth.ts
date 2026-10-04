@@ -50,6 +50,10 @@ export const Me = z.object({
   termsAcceptedVersion: z.string().nullable(),
   /** The Terms & Privacy version the app must show and send back as `acceptTermsVersion`. */
   currentTermsVersion: z.string(),
+  /** Driver verification state, or null if the user never started one. VERIFIED ⇒ driver-only (ADR-205). */
+  driverVerification: z
+    .enum(['DRAFT', 'UNDER_REVIEW', 'VERIFIED', 'CHANGES_REQUESTED', 'REJECTED', 'EXPIRED', 'SUSPENDED'])
+    .nullable(),
   /** True until the onboarding steps (terms + display name) are complete (R-002). */
   needsOnboarding: z.boolean(),
 });

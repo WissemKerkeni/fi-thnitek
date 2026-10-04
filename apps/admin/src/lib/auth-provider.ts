@@ -1,7 +1,6 @@
 import type { AuthProvider } from '@refinedev/core';
-import { AdminApiError, createAdminSession } from './session';
-
-const session = createAdminSession();
+import { adminSession as session } from './admin-session';
+import { AdminApiError } from './session';
 
 const MESSAGES: Record<string, string> = {
   ADMIN_REQUIRED: "Ce compte Google n'est pas administrateur.",

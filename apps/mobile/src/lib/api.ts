@@ -1,13 +1,18 @@
 import {
   type DeviceInfo,
+  type DocumentType,
+  DocumentView,
+  type DriverProfileInput,
   HealthResponse,
   Me,
+  MyVerification,
   PROBLEM_JSON,
   ProblemDetails,
   type RegisterDeviceRequest,
   SignInResponse,
   TokenPair,
   type UpdateMeRequest,
+  type VehicleInput,
 } from '@fi-thnitek/contracts';
 import type { ZodType } from 'zod';
 
@@ -37,6 +42,11 @@ export interface ApiClientOptions {
   tokens?: TokenStore;
   /** Called when the session can no longer be refreshed (expired, revoked, reused, account blocked). */
   onSessionEnded?: (reason: ApiError) => void;
+  /**
+   * Turns a local file URI into an uploadable Blob. Expo's fetch only accepts real Blob/File parts in
+   * FormData (not React Native's `{ uri, name, type }`), so the app passes expo-file-system's `File`.
+   */
+  fileFromUri?: (uri: string) => Blob;
 }
 
 export interface ApiClient {
@@ -47,6 +57,20 @@ export interface ApiClient {
   registerDevice(device: RegisterDeviceRequest): Promise<void>;
   logout(): Promise<void>;
   deleteMe(): Promise<void>;
+  // Driver verification (D1/D2)
+  getMyVerification(): Promise<MyVerification>;
+  saveDriverProfile(input: DriverProfileInput): Promise<MyVerification>;
+  saveVehicle(input: VehicleInput): Promise<MyVerification>;
+  uploadDocument(upload: DocumentUpload): Promise<DocumentView>;
+  deleteDocument(id: string): Promise<void>;
+  submitVerification(): Promise<MyVerification>;
+}
+
+/** A photo already resized/re-encoded on the device (local file URI). */
+export interface DocumentUpload {
+  type: DocumentType;
+  uri: string;
+  expiresOn?: string;
 }
 
 const NO_BODY = { parse: () => undefined } as unknown as ZodType<void>;
@@ -59,12 +83,14 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
 
   async function send(method: string, path: string, body: unknown, accessToken: string | null) {
     const headers: Record<string, string> = { Accept: 'application/json' };
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
+    // Multipart bodies set their own Content-Type (with the boundary).
+    if (body !== undefined && !multipart) headers['Content-Type'] = 'application/json';
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
     return fetchImpl(`${root}/v1${path}`, {
       method,
       headers,
-      ...(body !== undefined && { body: JSON.stringify(body) }),
+      ...(body !== undefined && { body: multipart ? body : JSON.stringify(body) }),
     });
   }
 
@@ -161,6 +187,21 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     async deleteMe() {
       await authed('DELETE', '/me', NO_BODY);
       await tokens?.clear();
+    },
+
+    getMyVerification: () => authed('GET', '/driver/verification', MyVerification),
+    saveDriverProfile: (input) => authed('PUT', '/driver/profile', MyVerification, input),
+    saveVehicle: (input) => authed('PUT', '/driver/vehicle', MyVerification, input),
+    deleteDocument: (id) => authed('DELETE', `/driver/documents/${id}`, NO_BODY),
+    submitVerification: () => authed('POST', '/driver/verification/submit', MyVerification),
+
+    uploadDocument(upload) {
+      const form = new FormData();
+      form.append('type', upload.type);
+      if (upload.expiresOn) form.append('expiresOn', upload.expiresOn);
+      if (!options.fileFromUri) throw new Error('fileFromUri is required to upload files');
+      form.append('file', options.fileFromUri(upload.uri), 'photo.jpg');
+      return authed('POST', '/driver/documents', DocumentView, form);
     },
   };
 }

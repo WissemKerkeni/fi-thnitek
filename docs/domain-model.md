@@ -28,8 +28,8 @@ erDiagram
 
 ### Drivers
 - **driver_profiles**: `user_id` PK, legal names, `cin_hmac` (unique), `cin_last4`, `cin_encrypted`, `public_photo_key`, `status`, `submitted_at`, `reviewed_by`, `reviewed_at`, `decision_reason`, **`cooldown_until`**, document expiry dates.
-- **driver_documents**: `id`, `driver_user_id`, `vehicle_id?`, `type`, `storage_key`, `sha256`, `status`, `reason`, `expires_on`.
-- **vehicles**: `id`, `driver_user_id`, `transport_type_code` (`TAXI`|`LOUAGE`|`BUS`), `plate_normalized` (unique), `plate_display`, `model`, `color`, `seats`, `status`.
+- **driver_documents**: `id`, `driver_user_id`, `type` (`CIN_FRONT`|`CIN_BACK`|`SELFIE`|`DRIVING_LICENCE`|`PROFESSIONAL_CARD`|`VEHICLE_REGISTRATION`|`INSURANCE`|`OPERATING_CARD`|`OPERATOR_AUTHORISATION`|`VEHICLE_PHOTO`), `storage_key`, `sha256`, `content_type`, `size_bytes`, `status` (`PENDING`|`ACCEPTED`|`REJECTED`), `reason`, `expires_on`, `reminded_at`, `created_at`, `reviewed_at`.
+- **vehicles**: `id`, `driver_user_id` (one vehicle per driver for now), `transport_type` (`TAXI`|`LOUAGE`|`BUS`), `plate_normalized` (unique; Arabic/Latin spellings collapse), `plate_display`, `seats` (from the type: taxi 4, louage 8, bus null; ADR-216).
 - **transport_types**: `code`, names, `can_share` (all true), `can_be_requested` (TAXI, LOUAGE true; BUS false), `required_documents[]`.
 
 Driver verification status:
@@ -112,7 +112,7 @@ stateDiagram-v2
 8. Pings with no active mode are rejected with `stop: true` and not stored.
 
 ## 3. Configurable thresholds (admin "Content → thresholds")
-`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`.
+`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `document_expiry_reminder_days=30`.
 
 ## 4. Retention (proposed; confirm with a lawyer)
 | Data | Retention |

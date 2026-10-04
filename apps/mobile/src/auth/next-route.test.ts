@@ -10,6 +10,7 @@ const me: Me = {
   isAdmin: false,
   termsAcceptedVersion: 'v2',
   currentTermsVersion: 'v2',
+  driverVerification: null,
   needsOnboarding: false,
 };
 

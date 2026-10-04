@@ -9,6 +9,7 @@ const me = {
   isAdmin: true,
   termsAcceptedVersion: null,
   currentTermsVersion: 'v1',
+  driverVerification: null,
   needsOnboarding: true,
 };
 const pair = (n: number) => ({ accessToken: `a${n}`, expiresIn: 900, refreshToken: `r${n}`.padEnd(43, 'x') });
