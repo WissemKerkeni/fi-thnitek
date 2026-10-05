@@ -3,6 +3,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { ProblemDetailsFilter } from './common/problem-details.filter.js';
+import { ClientErrorsModule } from './client-errors/client-errors.module.js';
 import { ConfigModule } from './config/config.module.js';
 import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -11,6 +12,7 @@ import { LoggingModule } from './logging/logging.module.js';
 import { ModerationModule } from './moderation/moderation.module.js';
 import { PlacesModule } from './places/places.module.js';
 import { RequestsModule } from './requests/requests.module.js';
+import { RetentionModule } from './retention/retention.module.js';
 import { RoutinesModule } from './routines/routines.module.js';
 import { SharingModule } from './sharing/sharing.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -32,6 +34,8 @@ import { VerificationModule } from './verification/verification.module.js';
     RoutinesModule,
     RequestsModule,
     ModerationModule,
+    RetentionModule,
+    ClientErrorsModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }],
 })

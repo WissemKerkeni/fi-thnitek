@@ -41,6 +41,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { AdminSessionsService } from './admin-sessions.service.js';
 import { MapService } from './map.service.js';
 import { PING_MIN_INTERVAL_MS, PingRateLimiter } from './ping-rate-limiter.js';
+import { MAP_RATE_LIMIT, type RateBudget, WindowRateLimiter } from './window-rate-limiter.js';
 import { RequestsService } from '../requests/requests.service.js';
 import { SharingService } from './sharing.service.js';
 
@@ -151,7 +152,14 @@ export class LocationController {
 @ApiBearerAuth()
 @Controller()
 export class MapController {
-  constructor(private readonly map: MapService) {}
+  private readonly limiter: WindowRateLimiter;
+
+  constructor(
+    private readonly map: MapService,
+    @Inject(MAP_RATE_LIMIT) budget: RateBudget,
+  ) {
+    this.limiter = new WindowRateLimiter(budget);
+  }
 
   /** Polled every 5 s (R-021): an unchanged answer is a bodiless 304 when the phone sends its ETag. */
   @Post('map')
@@ -162,6 +170,9 @@ export class MapController {
     @Headers('if-none-match') ifNoneMatch: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<MapView | undefined> {
+    // The phone keeps showing its last view and polls again on schedule.
+    if (!this.limiter.allow(auth.userId))
+      throw new ApiException('RATE_LIMITED', HttpStatus.TOO_MANY_REQUESTS);
     const view = await this.map.view(auth.userId, body.bbox);
     const etag = `W/"${createHash('sha1').update(JSON.stringify(view)).digest('base64url')}"`;
     res.setHeader('ETag', etag);

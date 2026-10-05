@@ -58,6 +58,8 @@ export const passengerRequests = pgTable(
     expiryRemindedAt: timestamp('expiry_reminded_at', { withTimezone: true }),
     renewCount: integer('renew_count').notNull().default(0),
     closedAt: timestamp('closed_at', { withTimezone: true }),
+    /** Retention (§4): points reduced to ~1 km cells, the latest point dropped. */
+    coarsenedAt: timestamp('coarsened_at', { withTimezone: true }),
   },
   (t) => [
     uniqueIndex('passenger_requests_one_open')

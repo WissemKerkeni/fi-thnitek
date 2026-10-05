@@ -9,3 +9,4 @@ export * from './sharing.js';
 export * from './routines.js';
 export * from './requests.js';
 export * from './moderation.js';
+export * from './client-errors.js';

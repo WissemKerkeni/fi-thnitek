@@ -10,6 +10,8 @@ import { DEV_CIN_ENCRYPTION_KEY, DEV_CIN_HMAC_KEY, DEV_JWT_SECRET, ENV, loadEnv 
 import { runMigrations } from '../src/db/migrate.js';
 import { PUSH_TRANSPORT, RecordingTransport } from '../src/notifications/push.service.js';
 import { PING_MIN_INTERVAL_MS } from '../src/sharing/ping-rate-limiter.js';
+import { MAP_CACHE_MS } from '../src/sharing/map.service.js';
+import { MAP_RATE_LIMIT } from '../src/sharing/window-rate-limiter.js';
 import { RequestsSweepJob } from '../src/requests/requests.module.js';
 import { SharingSweepJob } from '../src/sharing/sharing-sweep.job.js';
 import { TEST_S3, startGarage } from './garage.js';
@@ -35,7 +37,8 @@ export interface TestApp {
  * Real PostGIS and Garage (Testcontainers) + migrations + the full Nest app. Only Google's key set is local
  * and pushes are recorded instead of sent.
  */
-export async function startTestApp(): Promise<TestApp> {
+/** `mapCacheMs`: tests see changes at once (0) unless they measure the cache (the load test). */
+export async function startTestApp(options: { mapCacheMs?: number } = {}): Promise<TestApp> {
   const [container, garage] = await Promise.all([startPostgis(), startGarage()]);
   const databaseUrl = container.getConnectionUri();
   const push = new RecordingTransport();
@@ -72,6 +75,10 @@ export async function startTestApp(): Promise<TestApp> {
     // Tests send batches back to back, and drive the sweep themselves with a chosen clock.
     .overrideProvider(PING_MIN_INTERVAL_MS)
     .useValue(0)
+    .overrideProvider(MAP_RATE_LIMIT)
+    .useValue({ limit: 1_000, windowMs: 1_000 })
+    .overrideProvider(MAP_CACHE_MS)
+    .useValue(options.mapCacheMs ?? 0)
     .overrideProvider(SharingSweepJob)
     .useValue({})
     .overrideProvider(RequestsSweepJob)

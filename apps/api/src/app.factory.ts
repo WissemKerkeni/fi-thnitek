@@ -13,6 +13,12 @@ export function configureApp(app: INestApplication): void {
   const env = app.get<Env>(ENV);
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix(API_PREFIX);
+  // Caddy (same host or Docker network) forwards the client address; trust only private hops, so the
+  // per-address limits (crash reports) see the phone, not the proxy.
+  (app.getHttpAdapter().getInstance() as { set: (k: string, v: string) => void }).set(
+    'trust proxy',
+    'loopback, linklocal, uniquelocal',
+  );
   app.enableShutdownHooks();
   if (env.CORS_ORIGINS.length > 0) app.enableCors({ origin: env.CORS_ORIGINS });
 

@@ -99,6 +99,7 @@ stateDiagram-v2
 - **blocks**: `id`, `blocker_user_id`, `blocked_user_id` (unique pair, not self), `kind` (`DRIVER`|`PASSENGER`), `label?` (the driver's public name, or the passenger's name only if they had shown it), `created_at`. Either direction hides both people from each other's map and finder (R-027).
 - **appeals** (R-073, the contact form): `id`, `user_id`, `sanction_id?`, `message`, `status` (`OPEN`|`CLOSED`, one OPEN per user), `handled_by?`, `handled_at?`, `created_at`.
 - **risk_flags**: `id`, `user_id`, `type` (`MOCK_LOCATION`|`IMPOSSIBLE_JUMP`|`MULTI_ACCOUNT_DEVICE`|`NOBODY_THERE_CLUSTER`|`REPORTS_CLUSTER`), `session_id?`, `request_id?`, `evidence` jsonb (measurements such as speed, interval or reporter counts, never coordinates), `created_at`, `reviewed_at?`, `reviewed_by?`.
+- **client_errors** (crash reports, ADR-223): `id`, `fingerprint`, `name`, `message`, `stack?`, `screen?`, `fatal`, `install_id`, `platform`, `app_version`, `occurred_at`, `received_at`. Scrubbed twice, no user id, no position; 90 days.
 - **notifications**, **audit_logs** (insert-only).
 
 ## 2. Invariants (each covered by a test)
@@ -116,13 +117,13 @@ stateDiagram-v2
 8. Pings with no active mode are rejected with `stop: true` and not stored.
 
 ## 3. Configurable thresholds (admin "Content → thresholds")
-`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `anchor_timeout_s=60`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `request_expiry_reminder_min=10`, `request_daily_limit_new=5`, `request_daily_limit=15`, `request_new_account_days=3`, `passenger_ping_s=5`, `passenger_distance_filter_m=3`, `passenger_buffer_max_min=5`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `ping_gap_s=120`, `driver_ping_moving_s=10`, `driver_ping_stationary_s=30`, `driver_distance_filter_m=10`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `still_working_answer_min=10`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `map_max_span_km=25`, `map_cluster_cells=8`, `finder_near_urban_m=2000`, `finder_near_intercity_m=10000`, `finder_corridor_urban_m=1000`, `finder_corridor_intercity_m=5000`, `finder_radius_taxi_m=5000`, `finder_radius_intercity_m=15000`, `finder_routine_m=15000`, `report_daily_limit=10`, `nobody_there_reports=3`, `nobody_there_window_days=7`, `request_pause_h=24`, `report_flag_count=3`, `report_flag_window_days=7`, `device_max_accounts=2`, `device_window_days=30`, `pickup_retention_days=90`, `document_expiry_reminder_days=30`.
+`move_away_m=20`, `move_away_min_accuracy_m=25`, `move_away_confirm_s=10`, `anchor_max_accuracy_m=30`, `anchor_timeout_s=60`, `location_lost_min=5`, `request_ttl_min=60`, `request_max_renewals=3`, `request_expiry_reminder_min=10`, `request_daily_limit_new=5`, `request_daily_limit=15`, `request_new_account_days=3`, `passenger_ping_s=5`, `passenger_distance_filter_m=3`, `passenger_buffer_max_min=5`, `driver_fresh_s=120`, `driver_buffer_max_min=60`, `ping_gap_s=120`, `driver_ping_moving_s=10`, `driver_ping_stationary_s=30`, `driver_distance_filter_m=10`, `cooldown_min=60`, `break_options_min=[30,60,120]`, `break_resume_window_min=15`, `session_max_h=12`, `still_working_answer_min=10`, `routine_max=5`, `routine_stale_days=30`, `routine_prompt_grace_days=7`, `routine_prefill_window_min=60`, `pickup_radius_m=50`, `spoof_speed_kmh=180`, `approx_grid_m=100`, `map_max_span_km=25`, `map_cluster_cells=8`, `finder_near_urban_m=2000`, `finder_near_intercity_m=10000`, `finder_corridor_urban_m=1000`, `finder_corridor_intercity_m=5000`, `finder_radius_taxi_m=5000`, `finder_radius_intercity_m=15000`, `finder_routine_m=15000`, `report_daily_limit=10`, `nobody_there_reports=3`, `nobody_there_window_days=7`, `request_pause_h=24`, `report_flag_count=3`, `report_flag_window_days=7`, `device_max_accounts=2`, `device_window_days=30`, `pickup_retention_days=90`, `request_coarsen_days=30`, `request_coarse_grid_m=1000`, `session_retention_days=365`, `client_error_retention_days=90`, `document_expiry_reminder_days=30`.
 
 ## 4. Retention (proposed; confirm with a lawyer)
 | Data | Retention |
 |---|---|
 | Driver live location (+ rolling window) | While sharing only; deleted at session end |
-| Request anchor/last point | 30 days, then coarsened (H3 cell + place IDs) |
+| Request anchor/last point | 30 days, then coarsened (~1 km cell centre + place IDs; `coarsened_at`) |
 | Pickup records (admin-only) | 90 days (longer if linked to an open report) |
 | Session events (no coordinates) | 12 months |
 | Sharing sessions metadata (no coordinates) | 12 months |

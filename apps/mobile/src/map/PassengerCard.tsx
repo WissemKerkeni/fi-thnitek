@@ -10,6 +10,7 @@ import { Badge, Banner, IconButton } from '../ui/kit';
 import { SafetyActions } from '../safety/SafetyActions';
 import { Text } from '../ui/Text';
 import { openNavigation } from './navigate';
+import { arrow } from '../ui/arrow';
 
 /**
  * Stitch "Anonymous / Identified Passenger Details": destination, seats, wait, distance, the name and note
@@ -41,7 +42,7 @@ export function PassengerCard({ passenger: p, onClose }: { passenger: ExactPasse
         <View style={styles.flex}>
           <Text variant="headline">{p.name ?? t('passenger.anonymous')}</Text>
           <Text variant="caption" muted>
-            → {dest}
+            {arrow()} {dest}
           </Text>
         </View>
         <IconButton icon="close" label={t('live.close')} variant="tonal" onPress={onClose} />

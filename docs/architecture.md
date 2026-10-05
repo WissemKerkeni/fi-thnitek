@@ -162,12 +162,12 @@ The same data as the map for the sharing driver, sorted by distance and grouped 
 Latest points only; requests keep anchor/last point for 30 days and are then coarsened; pickup records are admin-only and kept 90 days; sessions metadata and session events (no coordinates) for 12 months. See [domain-model.md §4](domain-model.md).
 
 ## 7. Jobs (`@nestjs/schedule`)
-Every 30 s: the passenger and driver rules above. Every 1 min: expiry reminders, 12 h prompts. Every 5 min: expired suspensions end. Daily: document expiry, routine staleness, pick-up record retention (90 days unless an open report needs them). All jobs are idempotent SQL.
+Every 30 s: the passenger and driver rules above. Every 1 min: expiry reminders, 12 h prompts. Every 5 min: expired suspensions end. Daily: document expiry, routine staleness, retention at 03:30 (requests coarsened at 30 days, sessions deleted at 12 months, pick-up records at 90 days unless an open report needs them, crash reports at 90 days; docs/operations.md). All jobs are idempotent SQL.
 
 ## 8. Capacity (pilot)
 - 500 sharing drivers × 1 upload/15 s ≈ 35 req/s.
 - 300 open requests × 1 upload/5 s ≈ 60 req/s.
-- 1,500 map viewers × 1 poll/5 s ≈ 300 req/s (small bbox queries on GiST indexes + a 2 s in-memory cache per tile).
+- 1,500 map viewers × 1 poll/5 s ≈ 300 req/s (small bbox queries on GiST indexes + a 2 s in-memory cache per 0.05° area, ADR-223; measured p95 180 ms at 176 polls/s on a dev PC).
 
 A 4 vCPU VPS with Postgres handles this. Beyond that: cache the map per H3 tile in Redis, then switch to SSE/websockets for the map.
 

@@ -2,7 +2,7 @@ import type { MarkerRef } from '@fi-thnitek/contracts';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
-import { colors, radii, spacing } from '../theme/tokens';
+import { colors, radii, sizes, spacing } from '../theme/tokens';
 import { Icon, type IconName } from '../ui/Icon';
 import { Text } from '../ui/Text';
 import { safetyErrorMessage, useBlock } from './useSafety';
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    minHeight: 44,
+    minHeight: sizes.minTouchTarget,
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
     borderWidth: 1,

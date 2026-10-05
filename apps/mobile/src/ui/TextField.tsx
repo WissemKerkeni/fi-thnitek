@@ -19,6 +19,7 @@ export function TextField({
         {label}
       </Text>
       <TextInput
+        maxFontSizeMultiplier={1.6}
         {...props}
         accessibilityLabel={label}
         placeholderTextColor={colors.textMuted}

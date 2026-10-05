@@ -1,0 +1,1 @@
+ALTER TABLE "passenger_requests" ADD COLUMN "coarsened_at" timestamp with time zone;

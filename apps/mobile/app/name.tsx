@@ -45,6 +45,7 @@ export default function NameScreen() {
       </View>
       <Banner icon="incognito">{t('onboarding.nameHint')}</Banner>
       <TextInput
+        maxFontSizeMultiplier={1.6}
         value={name}
         onChangeText={setName}
         placeholder={t('onboarding.namePlaceholder')}

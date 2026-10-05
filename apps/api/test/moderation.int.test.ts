@@ -21,7 +21,7 @@ import request from 'supertest';
 import { v7 as uuidv7 } from 'uuid';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SanctionsService } from '../src/moderation/sanctions.service.js';
-import { ModerationSweepJob } from '../src/moderation/moderation.module.js';
+import { RetentionService } from '../src/retention/retention.service.js';
 import { TEST_ADMIN_EMAIL, TEST_TERMS_VERSION, type TestApp, startTestApp } from './test-app.js';
 
 let t: TestApp;
@@ -614,7 +614,6 @@ describe('pick-up records (R-039, NFR-06)', () => {
   });
 
   it('purges records after the retention period unless an open report needs them', async () => {
-    const job = t.app.get(ModerationSweepJob);
     const { rows } = await t.pool.query<{ request_id: string }>(
       `SELECT request_id FROM pickup_records LIMIT 1`,
     );
@@ -628,7 +627,7 @@ describe('pick-up records (R-039, NFR-06)', () => {
       `INSERT INTO reports (id, reporter_user_id, source, category, priority, request_id) VALUES ($1, $2, 'MY_REQUEST', 'UNSAFE', 'HIGH', $3)`,
       [uuidv7(), owner[0]?.passenger_user_id, requestId],
     );
-    await job.purgePickups();
+    await t.app.get(RetentionService).run();
     const { rows: kept } = await t.pool.query(`SELECT request_id FROM pickup_records`);
     expect(kept.map((r: { request_id: string }) => r.request_id)).toEqual([requestId]);
   });

@@ -451,10 +451,17 @@ function LiveView({ status }: { status: SharingStatus }) {
       </View>
 
       <Modal transparent visible={breakOpen} animationType="fade" onRequestClose={() => setBreakOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setBreakOpen(false)}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => setBreakOpen(false)}
+          accessibilityRole="button"
+          accessibilityLabel={t('live.close')}
+        >
+          {/* Swallows taps inside the sheet; not a control itself. */}
           <Pressable
             style={[styles.sheet, { paddingBottom: insets.bottom + spacing.lg }]}
             onPress={() => undefined}
+            accessible={false}
           >
             <View style={styles.grabber} />
             <SectionTitle icon="coffee-outline" title={t('sharing.breakTitle')} />

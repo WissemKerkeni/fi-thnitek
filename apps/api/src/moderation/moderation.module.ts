@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Inject,
   Injectable,
   Logger,
   Module,
@@ -14,10 +13,12 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { Cron, Interval } from '@nestjs/schedule';
+import { Interval } from '@nestjs/schedule';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   AdminAppealQuery,
+  type AdminFieldMetrics,
+  AdminFieldMetricsQuery,
   type AdminAppealList,
   AdminPickupQuery,
   type AdminPickupList,
@@ -40,21 +41,17 @@ import {
   ResolveReportInput,
   RevokeSanctionInput,
 } from '@fi-thnitek/contracts';
-import type { Thresholds } from '@fi-thnitek/domain';
-import { and, inArray, lt, notExists, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import { AuthModule } from '../auth/auth.module.js';
 import { AdminOnly, type AuthContext, CurrentAuth, Public } from '../auth/decorators.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
-import { THRESHOLDS, thresholdsProvider } from '../config/thresholds.provider.js';
-import type { Database } from '../db/client.js';
-import { DB } from '../db/db.module.js';
-import { pickupRecords, reports } from '../db/schema/index.js';
+import { thresholdsProvider } from '../config/thresholds.provider.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { RequestsModule } from '../requests/requests.module.js';
 import { SharingModule } from '../sharing/sharing.module.js';
 import { UsersModule } from '../users/users.module.js';
 import { AdminModerationService } from './admin-moderation.service.js';
+import { FieldMetricsService } from './field-metrics.service.js';
 import { ModerationService } from './moderation.service.js';
 import { SanctionsService } from './sanctions.service.js';
 
@@ -115,6 +112,7 @@ export class AdminModerationController {
   constructor(
     private readonly admin: AdminModerationService,
     private readonly sanctions: SanctionsService,
+    private readonly fieldMetrics: FieldMetricsService,
   ) {}
 
   @Get('reports')
@@ -210,22 +208,23 @@ export class AdminModerationController {
   stats(): Promise<AdminStats> {
     return this.admin.stats();
   }
+
+  /** Phase 9: aggregates over a period for threshold tuning (no positions, no people). */
+  @Get('field-metrics')
+  metrics(
+    @Query(new ZodValidationPipe(AdminFieldMetricsQuery)) q: z.output<typeof AdminFieldMetricsQuery>,
+  ): Promise<AdminFieldMetrics> {
+    return this.fieldMetrics.metrics(new Date(q.from), new Date(q.to));
+  }
 }
 
-/**
- * Every 5 min: suspensions that ran out give the account back. Daily: pick-up records older than
- * `pickup_retention_days` are deleted unless an open report points at their request (docs/domain-model.md §4).
- */
+/** Every 5 min: suspensions that ran out give the account back. */
 @Injectable()
 export class ModerationSweepJob {
   private readonly logger = new Logger(ModerationSweepJob.name);
   private running = false;
 
-  constructor(
-    @Inject(DB) private readonly db: Database,
-    @Inject(THRESHOLDS) private readonly t: Thresholds,
-    private readonly sanctions: SanctionsService,
-  ) {}
+  constructor(private readonly sanctions: SanctionsService) {}
 
   @Interval('moderation-sweep', 300_000)
   async handle(): Promise<void> {
@@ -240,32 +239,6 @@ export class ModerationSweepJob {
       this.running = false;
     }
   }
-
-  @Cron('30 3 * * *', { name: 'pickup-retention', timeZone: 'Africa/Tunis' })
-  async purgePickups(now = new Date()): Promise<number> {
-    const cutoff = new Date(now.getTime() - this.t.pickup_retention_days * 86_400_000);
-    const deleted = await this.db
-      .delete(pickupRecords)
-      .where(
-        and(
-          lt(pickupRecords.recordedAt, cutoff),
-          notExists(
-            this.db
-              .select({ one: sql`1` })
-              .from(reports)
-              .where(
-                and(
-                  sql`${reports.requestId} = ${pickupRecords.requestId}`,
-                  inArray(reports.status, ['OPEN']),
-                ),
-              ),
-          ),
-        ),
-      )
-      .returning({ requestId: pickupRecords.requestId });
-    if (deleted.length > 0) this.logger.log({ deleted: deleted.length }, 'pick-up records purged');
-    return deleted.length;
-  }
 }
 
 @Module({
@@ -275,6 +248,7 @@ export class ModerationSweepJob {
     ModerationService,
     SanctionsService,
     AdminModerationService,
+    FieldMetricsService,
     ModerationSweepJob,
     thresholdsProvider,
   ],

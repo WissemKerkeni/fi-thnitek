@@ -15,3 +15,5 @@ export * from './finder/finder.js';
 export * from './visibility/clusters.js';
 export * from './visibility/passengers.js';
 export * from './moderation/moderation.js';
+export * from './retention/retention.js';
+export * from './privacy/scrub.js';

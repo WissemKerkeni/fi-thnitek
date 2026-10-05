@@ -86,6 +86,13 @@ export const ThresholdsSchema = z
     device_window_days: positiveInt,
     /** Pick-up records are kept this long, longer while an open report points at them (§4). */
     pickup_retention_days: positiveInt,
+    /** Retention (§4): closed requests keep only ~1 km cells after this many days. */
+    request_coarsen_days: positiveInt,
+    request_coarse_grid_m: positiveInt,
+    /** Ended sharing sessions and their events are deleted after this many days. */
+    session_retention_days: positiveInt,
+    /** Crash reports (scrubbed) are kept this long. */
+    client_error_retention_days: positiveInt,
     /** Drivers get a reminder this many days before an accepted document expires (R-064). */
     document_expiry_reminder_days: positiveInt,
   })
@@ -152,6 +159,10 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     device_max_accounts: 2,
     device_window_days: 30,
     pickup_retention_days: 90,
+    request_coarsen_days: 30,
+    request_coarse_grid_m: 1000,
+    session_retention_days: 365,
+    client_error_retention_days: 90,
     document_expiry_reminder_days: 30,
   }),
 );

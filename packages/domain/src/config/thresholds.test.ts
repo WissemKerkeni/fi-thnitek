@@ -55,6 +55,10 @@ describe('DEFAULT_THRESHOLDS', () => {
       device_max_accounts: 2,
       device_window_days: 30,
       pickup_retention_days: 90,
+      request_coarsen_days: 30,
+      request_coarse_grid_m: 1000,
+      session_retention_days: 365,
+      client_error_retention_days: 90,
       document_expiry_reminder_days: 30,
     });
   });
