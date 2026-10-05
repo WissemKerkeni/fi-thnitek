@@ -5,13 +5,16 @@ import type {
   LatLng,
   NearestPlaceResponse,
   Place,
+  PlaceHit,
   PlaceInput,
   PlaceKind,
+  PlaceSearchResponse,
 } from '@fi-thnitek/contracts';
 import {
   PLACE_SEARCH_MIN_SIMILARITY,
   normalizeSearchText,
   placePopularity,
+  placeIntent,
   placeSearchText,
 } from '@fi-thnitek/domain';
 import type { z } from 'zod';
@@ -47,6 +50,13 @@ interface PlaceRow {
   lng: number;
 }
 
+const distanceFrom = (near: LatLng) => sql<number>`ST_Distance(${places.location}, ${point(near)})`;
+
+const toHit = (r: PlaceRow & { distanceM: number | string | null }): PlaceHit => ({
+  ...toPlace(r),
+  distanceM: r.distanceM === null ? null : Math.round(Number(r.distanceM)),
+});
+
 const toPlace = (r: PlaceRow): Place => ({
   id: r.id,
   kind: r.kind,
@@ -71,9 +81,45 @@ export class PlacesService {
 
   /**
    * R-011. Ranking = how well the folded query matches (trigram word similarity, substring) + popularity,
-   * minus a distance penalty when `near` is given. `near` is used only in this query.
+   * minus a distance penalty when `near` is given. `near` is used only in this query, never stored.
+   * ADR-224: a query naming only a kind of place ("station louage", "taxi") answers with the nearest
+   * places of that kind; with more words, those words are searched among that kind.
    */
-  async search(q: string, opts: { near?: LatLng; kinds?: PlaceKind[]; limit: number }): Promise<Place[]> {
+  async search(
+    q: string,
+    opts: { near?: LatLng; kinds?: PlaceKind[]; limit: number },
+  ): Promise<PlaceSearchResponse> {
+    const found = placeIntent(q);
+    // A caller restricted to other kinds (e.g. a picker for cities) keeps the plain search.
+    const intent = found && (!opts.kinds?.length || opts.kinds.includes(found.kind)) ? found : null;
+    if (intent && !intent.rest) {
+      return {
+        places: await this.ofKind(intent.kind, opts.near, opts.limit),
+        nearestKind: opts.near ? intent.kind : null,
+      };
+    }
+    const kinds = intent ? [intent.kind] : opts.kinds;
+    return { places: await this.byText(intent ? intent.rest : q, { ...opts, kinds }), nearestKind: null };
+  }
+
+  /** The nearest places of a kind (KNN on the GiST index), or the most popular ones without `near`. */
+  private async ofKind(kind: PlaceKind, near: LatLng | undefined, limit: number): Promise<PlaceHit[]> {
+    const rows = await this.db
+      .select({ ...placeColumns, distanceM: near ? distanceFrom(near) : sql<null>`NULL` })
+      .from(places)
+      .where(eq(places.kind, kind))
+      .orderBy(
+        near ? sql`${places.location} <-> ${point(near)}` : desc(places.popularity),
+        asc(places.nameFr),
+      )
+      .limit(limit);
+    return rows.map(toHit);
+  }
+
+  private async byText(
+    q: string,
+    opts: { near?: LatLng; kinds?: PlaceKind[]; limit: number },
+  ): Promise<PlaceHit[]> {
     const needle = normalizeSearchText(q);
     if (!needle) return [];
     const like = `%${needle.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
@@ -87,7 +133,7 @@ export class PlacesService {
         sql.raw(`SET LOCAL pg_trgm.word_similarity_threshold = ${Number(PLACE_SEARCH_MIN_SIMILARITY)}`),
       );
       return tx
-        .select(placeColumns)
+        .select({ ...placeColumns, distanceM: opts.near ? distanceFrom(opts.near) : sql<null>`NULL` })
         .from(places)
         .where(
           and(
@@ -98,7 +144,7 @@ export class PlacesService {
         .orderBy(desc(score), asc(places.nameFr))
         .limit(opts.limit);
     });
-    return rows.map(toPlace);
+    return rows.map(toHit);
   }
 
   /** "Pick on map": the closest place to a dropped pin (KNN on the GiST index), within maxDistanceM. */
@@ -114,6 +160,7 @@ export class PlacesService {
             'NEIGHBOURHOOD',
             'LOUAGE_STATION',
             'BUS_STATION',
+            'TAXI_STATION',
             'AIRPORT',
             'LANDMARK',
           ]),

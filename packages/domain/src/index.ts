@@ -1,6 +1,7 @@
 export * from './auth/auth-rules.js';
 export * from './config/thresholds.js';
 export * from './places/places.js';
+export * from './places/intent.js';
 export * from './state-machines/fsm.js';
 export * from './verification/documents.js';
 export * from './verification/identifiers.js';

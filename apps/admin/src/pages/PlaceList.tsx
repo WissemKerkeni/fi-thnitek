@@ -24,6 +24,7 @@ const KIND_LABEL: Record<PlaceKind, string> = {
   CITY: 'Ville',
   NEIGHBOURHOOD: 'Quartier',
   LOUAGE_STATION: 'Station louage',
+  TAXI_STATION: 'Station taxi',
   BUS_STATION: 'Gare routière',
   AIRPORT: 'Aéroport',
   LANDMARK: 'Lieu connu',

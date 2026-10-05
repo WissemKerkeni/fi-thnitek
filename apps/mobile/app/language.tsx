@@ -1,4 +1,4 @@
-import type { Locale } from '@fi-thnitek/i18n';
+import { type Locale, resolveLocale } from '@fi-thnitek/i18n';
 import { Stack, router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -14,19 +14,22 @@ import { Text } from '../src/ui/Text';
 const OPTIONS: { locale: Locale; label: string; sample: string }[] = [
   { locale: 'ar', label: 'العربية', sample: 'وين ماشي؟' },
   { locale: 'fr', label: 'Français', sample: 'Où allez-vous ?' },
+  { locale: 'en', label: 'English', sample: 'Where are you going?' },
 ];
+
+const BADGE: Record<Locale, string> = { ar: 'ع', fr: 'Fr', en: 'En' };
 
 /** First-run step 2 (after sign-in) and from settings. Each option is labelled in its own language. */
 export default function LanguageScreen() {
   const { t, i18n } = useTranslation();
   const { session, updateMe } = useAuth();
   const [pending, setPending] = useState<Locale | null>(null);
-  const current = i18n.language.startsWith('fr') ? 'fr' : 'ar';
+  const current = resolveLocale(i18n.language);
 
   async function pick(locale: Locale) {
     setPending(locale);
     try {
-      // Save it on the account first: switching direction (ar <-> fr) reloads the app.
+      // Save it on the account first: switching direction (Arabic <-> French/English) reloads the app.
       if (session.status === 'signedIn') await updateMe({ locale });
       await chooseLocale(locale);
       router.replace('/');
@@ -58,7 +61,7 @@ export default function LanguageScreen() {
           >
             <View style={[styles.badge, on && styles.badgeOn]}>
               <Text variant="headline" style={on ? styles.badgeTextOn : styles.badgeText}>
-                {o.locale === 'ar' ? 'ع' : 'Fr'}
+                {BADGE[o.locale]}
               </Text>
             </View>
             <View style={styles.flex}>

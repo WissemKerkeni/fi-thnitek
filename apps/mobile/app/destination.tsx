@@ -1,4 +1,4 @@
-import type { Place } from '@fi-thnitek/contracts';
+import type { Place, PlaceHit } from '@fi-thnitek/contracts';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
 import { useState } from 'react';
@@ -6,13 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { titleKey, useChoosePlace, usePlacePurpose } from '../src/places/purpose';
-import { langOf, placeNames } from '../src/places/format';
+import { useMyPosition } from '../src/location/myPosition';
+import { distanceParts, langOf, placeNames } from '../src/places/format';
 import { useDebouncedValue } from '../src/places/useDebouncedValue';
 import { colors, radii, sizes, spacing, typography } from '../src/theme/tokens';
 import { Icon, type IconName } from '../src/ui/Icon';
+import { Chip } from '../src/ui/kit';
 import { Text } from '../src/ui/Text';
 
 const MIN_CHARS = 2;
+/** One tap to the nearest station of each kind (ADR-224). */
+const QUICK = ['LOUAGE_STATION', 'BUS_STATION', 'TAXI_STATION'] as const;
 
 const KIND_ICON: Record<Place['kind'], IconName> = {
   GOVERNORATE: 'map-outline',
@@ -21,6 +25,7 @@ const KIND_ICON: Record<Place['kind'], IconName> = {
   NEIGHBOURHOOD: 'home-group',
   LOUAGE_STATION: 'van-passenger',
   BUS_STATION: 'bus-stop',
+  TAXI_STATION: 'taxi',
   AIRPORT: 'airplane',
   LANDMARK: 'star-outline',
 };
@@ -28,6 +33,8 @@ const KIND_ICON: Record<Place['kind'], IconName> = {
 /**
  * Destination search (R-011): accent/hamza-insensitive suggestions in AR and FR, or pick on the map.
  * With a `purpose` it picks a driver's "heading to" (R-051) or a routine's ends (R-065) instead.
+ * ADR-224: results show their distance from the person; "station louage", "taxi"… (or the chips)
+ * list the nearest stations of that kind.
  */
 export default function DestinationScreen() {
   const { t, i18n } = useTranslation();
@@ -38,10 +45,13 @@ export default function DestinationScreen() {
   const [text, setText] = useState('');
   const q = useDebouncedValue(text.trim(), 250);
   const ready = q.length >= MIN_CHARS;
+  const me = useMyPosition();
+  // ~100 m steps: moving a little reuses the cached answer.
+  const near = me ? { lat: Math.round(me.lat * 1e3) / 1e3, lng: Math.round(me.lng * 1e3) / 1e3 } : undefined;
 
   const results = useQuery({
-    queryKey: ['places', 'search', q],
-    queryFn: () => api.searchPlaces({ q, limit: 12 }),
+    queryKey: ['places', 'search', q, near?.lat, near?.lng],
+    queryFn: () => api.searchPlaces({ q, near, limit: 12 }),
     enabled: ready,
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
@@ -52,7 +62,8 @@ export default function DestinationScreen() {
     router.back();
   }
 
-  const places = ready ? (results.data?.places ?? []) : [];
+  const places: PlaceHit[] = ready ? (results.data?.places ?? []) : [];
+  const nearestKind = ready ? (results.data?.nearestKind ?? null) : null;
   const empty = !ready
     ? t('places.typeMore')
     : results.isError
@@ -105,6 +116,16 @@ export default function DestinationScreen() {
           </Text>
           <Icon name="chevron-right" color={colors.textMuted} />
         </Pressable>
+        <View style={styles.chips}>
+          {QUICK.map((kind) => (
+            <Chip
+              key={kind}
+              label={t(`places.kind.${kind}`)}
+              icon={<Icon name={KIND_ICON[kind]} size={18} color={colors.primary} />}
+              onPress={() => setText(t(`places.kind.${kind}`))}
+            />
+          ))}
+        </View>
       </View>
       <FlatList
         data={places}
@@ -114,6 +135,10 @@ export default function DestinationScreen() {
         ListHeaderComponent={
           ready && results.isFetching ? (
             <ActivityIndicator color={colors.primary} style={styles.spinner} />
+          ) : nearestKind ? (
+            <Text variant="bodyStrong" style={styles.nearestTitle}>
+              {t('places.nearestTitle', { kind: t(`places.kind.${nearestKind}`) })}
+            </Text>
           ) : null
         }
         ListEmptyComponent={
@@ -133,10 +158,12 @@ export default function DestinationScreen() {
         renderItem={({ item }) => {
           const { name, other } = placeNames(item, lang);
           const kind = t(`places.kind.${item.kind}`);
+          const d = item.distanceM !== null ? distanceParts(item.distanceM) : null;
+          const distance = d ? t(`places.${d.unit}`, { value: d.value }) : null;
           return (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`${name}, ${kind}`}
+              accessibilityLabel={[name, kind, distance].filter(Boolean).join(', ')}
               onPress={() => choose(item)}
               style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
             >
@@ -149,6 +176,11 @@ export default function DestinationScreen() {
                   {other ? `${kind} · ${other}` : kind}
                 </Text>
               </View>
+              {distance ? (
+                <Text variant="label" style={styles.distance}>
+                  {distance}
+                </Text>
+              ) : null}
             </Pressable>
           );
         }}
@@ -160,6 +192,9 @@ export default function DestinationScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.background },
   flex1: { flex: 1 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  nearestTitle: { paddingVertical: spacing.xs, color: colors.primary },
+  distance: { color: colors.primary },
   center: { textAlign: 'center' },
   header: {
     padding: spacing.md,

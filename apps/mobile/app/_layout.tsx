@@ -8,14 +8,16 @@ import {
   useFonts,
 } from '@expo-google-fonts/inter';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { type ErrorBoundaryProps, Stack, usePathname } from 'expo-router';
+import { type ErrorBoundaryProps, Stack, router, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthProvider } from '../src/auth/AuthProvider';
+import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
+import { BEFORE_LOCATION } from '../src/auth/next-route';
 import { usePushRegistration } from '../src/push/usePushRegistration';
 import { initI18n } from '../src/i18n';
+import { locationStatus, refreshPosition } from '../src/location/myPosition';
 import { flushCrashes, installCrashReporter, recordCrash, setCrashScreen } from '../src/lib/crashReporter';
 import { queryClient } from '../src/lib/query';
 import { RequestSupervisor } from '../src/requests/RequestSupervisor';
@@ -68,6 +70,7 @@ export default function RootLayout() {
         <AuthProvider>
           <PushRegistration />
           <CrashScreenTracker />
+          <LocationGuard />
           <SharingSupervisor />
           <RequestSupervisor />
           <StatusBar style="dark" />
@@ -81,6 +84,31 @@ export default function RootLayout() {
       </QueryClientProvider>
     </SafeAreaProvider>
   );
+}
+
+/**
+ * ADR-224: location is required. Each time the app comes back (and on every screen change), a
+ * signed-in person without location is sent to the location screen; with it, the position is refreshed.
+ */
+function LocationGuard() {
+  const { session } = useAuth();
+  const path = usePathname();
+  const signedIn = session.status === 'signedIn';
+
+  useEffect(() => {
+    if (!signedIn) return;
+    const check = () =>
+      void locationStatus().then((s) => {
+        if (s === 'ok') void refreshPosition();
+        else if (!BEFORE_LOCATION.includes(path)) router.replace('/location');
+      });
+    check();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') check();
+    });
+    return () => sub.remove();
+  }, [signedIn, path]);
+  return null;
 }
 
 function CrashScreenTracker() {

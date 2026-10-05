@@ -31,7 +31,18 @@ export const PlaceSearchRequest = z.object({
 });
 export type PlaceSearchRequest = z.input<typeof PlaceSearchRequest>;
 
-export const PlaceSearchResponse = z.object({ places: z.array(Place) });
+/** A search result; `distanceM` from `near` when it was given (ADR-224). */
+export const PlaceHit = Place.extend({ distanceM: z.number().int().nullable() });
+export type PlaceHit = z.infer<typeof PlaceHit>;
+
+/**
+ * `nearestKind` is set when the query asked for a type of place only ("station louage", "taxi"):
+ * the results are then the nearest places of that kind to `near`, closest first.
+ */
+export const PlaceSearchResponse = z.object({
+  places: z.array(PlaceHit),
+  nearestKind: PlaceKind.nullable(),
+});
 export type PlaceSearchResponse = z.infer<typeof PlaceSearchResponse>;
 
 /** POST /v1/places/nearest: "pick on map" names the dropped pin after the closest place. */

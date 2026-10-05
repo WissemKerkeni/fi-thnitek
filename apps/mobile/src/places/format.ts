@@ -1,8 +1,10 @@
 import type { Place } from '@fi-thnitek/contracts';
 
+/** The script of place names: Arabic, or the Latin (French) spelling, also used in English (ADR-224). */
 export type Lang = 'ar' | 'fr';
 
-export const langOf = (language: string | undefined): Lang => (language?.startsWith('fr') ? 'fr' : 'ar');
+export const langOf = (language: string | undefined): Lang =>
+  language?.startsWith('fr') || language?.startsWith('en') ? 'fr' : 'ar';
 
 /** The name in the UI language, and the other one as a hint (shown only when it differs). */
 export function placeNames(

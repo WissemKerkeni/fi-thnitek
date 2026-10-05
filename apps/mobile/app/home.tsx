@@ -5,6 +5,7 @@ import {
   Map as MapView,
   Marker,
   type ViewStateChangeEvent,
+  UserLocation,
 } from '@maplibre/maplibre-react-native';
 import { Stack, router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +19,7 @@ import { useAnimatedPositions } from '../src/map/useAnimatedPositions';
 import { useLiveMap } from '../src/map/useLiveMap';
 import { setMapCenter } from '../src/map/mapCenter';
 import { bboxAround, bboxOf } from '../src/map/viewport';
+import { refreshPosition, useMyPosition } from '../src/location/myPosition';
 import { DestinationPin } from '../src/places/DestinationPin';
 import { type Layer, LayerChips } from '../src/places/LayerChips';
 import { setDestination, useDestination } from '../src/places/destination';
@@ -38,15 +40,18 @@ const LAYER_OF: Record<TransportType, Layer> = { TAXI: 'taxi', LOUAGE: 'louage',
 /**
  * P1 Map home (R-020…R-022), as the Stitch "Map home" screen: top bar, search card, layer chips, the map
  * with live drivers (polled every 5 s while visible), a "live" freshness pill and the bottom navigation.
- * Passenger requests arrive with Phase 6; there is no user location on this screen yet.
+ * It opens where the person is (ADR-224: read on the phone, never sent with the map polls).
  */
 export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const camera = useRef<CameraRef>(null);
   const destination = useDestination();
+  const me = useMyPosition();
+  const [start] = useState(() => me);
+  const centredOnMe = useRef(start !== null);
   const now = useNow();
   const [layers, setLayers] = useState<ReadonlySet<Layer>>(() => new Set(ALL_LAYERS));
-  const [bbox, setBbox] = useState(() => bboxAround(TUNIS_CENTER));
+  const [bbox, setBbox] = useState(() => bboxAround(start ? [start.lng, start.lat] : TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
   const live = useLiveMap(bbox);
   const current = useCurrentRequest();
@@ -63,6 +68,19 @@ export default function HomeScreen() {
     setBbox(bboxOf(e.nativeEvent.bounds));
     const [lng, lat] = e.nativeEvent.center;
     setMapCenter({ lat, lng });
+  }
+
+  // The position may arrive after the map: go there once, unless the person is looking at a destination.
+  useEffect(() => {
+    if (me && !centredOnMe.current && !destination) {
+      centredOnMe.current = true;
+      camera.current?.flyTo({ center: [me.lng, me.lat], zoom: MY_ZOOM, duration: 600 });
+    }
+  }, [me, destination]);
+
+  async function locateMe() {
+    const p = (await refreshPosition()) ?? me;
+    if (p) camera.current?.flyTo({ center: [p.lng, p.lat], zoom: MY_ZOOM, duration: 600 });
   }
 
   useEffect(() => {
@@ -103,7 +121,14 @@ export default function HomeScreen() {
           compass
           onRegionDidChange={onRegionDidChange}
         >
-          <Camera ref={camera} initialViewState={{ center: TUNIS_CENTER, zoom: DEFAULT_ZOOM }} />
+          <Camera
+            ref={camera}
+            initialViewState={{
+              center: start ? [start.lng, start.lat] : TUNIS_CENTER,
+              zoom: start ? MY_ZOOM : DEFAULT_ZOOM,
+            }}
+          />
+          <UserLocation accuracy />
           <DriverMarkers drivers={drivers} onSelect={setSelected} />
           <PassengerMarkers passengers={passengers} />
           <ClusterMarkers
@@ -161,6 +186,14 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.bottom} pointerEvents="box-none">
+          <View style={styles.locate} pointerEvents="box-none">
+            <IconButton
+              icon="crosshairs-gps"
+              label={t('location.locateMe')}
+              floating
+              onPress={() => void locateMe()}
+            />
+          </View>
           {open ? (
             <Pressable
               accessibilityRole="button"
@@ -238,7 +271,11 @@ export default function HomeScreen() {
   );
 }
 
+/** Street level around the person (~1 km across). */
+const MY_ZOOM = 15;
+
 const styles = StyleSheet.create({
+  locate: { alignItems: 'flex-end' },
   screen: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   top: { position: 'absolute', top: spacing.sm, start: 0, end: 0, gap: spacing.sm },

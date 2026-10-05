@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 export const userStatus = pgEnum('user_status', ['ACTIVE', 'SUSPENDED', 'BANNED', 'DELETED']);
-export const locale = pgEnum('locale', ['ar', 'fr']);
+export const locale = pgEnum('locale', ['ar', 'fr', 'en']);
 export const platform = pgEnum('platform', ['android', 'ios', 'web']);
 
 /** docs/domain-model.md § Identity. `email` is private: never returned by user endpoints, never logged. */

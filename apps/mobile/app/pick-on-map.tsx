@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, type NativeSyntheticEvent, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_ZOOM, MAP_STYLE_URL, TUNIS_CENTER } from '../src/lib/map';
+import { myPosition } from '../src/location/myPosition';
 import { useAuth } from '../src/auth/AuthProvider';
 import { DestinationPin, PIN_HEIGHT } from '../src/places/DestinationPin';
 import { setDestination } from '../src/places/destination';
@@ -36,7 +37,8 @@ export default function PickOnMapScreen() {
   const insets = useSafeAreaInsets();
   const purpose = usePlacePurpose();
   const choosePlace = useChoosePlace(purpose);
-  const start = usePurposeStart(purpose);
+  // The current choice, else where the person is (ADR-224).
+  const start = usePurposeStart(purpose) ?? myPosition();
   const placeOnly = needsPlace(purpose);
   const [center, setCenter] = useState<LatLng>(() => start ?? { lat: TUNIS_CENTER[1], lng: TUNIS_CENTER[0] });
   const point = { lat: round(center.lat), lng: round(center.lng) };

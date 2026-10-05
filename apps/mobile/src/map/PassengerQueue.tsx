@@ -1,14 +1,14 @@
 import type { ExactPassenger } from '@fi-thnitek/contracts';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { distanceParts, langOf } from '../places/format';
+import { type Lang, distanceParts, langOf } from '../places/format';
 import { colors, radii, spacing } from '../theme/tokens';
 import { Icon } from '../ui/Icon';
 import { Badge } from '../ui/kit';
 import { Text } from '../ui/Text';
 
 /** docs/architecture.md §5.3: the sharing driver's passengers, grouped by destination, nearest first. */
-export function groupByDestination(passengers: readonly ExactPassenger[], lang: 'ar' | 'fr') {
+export function groupByDestination(passengers: readonly ExactPassenger[], lang: Lang) {
   const groups = new Map<string, ExactPassenger[]>();
   for (const p of [...passengers].sort((a, b) => a.distanceM - b.distanceM)) {
     const key = p.destination ? (lang === 'ar' ? p.destination.nameAr : p.destination.nameFr) : '';

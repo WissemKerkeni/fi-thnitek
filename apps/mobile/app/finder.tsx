@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
+import { myPosition } from '../src/location/myPosition';
 import { mapCenter } from '../src/map/mapCenter';
 import { VehicleBadge } from '../src/map/VehicleBadge';
 import { useDestination } from '../src/places/destination';
@@ -34,7 +35,8 @@ export default function FinderScreen() {
     queryFn: () =>
       api.finder({
         destination: { point: destination!.point, placeId: destination!.place?.id ?? null },
-        near: mapCenter(),
+        // R-045: around the passenger (ADR-224), else where the map was looking.
+        near: myPosition() ?? mapCenter(),
       }),
     enabled: destination !== null && focused,
     refetchInterval: 5_000,

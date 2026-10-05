@@ -1,3 +1,5 @@
+import { type Locale, resolveLocale } from '@fi-thnitek/i18n';
+import { Fragment } from 'react';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -17,10 +19,16 @@ export function AppLogo({ size = 40 }: { size?: number }) {
   );
 }
 
-/** "FR | عربي": the current language highlighted; opens the language screen. */
+const PILL: readonly [Locale, string][] = [
+  ['ar', 'عربي'],
+  ['fr', 'FR'],
+  ['en', 'EN'],
+];
+
+/** "عربي | FR | EN": the current language highlighted; opens the language screen. */
 export function LanguagePill() {
   const { t, i18n } = useTranslation();
-  const ar = !i18n.language.startsWith('fr');
+  const current = resolveLocale(i18n.language);
   return (
     <Pressable
       accessibilityRole="button"
@@ -28,15 +36,18 @@ export function LanguagePill() {
       onPress={() => router.push('/language')}
       style={styles.langPill}
     >
-      <Text variant="caption" style={!ar ? styles.langOn : styles.langOff}>
-        FR
-      </Text>
-      <Text variant="caption" style={styles.langOff}>
-        |
-      </Text>
-      <Text variant="caption" style={ar ? styles.langOn : styles.langOff}>
-        عربي
-      </Text>
+      {PILL.map(([locale, label], i) => (
+        <Fragment key={locale}>
+          {i > 0 ? (
+            <Text variant="caption" style={styles.langOff}>
+              |
+            </Text>
+          ) : null}
+          <Text variant="caption" style={locale === current ? styles.langOn : styles.langOff}>
+            {label}
+          </Text>
+        </Fragment>
+      ))}
     </Pressable>
   );
 }

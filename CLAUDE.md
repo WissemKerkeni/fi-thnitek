@@ -26,7 +26,7 @@ pnpm + Turborepo · TypeScript strict · NestJS REST `/v1` + `@nestjs/schedule` 
    - A break can't be ended early; fixes during a break are discarded; Full/Break don't trigger the cooldown.
    - Latest-point-only storage (no location history).
    - Pings outside an active mode → `stop:true`, nothing stored.
-7. Location only inside user-started foreground services with a visible notification; never add `ACCESS_BACKGROUND_LOCATION`.
+7. Tracking (continuous location) only inside user-started foreground services with a visible notification; never add `ACCESS_BACKGROUND_LOCATION`. One-shot foreground reads to centre the map and measure distances are allowed but never stored or logged; the position leaves the phone only as `near` in a request body (ADR-224).
 8. No PII or coordinates in logs, push payloads or URLs.
-9. i18n ar + fr, RTL-safe layouts. IDs are UUIDv7; timestamps UTC; migrations via drizzle-kit, never edited after merge.
+9. i18n ar + fr + en (same keys and placeholders, tested), RTL-safe layouts. IDs are UUIDv7; timestamps UTC; migrations via drizzle-kit, never edited after merge.
 10. Tests: Vitest (domain), Testcontainers PostGIS (API integration), authz/serialisation tests for every endpoint returning user or location data.

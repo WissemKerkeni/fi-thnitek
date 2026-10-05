@@ -1,12 +1,14 @@
 /**
  * Builds data/places/tn-places.json from OpenStreetMap (ODbL) via the Overpass API.
  *   pnpm --filter @fi-thnitek/api places:fetch
+ *   pnpm --filter @fi-thnitek/api places:fetch --only taxi-ranks   (refresh some categories, keep the rest)
  * Each place keeps its provenance (`osm:<type>/<id>`). Re-run to refresh; review the diff before committing.
  * Attribution: "© OpenStreetMap contributors" (shown on the map and in data/places/README.md).
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { type PlaceKind, placePopularity } from '@fi-thnitek/domain';
+import { dedupePlaces } from '../src/places/dedupe.js';
 import type { PlaceRecord } from '../src/places/place-record.js';
 
 const MIRRORS = [
@@ -62,6 +64,12 @@ const CATEGORIES: Category[] = [
       'nwr["amenity"="bus_station"]["name"](area.tn); nwr["amenity"="taxi"]["name"~"louage|لواج",i](area.tn);',
     kind: (t) => (isLouage(t) ? 'LOUAGE_STATION' : 'BUS_STATION'),
   },
+  {
+    name: 'taxi-ranks',
+    // ADR-224: "the nearest taxi station". Most ranks are unnamed; louage ranks stay louage stations.
+    query: 'nwr["amenity"="taxi"](area.tn);',
+    kind: (t) => (isLouage(t) ? 'LOUAGE_STATION' : 'TAXI_STATION'),
+  },
   { name: 'airports', query: 'nwr["aeroway"="aerodrome"]["iata"](area.tn);', kind: () => 'AIRPORT' },
   {
     name: 'landmarks',
@@ -112,9 +120,14 @@ function toRecord(e: OsmElement, kind: PlaceKind): PlaceRecord | null {
   const lat = e.lat ?? e.center?.lat;
   const lng = e.lon ?? e.center?.lon;
   if (lat === undefined || lng === undefined) return null;
-  const nameAr = strip(t['name:ar']) ?? (/[؀-ۿ]/.test(t.name ?? '') ? strip(t.name) : undefined);
-  const nameFr =
+  let nameAr = strip(t['name:ar']) ?? (/[؀-ۿ]/.test(t.name ?? '') ? strip(t.name) : undefined);
+  let nameFr =
     strip(t['name:fr']) ?? strip(t['name:en']) ?? (/[A-Za-z]/.test(t.name ?? '') ? strip(t.name) : undefined);
+  if (kind === 'TAXI_STATION' && !nameAr && !nameFr) {
+    // An unnamed rank is still useful: it is found by kind and shown with its distance.
+    nameAr = 'محطة تاكسي';
+    nameFr = 'Station de taxi';
+  }
   if (!nameAr && !nameFr) return null;
   const aliases = [
     t.name,
@@ -144,16 +157,31 @@ function toRecord(e: OsmElement, kind: PlaceKind): PlaceRecord | null {
   };
 }
 
+/** `--only "a,b"`: fetch those categories and merge them into the existing file (Overpass is often busy). */
+function onlyCategories(): string[] | null {
+  const i = process.argv.indexOf('--only');
+  return i === -1 ? null : (process.argv[i + 1] ?? '').split(',').map((c) => c.trim());
+}
+
 async function main(): Promise<void> {
+  const only = onlyCategories();
   const places = new Map<string, PlaceRecord>();
-  for (const category of CATEGORIES) {
+  if (only) {
+    if (!existsSync(OUT)) throw new Error(`--only needs an existing ${OUT}`);
+    const existing = JSON.parse(readFileSync(OUT, 'utf8')) as { places: PlaceRecord[] };
+    for (const p of existing.places) places.set(p.source, p);
+    const unknown = only.filter((name) => !CATEGORIES.some((c) => c.name === name));
+    if (unknown.length > 0) throw new Error(`unknown categories: ${unknown.join(', ')}`);
+  }
+  for (const category of CATEGORIES.filter((c) => !only || only.includes(c.name))) {
     process.stdout.write(`${category.name}…\n`);
     const elements = await overpass(category.query);
     let kept = 0;
     for (const e of elements) {
       const kind = category.kind(e.tags ?? {});
       const record = kind && toRecord(e, kind);
-      if (record && !places.has(record.source)) {
+      // A full run keeps the first category that claimed a place; a partial run refreshes its records.
+      if (record && (only || !places.has(record.source))) {
         places.set(record.source, record);
         kept += 1;
       }
@@ -162,7 +190,7 @@ async function main(): Promise<void> {
     await sleep(3_000);
   }
   mkdirSync(path.dirname(OUT), { recursive: true });
-  const sorted = [...places.values()].sort((a, b) => a.source.localeCompare(b.source));
+  const sorted = dedupePlaces([...places.values()]);
   writeFileSync(
     OUT,
     `${JSON.stringify(
