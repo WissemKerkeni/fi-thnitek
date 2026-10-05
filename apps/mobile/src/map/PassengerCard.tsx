@@ -7,6 +7,7 @@ import { colors, elevation, radii, spacing } from '../theme/tokens';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/Icon';
 import { Badge, Banner, IconButton } from '../ui/kit';
+import { SafetyActions } from '../safety/SafetyActions';
 import { Text } from '../ui/Text';
 import { openNavigation } from './navigate';
 
@@ -80,6 +81,7 @@ export function PassengerCard({ passenger: p, onClose }: { passenger: ExactPasse
         variant="tonal"
         onPress={() => void openNavigation('waze', p.lat, p.lng)}
       />
+      <SafetyActions target={{ source: 'PASSENGER_MARKER', requestId: p.id }} onBlocked={onClose} />
     </View>
   );
 }

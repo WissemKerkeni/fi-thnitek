@@ -8,19 +8,22 @@ import type {
   RequestView,
 } from '@fi-thnitek/contracts';
 import {
+  type DeviceAccount,
   type Fix,
   type RequestBlocker,
   type RequestCloseReason,
   type RequestTrackState,
   type Thresholds,
+  deviceProblem,
   evaluatePassengerFixes,
   pickupCandidates,
   renewal,
   requestBlockers,
+  requestPausedUntil,
   sweepRequest,
   tunisDate,
 } from '@fi-thnitek/domain';
-import { and, desc, eq, gte, isNotNull, ne, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
 import type { z } from 'zod';
 import { ApiException } from '../common/api-exception.js';
@@ -29,11 +32,13 @@ import type { Database, Executor, Tx } from '../db/client.js';
 import { DB } from '../db/db.module.js';
 import { UNIQUE_VIOLATION, pgError } from '../db/pg-errors.js';
 import {
+  devices,
   driverLiveLocations,
   driverProfiles,
   passengerRequests,
   pickupRecords,
   riskFlags,
+  sanctions,
   sharingSessions,
   users,
 } from '../db/schema/index.js';
@@ -71,7 +76,7 @@ export class RequestsService {
     return {
       request: open ? await this.view(open) : null,
       lastClosed: lastClosed ? await this.view(lastClosed) : null,
-      blockers: await this.blockers(this.db, userId, ['TAXI'], now),
+      ...(await this.eligibility(this.db, userId, ['TAXI'], now)),
       tracking: {
         intervalS: this.t.passenger_ping_s,
         distanceFilterM: this.t.passenger_distance_filter_m,
@@ -90,7 +95,7 @@ export class RequestsService {
       await this.db.transaction(async (tx) => {
         // Serialises concurrent posts of the same passenger (the partial unique index is the backstop).
         await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for('update');
-        const blockers = await this.blockers(tx, userId, input.types, now);
+        const { blockers } = await this.eligibility(tx, userId, input.types, now);
         if (blockers.length > 0) throw blocked(blockers);
         if (input.destination.placeId && !(await findPlace(tx, input.destination.placeId))) {
           throw new ApiException('VALIDATION_FAILED', HttpStatus.BAD_REQUEST, 'Unknown place');
@@ -320,6 +325,21 @@ export class RequestsService {
     };
   }
 
+  /**
+   * Closes the passenger's open request as REMOVED inside `tx` (a sanction or the automatic request
+   * pause, anti-abuse §3). Returns whether there was one.
+   */
+  async removeOpenLocked(tx: Tx, userId: string, now: Date): Promise<boolean> {
+    const [r] = await tx
+      .select()
+      .from(passengerRequests)
+      .where(and(eq(passengerRequests.passengerUserId, userId), eq(passengerRequests.status, 'OPEN')))
+      .for('update');
+    if (!r) return false;
+    await this.close(tx, r, 'REMOVED', now);
+    return true;
+  }
+
   private async lockOpen(tx: Tx, userId: string): Promise<Row> {
     const [r] = await tx
       .select()
@@ -347,12 +367,12 @@ export class RequestsService {
     return r;
   }
 
-  private async blockers(
+  private async eligibility(
     db: Executor,
     userId: string,
     types: readonly ('TAXI' | 'LOUAGE' | 'BUS')[],
     now: Date,
-  ): Promise<RequestBlocker[]> {
+  ): Promise<{ blockers: RequestBlocker[]; pausedUntil: string | null }> {
     const [user] = await db
       .select({ status: users.status, createdAt: users.createdAt, verification: driverProfiles.status })
       .from(users)
@@ -369,16 +389,42 @@ export class RequestsService {
       .where(
         and(eq(passengerRequests.passengerUserId, userId), gte(passengerRequests.createdAt, todayStart)),
       );
-    return requestBlockers({
+    const pauses = await db
+      .select()
+      .from(sanctions)
+      .where(
+        and(eq(sanctions.userId, userId), eq(sanctions.type, 'REQUEST_PAUSE'), isNull(sanctions.revokedAt)),
+      );
+    const pausedUntil = requestPausedUntil(pauses, now);
+    const blockers = requestBlockers({
       verification: user?.verification ?? null,
       accountActive: user?.status === 'ACTIVE',
       hasOpenRequest: open !== undefined,
       types,
       accountCreatedAt: user?.createdAt ?? now,
       requestsToday: today?.n ?? 0,
+      pausedUntil,
+      deviceProblem: deviceProblem(await this.deviceAccounts(db, userId, now), userId, this.t),
       now,
       t: this.t,
     });
+    return {
+      blockers,
+      pausedUntil: blockers.includes('PAUSED') ? (pausedUntil?.toISOString() ?? null) : null,
+    };
+  }
+
+  /** Anti-abuse §2: the accounts seen on this user's devices (install ids) in the last 30 days. */
+  private async deviceAccounts(db: Executor, userId: string, now: Date): Promise<DeviceAccount[]> {
+    const since = new Date(now.getTime() - this.t.device_window_days * 24 * 60 * MIN);
+    const mine = db.select({ installId: devices.installId }).from(devices).where(eq(devices.userId, userId));
+    return db
+      .selectDistinct({ userId: users.id, createdAt: users.createdAt, status: users.status })
+      .from(devices)
+      .innerJoin(users, eq(users.id, devices.userId))
+      .where(
+        and(inArray(devices.installId, mine), or(gte(devices.lastSeenAt, since), eq(devices.userId, userId))),
+      );
   }
 
   private async view(r: Row): Promise<RequestView> {
@@ -403,8 +449,11 @@ export class RequestsService {
 }
 
 function blocked(blockers: RequestBlocker[]): ApiException {
-  const hard = blockers.filter((b) => b === 'DRIVER_ACCOUNT' || b === 'ACCOUNT_SUSPENDED' || b === 'BUS');
+  const hard = blockers.filter(
+    (b) => b === 'DRIVER_ACCOUNT' || b === 'ACCOUNT_SUSPENDED' || b === 'BUS' || b === 'DEVICE_LIMIT',
+  );
   if (hard.length > 0) return new ApiException('REQUEST_NOT_ALLOWED', HttpStatus.FORBIDDEN, hard.join(', '));
+  if (blockers.includes('PAUSED')) return new ApiException('REQUEST_PAUSED', HttpStatus.FORBIDDEN);
   if (blockers.includes('ALREADY_OPEN')) return new ApiException('REQUEST_ALREADY_OPEN', HttpStatus.CONFLICT);
   return new ApiException('REQUEST_LIMIT', HttpStatus.TOO_MANY_REQUESTS);
 }

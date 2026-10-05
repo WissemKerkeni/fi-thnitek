@@ -1,4 +1,4 @@
-import { REQUESTABLE_TYPES, REQUEST_STATUSES } from '@fi-thnitek/domain';
+import { REQUESTABLE_TYPES, REQUEST_BLOCKERS, REQUEST_STATUSES } from '@fi-thnitek/domain';
 import { z } from 'zod';
 import { LatLng, Place } from './places.js';
 
@@ -8,13 +8,7 @@ export type RequestStatus = z.infer<typeof RequestStatus>;
 export const RequestableType = z.enum(REQUESTABLE_TYPES);
 export type RequestableType = z.infer<typeof RequestableType>;
 
-export const RequestBlocker = z.enum([
-  'DRIVER_ACCOUNT',
-  'ACCOUNT_SUSPENDED',
-  'ALREADY_OPEN',
-  'DAILY_LIMIT',
-  'BUS',
-]);
+export const RequestBlocker = z.enum(REQUEST_BLOCKERS);
 export type RequestBlocker = z.infer<typeof RequestBlocker>;
 
 /** Where the passenger is going: a pin, named after a known place when there is one. */
@@ -71,6 +65,8 @@ export const CurrentRequest = z.object({
   lastClosed: RequestView.nullable(),
   /** Why posting is unavailable right now (empty when it is available). */
   blockers: z.array(RequestBlocker),
+  /** When `PAUSED` is among the blockers: the end of the pause. */
+  pausedUntil: z.iso.datetime().nullable(),
   tracking: PassengerTracking,
 });
 export type CurrentRequest = z.infer<typeof CurrentRequest>;

@@ -41,6 +41,7 @@ import {
   users,
   vehicles,
 } from '../db/schema/index.js';
+import { blockedWith } from '../moderation/blocks.js';
 import { point } from '../places/places.service.js';
 import { RoutinesService, scheduleOf } from '../routines/routines.service.js';
 
@@ -67,10 +68,15 @@ export class MapService {
 
   async view(viewerId: string, bbox: BBox, now = new Date()): Promise<MapView> {
     const viewer = await this.viewerOf(viewerId, now);
+    const hidden = await blockedWith(this.db, viewerId);
 
     if (isMapSpanTooWide(bbox, this.t)) {
-      const drivers = await this.liveDrivers(this.inBox(bbox), now, MAX_CLUSTERED);
-      const requests = await this.openRequests(bbox, MAX_CLUSTERED);
+      const drivers = (await this.liveDrivers(this.inBox(bbox), now, MAX_CLUSTERED)).filter(
+        (d) => !hidden.has(d.driverUserId),
+      );
+      const requests = (await this.openRequests(bbox, MAX_CLUSTERED)).filter(
+        (r) => !hidden.has(r.passengerUserId),
+      );
       const points: { lat: number; lng: number; kind: ClusterKind }[] = [
         ...drivers.map((d) => ({ lat: d.lat, lng: d.lng, kind: d.type })),
         ...requests.map((r) => ({ lat: r.anchorLat!, lng: r.anchorLng!, kind: 'PASSENGER' as const })),
@@ -87,7 +93,7 @@ export class MapService {
     const around = await this.liveDrivers(this.inBox(margin), now, MAX_MARKERS * 2);
     const visible = around
       .filter((d) => d.lat >= bbox.south && d.lat <= bbox.north && d.lng >= bbox.west && d.lng <= bbox.east)
-      .filter((d) => d.driverUserId !== viewerId)
+      .filter((d) => d.driverUserId !== viewerId && !hidden.has(d.driverUserId))
       .slice(0, MAX_MARKERS);
     const sharing: SharingDriverPosition[] = around.map((d) => ({
       userId: d.driverUserId,
@@ -101,6 +107,7 @@ export class MapService {
       clustered: false,
       drivers: await this.markers(visible, now),
       passengers: requests.flatMap((r) => {
+        if (hidden.has(r.passengerUserId)) return [];
         const marker = passengerMarker(
           {
             id: r.id,
@@ -132,6 +139,7 @@ export class MapService {
     now = new Date(),
   ): Promise<FinderResponse> {
     await this.viewerOf(viewerId, now);
+    const hidden = await blockedWith(this.db, viewerId);
     const destination = req.destination.point;
     const origin = req.near;
     const radius = Math.max(this.t.finder_radius_taxi_m, this.t.finder_radius_intercity_m);
@@ -145,7 +153,7 @@ export class MapService {
     const headingThere: FinderDriver[] = [];
     const taxisNearby: FinderDriver[] = [];
     for (const d of live) {
-      if (d.driverUserId === viewerId) continue;
+      if (d.driverUserId === viewerId || hidden.has(d.driverUserId)) continue;
       const group = finderGroup(
         {
           type: d.type,
@@ -169,7 +177,7 @@ export class MapService {
     return {
       headingThere: headingThere.sort(finderOrder),
       taxisNearby: taxisNearby.sort(finderOrder),
-      scheduled: await this.scheduled(destination, origin, now),
+      scheduled: await this.scheduled(destination, origin, hidden, now),
     };
   }
 
@@ -177,6 +185,7 @@ export class MapService {
   private async scheduled(
     destination: { lat: number; lng: number },
     origin: { lat: number; lng: number } | null,
+    hidden: ReadonlySet<string>,
     now: Date,
   ): Promise<FinderDeparture[]> {
     const fromPlace = alias(places, 'from_place');
@@ -214,6 +223,7 @@ export class MapService {
 
     const out: FinderDeparture[] = [];
     for (const r of rows) {
+      if (hidden.has(r.routine.driverUserId)) continue;
       const route = { from: { lat: r.fromLat, lng: r.fromLng }, to: { lat: r.toLat, lng: r.toLng } };
       if (!routineMatches(route, destination, origin, this.t)) continue;
       const at = nextOccurrence(scheduleOf(r.routine), now);

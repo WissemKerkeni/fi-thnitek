@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ErrorCode } from './error-codes.js';
+import { AccountSanction } from './moderation.js';
 
 export const FieldError = z.object({
   path: z.string(),
@@ -16,6 +17,8 @@ export const ProblemDetails = z.object({
   instance: z.string().optional(),
   code: ErrorCode,
   errors: z.array(FieldError).optional(),
+  /** With ACCOUNT_SUSPENDED / ACCOUNT_BANNED (R-073). */
+  sanction: AccountSanction.optional(),
 });
 export type ProblemDetails = z.infer<typeof ProblemDetails>;
 

@@ -8,6 +8,7 @@ import { DbModule } from './db/db.module.js';
 import { HealthModule } from './health/health.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { LoggingModule } from './logging/logging.module.js';
+import { ModerationModule } from './moderation/moderation.module.js';
 import { PlacesModule } from './places/places.module.js';
 import { RequestsModule } from './requests/requests.module.js';
 import { RoutinesModule } from './routines/routines.module.js';
@@ -30,6 +31,7 @@ import { VerificationModule } from './verification/verification.module.js';
     SharingModule,
     RoutinesModule,
     RequestsModule,
+    ModerationModule,
   ],
   providers: [{ provide: APP_FILTER, useClass: ProblemDetailsFilter }],
 })

@@ -67,6 +67,17 @@ describe('requestBlockers (R-031, R-040, R-041, invariant 3)', () => {
     expect(requestBlockers({ ...ok, hasOpenRequest: true })).toEqual(['ALREADY_OPEN']);
   });
 
+  it('refuses a paused account until the pause ends (anti-abuse §3)', () => {
+    expect(requestBlockers({ ...ok, pausedUntil: new Date(T0 + 60_000) })).toEqual(['PAUSED']);
+    expect(requestBlockers({ ...ok, pausedUntil: new Date(T0) })).toEqual([]);
+    expect(requestBlockers({ ...ok, pausedUntil: null })).toEqual([]);
+  });
+
+  it('refuses a device over its account limit or with a banned account (anti-abuse §2)', () => {
+    expect(requestBlockers({ ...ok, deviceProblem: 'TOO_MANY_ACCOUNTS' })).toEqual(['DEVICE_LIMIT']);
+    expect(requestBlockers({ ...ok, deviceProblem: 'BANNED_ON_DEVICE' })).toEqual(['DEVICE_LIMIT']);
+  });
+
   it('allows 5 requests a day for accounts under 3 days, 15 after', () => {
     const young = { ...ok, accountCreatedAt: new Date(T0 - 2 * 86_400_000) };
     expect(requestBlockers({ ...young, requestsToday: 4 })).toEqual([]);

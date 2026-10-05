@@ -72,6 +72,20 @@ export const ThresholdsSchema = z
     finder_radius_intercity_m: positiveInt,
     /** Finder: routine destinations and origins this close to the passenger's destination and position. */
     finder_routine_m: positiveInt,
+    /** Moderation (anti-abuse §2–3): reports a user may file per Tunis day. */
+    report_daily_limit: positiveInt,
+    /** "Nobody there" from this many distinct drivers within the window → a request pause. */
+    nobody_there_reports: positiveInt,
+    nobody_there_window_days: positiveInt,
+    request_pause_h: positiveInt,
+    /** Reports from this many distinct users on one person within the window → a risk flag. */
+    report_flag_count: positiveInt,
+    report_flag_window_days: positiveInt,
+    /** Live accounts per device within the window; newer ones cannot request. */
+    device_max_accounts: positiveInt,
+    device_window_days: positiveInt,
+    /** Pick-up records are kept this long, longer while an open report points at them (§4). */
+    pickup_retention_days: positiveInt,
     /** Drivers get a reminder this many days before an accepted document expires (R-064). */
     document_expiry_reminder_days: positiveInt,
   })
@@ -129,6 +143,15 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     finder_radius_taxi_m: 5_000,
     finder_radius_intercity_m: 15_000,
     finder_routine_m: 15_000,
+    report_daily_limit: 10,
+    nobody_there_reports: 3,
+    nobody_there_window_days: 7,
+    request_pause_h: 24,
+    report_flag_count: 3,
+    report_flag_window_days: 7,
+    device_max_accounts: 2,
+    device_window_days: 30,
+    pickup_retention_days: 90,
     document_expiry_reminder_days: 30,
   }),
 );

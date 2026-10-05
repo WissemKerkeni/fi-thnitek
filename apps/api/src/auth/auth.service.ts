@@ -1,5 +1,5 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import type { DeviceInfo, SignInResponse, TokenPair } from '@fi-thnitek/contracts';
+import type { AccountSanction, DeviceInfo, SignInResponse, TokenPair } from '@fi-thnitek/contracts';
 import { accountAccess, decideRefresh } from '@fi-thnitek/domain';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { v7 as uuidv7 } from 'uuid';
@@ -8,6 +8,7 @@ import { ENV, type Env } from '../config/env.js';
 import type { Database, Tx } from '../db/client.js';
 import { DB } from '../db/db.module.js';
 import { devices, sessions, users } from '../db/schema/index.js';
+import { accountSanction } from '../moderation/account-sanction.js';
 import { UsersService } from '../users/users.service.js';
 import { GOOGLE_VERIFIER, type GoogleTokenVerifier } from './google-verifier.js';
 import { ACCESS_TOKENS, type AccessTokens, hashRefreshToken, newRefreshToken } from './tokens.js';
@@ -48,7 +49,7 @@ export class AuthService {
       const access = accountAccess(user.status);
       if (access !== 'OK') {
         await this.users.revokeAllSessions(user.id, access, tx);
-        return { kind: 'denied', access } as const;
+        return { kind: 'denied', access, userId: user.id } as const;
       }
 
       const deviceId = device ? await this.users.upsertDevice(user.id, device, tx) : null;
@@ -61,7 +62,9 @@ export class AuthService {
     });
 
     // Thrown after commit, so the revocation above is kept.
-    if (result.kind === 'denied') throw this.accountError(result.access);
+    if (result.kind === 'denied') {
+      throw this.accountError(result.access, await accountSanction(this.db, result.userId));
+    }
     return { ...result.pair, me: result.me };
   }
 
@@ -76,6 +79,13 @@ export class AuthService {
         .where(eq(sessions.refreshTokenHash, hashRefreshToken(refreshToken)))
         .for('update', { of: sessions });
 
+      // A sanctioned account learns why, whatever the state of this token (R-073).
+      if (row && accountAccess(row.status) !== 'OK') {
+        const access = accountAccess(row.status) as Exclude<ReturnType<typeof accountAccess>, 'OK'>;
+        await this.users.revokeAllSessions(row.session.userId, access, tx);
+        return { kind: 'denied', access, userId: row.session.userId } as const;
+      }
+
       const decision = decideRefresh(row?.session, now);
       if (decision === 'REUSED') {
         await tx
@@ -85,12 +95,6 @@ export class AuthService {
         return { kind: 'error', code: 'REFRESH_TOKEN_REUSED' } as const;
       }
       if (decision !== 'ROTATE' || !row) return { kind: 'error', code: 'REFRESH_TOKEN_INVALID' } as const;
-
-      const access = accountAccess(row.status);
-      if (access !== 'OK') {
-        await this.users.revokeAllSessions(row.session.userId, access, tx);
-        return { kind: 'denied', access } as const;
-      }
 
       // Conditional update (CLAUDE.md rule 5): only one concurrent refresh can rotate this token.
       const rotated = await tx
@@ -107,7 +111,9 @@ export class AuthService {
     });
 
     if (outcome.kind === 'ok') return outcome.pair;
-    if (outcome.kind === 'denied') throw this.accountError(outcome.access);
+    if (outcome.kind === 'denied') {
+      throw this.accountError(outcome.access, await accountSanction(this.db, outcome.userId));
+    }
     throw new ApiException(outcome.code, HttpStatus.UNAUTHORIZED);
   }
 
@@ -151,9 +157,12 @@ export class AuthService {
     };
   }
 
-  private accountError(access: 'ACCOUNT_SUSPENDED' | 'ACCOUNT_BANNED' | 'ACCOUNT_DELETED'): ApiException {
+  private accountError(
+    access: 'ACCOUNT_SUSPENDED' | 'ACCOUNT_BANNED' | 'ACCOUNT_DELETED',
+    sanction?: AccountSanction,
+  ): ApiException {
     return access === 'ACCOUNT_DELETED'
       ? new ApiException('UNAUTHENTICATED', HttpStatus.UNAUTHORIZED)
-      : new ApiException(access, HttpStatus.FORBIDDEN);
+      : new ApiException(access, HttpStatus.FORBIDDEN, undefined, undefined, sanction);
   }
 }

@@ -1,4 +1,9 @@
 import {
+  type AppealInput,
+  BlockList,
+  BlockView,
+  type CreateBlockInput,
+  type CreateReportInput,
   type DeviceInfo,
   type DocumentType,
   DocumentView,
@@ -18,11 +23,13 @@ import {
   PlaceSearchResponse,
   type PingsRequest,
   PingsResponse,
+  ReportCreated,
   RequestHistory,
   type ResumeSharingRequest,
   type RoutineInput,
   RoutineList,
   RoutineView,
+  SharingHistory,
   SharingStatus,
   type StartSharingRequest,
   type UpdateSharingRequest,
@@ -114,6 +121,15 @@ export interface ApiClient {
   cancelRequest(): Promise<CurrentRequest>;
   renewRequest(): Promise<CurrentRequest>;
   requestHistory(): Promise<RequestHistory>;
+  /** The driver's own sessions of the last 30 days (R-070). */
+  sharingHistory(): Promise<SharingHistory>;
+  // Safety (R-070…R-073)
+  report(input: CreateReportInput): Promise<ReportCreated>;
+  block(ref: CreateBlockInput): Promise<BlockView>;
+  listBlocks(): Promise<BlockList>;
+  unblock(id: string): Promise<void>;
+  /** The contact form of a suspended or banned account: no session, a fresh Google ID token instead. */
+  appeal(input: AppealInput): Promise<void>;
 }
 
 /** A photo already resized/re-encoded on the device (local file URI). */
@@ -302,6 +318,16 @@ export function createApiClient(baseUrl: string, options: ApiClientOptions = {})
     cancelRequest: () => authed('POST', '/requests/current/cancel', CurrentRequest),
     renewRequest: () => authed('POST', '/requests/current/renew', CurrentRequest),
     requestHistory: () => authed('GET', '/requests/history', RequestHistory),
+    sharingHistory: () => authed('GET', '/driver/sharing/history', SharingHistory),
+    report: (input) => authed('POST', '/reports', ReportCreated, input),
+    block: (ref) => authed('POST', '/blocks', BlockView, ref),
+    listBlocks: () => authed('GET', '/blocks', BlockList),
+    unblock: (id) => authed('DELETE', `/blocks/${id}`, NO_BODY),
+
+    async appeal(input) {
+      const res = await send('POST', '/auth/appeal', input, null);
+      if (!res.ok) throw await toError(res);
+    },
     answerStillRunning: (id, running) =>
       authed('POST', `/driver/routines/${id}/still-running`, RoutineView, { running }),
 

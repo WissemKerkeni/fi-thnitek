@@ -202,7 +202,10 @@ describe('live map polling', () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify(view), { status: 200, headers: { 'content-type': 'application/json', etag: 'W/"a"' } }),
+        new Response(JSON.stringify(view), {
+          status: 200,
+          headers: { 'content-type': 'application/json', etag: 'W/"a"' },
+        }),
       )
       .mockResolvedValueOnce(new Response(null, { status: 304 }));
     const tokens: TokenStore = {

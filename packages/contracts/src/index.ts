@@ -8,3 +8,4 @@ export * from './map.js';
 export * from './sharing.js';
 export * from './routines.js';
 export * from './requests.js';
+export * from './moderation.js';

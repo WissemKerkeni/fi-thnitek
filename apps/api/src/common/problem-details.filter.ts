@@ -58,6 +58,9 @@ const TITLE_BY_CODE: Record<ErrorCode, string> = {
   REQUEST_ALREADY_OPEN: 'A request is already open',
   REQUEST_LIMIT: 'Daily request limit reached',
   NO_OPEN_REQUEST: 'No open request',
+  REQUEST_PAUSED: 'Requesting is paused',
+  REPORT_NOT_ALLOWED: 'Report not allowed',
+  REPORT_LIMIT: 'Report limit reached',
   RENEW_NOT_ALLOWED: 'Renewal not allowed',
   INVALID_STATE_TRANSITION: 'Invalid state transition',
 };
@@ -68,12 +71,14 @@ export function toProblem(exception: unknown, instance?: string): ProblemDetails
   let code: ErrorCode;
   let detail: string | undefined;
   let errors: ProblemDetails['errors'];
+  let sanction: ProblemDetails['sanction'];
 
   if (exception instanceof ApiException) {
     status = exception.getStatus();
     code = exception.code;
     detail = exception.detail;
     errors = exception.errors;
+    sanction = exception.sanction;
   } else if (exception instanceof InvalidStateTransitionError) {
     status = HttpStatus.CONFLICT;
     code = 'INVALID_STATE_TRANSITION';
@@ -93,6 +98,7 @@ export function toProblem(exception: unknown, instance?: string): ProblemDetails
     ...(detail !== undefined && { detail }),
     ...(instance !== undefined && { instance }),
     ...(errors !== undefined && { errors }),
+    ...(sanction !== undefined && { sanction }),
   };
 }
 

@@ -14,3 +14,4 @@ export * from './request-rules/request.js';
 export * from './finder/finder.js';
 export * from './visibility/clusters.js';
 export * from './visibility/passengers.js';
+export * from './moderation/moderation.js';

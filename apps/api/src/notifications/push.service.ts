@@ -21,7 +21,11 @@ export type PushEvent =
   | 'STILL_WORKING'
   | 'ROUTINE_STALE'
   | 'REQUEST_CLOSED'
-  | 'REQUEST_EXPIRING';
+  | 'REQUEST_EXPIRING'
+  | 'REQUEST_PAUSED'
+  | 'SANCTION_WARNING'
+  | 'ACCOUNT_SUSPENDED'
+  | 'ACCOUNT_BANNED';
 
 const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   VERIFICATION_APPROVED: 'verificationApproved',
@@ -35,6 +39,10 @@ const TEXT_KEY: Record<PushEvent, keyof (typeof catalogs)['fr']['push']> = {
   ROUTINE_STALE: 'routineStale',
   REQUEST_CLOSED: 'requestClosed',
   REQUEST_EXPIRING: 'requestExpiring',
+  REQUEST_PAUSED: 'requestPaused',
+  SANCTION_WARNING: 'sanctionWarning',
+  ACCOUNT_SUSPENDED: 'accountSuspended',
+  ACCOUNT_BANNED: 'accountBanned',
 };
 
 /** What a transport receives: already localised, already PII-free. */
