@@ -1,6 +1,6 @@
 import type { Me } from '@fi-thnitek/contracts';
 import { describe, expect, it } from 'vitest';
-import { nextRoute } from './next-route.js';
+import { PASSENGER_ONLY, driverHome, nextRoute } from './next-route.js';
 
 const me: Me = {
   id: '0192a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b',
@@ -62,6 +62,14 @@ describe('nextRoute (docs/ux.md §1)', () => {
     expect(nextRoute({ status: 'signedIn', me: { ...me, displayName: null } }, true, false)).toBe('/name');
     expect(nextRoute({ status: 'signedOut' }, true, false)).toBe('/sign-in');
     expect(nextRoute({ status: 'signedIn', me }, true, true)).toBe('/home');
+  });
+
+  it('lists the passenger screens a driver account is sent away from (ADR-226)', () => {
+    for (const path of ['/home', '/request', '/request/new', '/finder'])
+      expect(PASSENGER_ONLY).toContain(path);
+    expect(driverHome('VERIFIED')).toBe('/sharing');
+    expect(driverHome('UNDER_REVIEW')).toBe('/driver');
+    expect(driverHome(null)).toBe('/driver');
   });
 
   it('asks again when the terms change', () => {

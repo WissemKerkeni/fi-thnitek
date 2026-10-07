@@ -15,7 +15,7 @@
     "db:migrate": "tsx src/db/migrate-cli.ts",
     "db:seed": "tsx src/db/seed.ts",
     "places:fetch": "tsx scripts/places-fetch-osm.ts",
-    "sim:monastir": "node --env-file=.env --import tsx scripts/sim-monastir.ts"
+    "sim:demo": "node --env-file=.env --import tsx scripts/sim-demo.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1146.0",

@@ -129,7 +129,8 @@ When a request closes `MOVED_AWAY`, **every** sharing driver whose rolling-windo
   The driver's name is always included. Sharing drivers therefore see all other drivers.
 - **Requests** (OPEN and anchored, not blocked), serialised **per viewer** (`packages/domain/visibility/passengers.ts`):
   - a sharing (not on break) taxi/louage driver whose type ∈ request types → `{exact: true, lat, lng, destination, seats, waitingMin, distanceM, closerDrivers}` + `{name, note}` **only if `show_identity = true`**;
-  - everyone else → `{exact: false, lat, lng}` snapped to a ~100 m grid cell centre, plus the destination, never a name or note;
+  - a sharing driver of another type, or a bus driver → nothing (ADR-226);
+  - passengers → `{exact: false, lat, lng}` snapped to a ~100 m grid cell centre, plus the destination, never a name or note;
   - the passenger's own request is not on their map.
 - A driver account without an active, fresh, non-break session → **403** `SHARING_REQUIRED`.
 - `closerDrivers` = the number of other sharing, **non-full** drivers of a matching type closer to the passenger than the viewer. It helps drivers judge whether a passenger is worth going for.

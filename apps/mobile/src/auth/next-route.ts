@@ -15,6 +15,20 @@ export const BEFORE_LOCATION: readonly string[] = [
 
 export type SessionState = { status: 'loading' } | { status: 'signedOut' } | { status: 'signedIn'; me: Me };
 
+/** Passenger screens a driver account never sees (ADR-226): the passenger map, requests, finder. */
+export const PASSENGER_ONLY: readonly string[] = [
+  '/home',
+  '/request',
+  '/request/new',
+  '/finder',
+  '/history/requests',
+];
+
+/** Where a driver account lives: sharing once approved, else its driver file (ADR-225). */
+export function driverHome(state: Me['driverVerification'] | undefined): '/sharing' | '/driver' {
+  return isDriverAccount(state) ? '/sharing' : '/driver';
+}
+
 /** Driver-only accounts (ADR-205): approved once, even if later expired or suspended. */
 export function isDriverAccount(state: Me['driverVerification'] | undefined): boolean {
   return state === 'VERIFIED' || state === 'EXPIRED' || state === 'SUSPENDED';
@@ -39,6 +53,6 @@ export function nextRoute(
   if (!me.displayName) return '/name';
   if (!me.role) return '/role';
   if (!locationOk) return '/location';
-  if (me.role === 'DRIVER') return isDriverAccount(me.driverVerification) ? '/sharing' : '/driver';
+  if (me.role === 'DRIVER') return driverHome(me.driverVerification);
   return '/home';
 }

@@ -1,14 +1,19 @@
 /**
- * DEV ONLY: fills Monastir with fake drivers moving on the map, fake waiting passengers and regular
- * trips, and keeps them alive while it runs (every 5 s), so the app can be looked at with real data.
+ * DEV ONLY: fills Teboulba with fake drivers moving along its real main roads, fake waiting passengers
+ * and regular trips, and keeps them alive while it runs (every 5 s), so the app can be looked at with
+ * real data.
  *
- *   node --env-file=.env --import tsx scripts/sim-monastir.ts                start (Ctrl+C stops)
- *   node --env-file=.env --import tsx scripts/sim-monastir.ts --around 36.80,10.18   same scene elsewhere
- *   node --env-file=.env --import tsx scripts/sim-monastir.ts --clean        delete every fake account
+ *   pnpm --filter @fi-thnitek/api sim:demo                      start (Ctrl+C stops)
+ *   pnpm --filter @fi-thnitek/api sim:demo -- --around 36.80,10.18   the same scene elsewhere
+ *   pnpm --filter @fi-thnitek/api sim:demo -- --clean           delete every fake account
  *
  * Writes straight to the local database (no API, no push). Refuses anything but a local database.
- * Fake accounts use e-mails @sim.fi-thnitek.test, never sign in, and are removed by --clean.
+ * Fake accounts use e-mails @sim.fi-thnitek.test, never sign in, and are removed by --clean. Each start
+ * first ends the previous fake sessions and requests, so nothing stays behind from an older scene.
+ * Routes: OpenStreetMap roads (ODbL, © OpenStreetMap contributors) in sim-teboulba-routes.json.
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { Pool } from 'pg';
 import { v7 as uuidv7 } from 'uuid';
 
@@ -22,48 +27,24 @@ const DOMAIN = 'sim.fi-thnitek.test';
 const TICK_MS = 5_000;
 
 type LatLng = [number, number];
-const MONASTIR: LatLng = [35.7708, 10.8281];
+/** Teboulba centre (the taxi, louage and bus stations are within 500 m). */
+const CENTRE: LatLng = [35.6418, 10.9658];
 
 // --around lat,lng moves the whole scene (handy to see it next to you).
 const aroundArg = process.argv[process.argv.indexOf('--around') + 1];
 const around: LatLng | null =
   process.argv.includes('--around') && aroundArg ? (aroundArg.split(',').map(Number) as LatLng) : null;
 const shift = (p: LatLng): LatLng =>
-  around ? [p[0] - MONASTIR[0] + around[0], p[1] - MONASTIR[1] + around[1]] : p;
+  around ? [p[0] - CENTRE[0] + around[0], p[1] - CENTRE[1] + around[1]] : p;
 
-/** Rough routes along Monastir's main roads (waypoints; drivers go back and forth). */
+/** Teboulba's main roads (OSM geometry); drivers go back and forth along them. */
+const ROAD_FILE = path.resolve(__dirname, 'sim-teboulba-routes.json');
 const ROUTES: Record<string, LatLng[]> = {
-  centre: [
-    [35.7708, 10.8281],
-    [35.775, 10.832],
-    [35.779, 10.83],
-    [35.7765, 10.821],
-    [35.77, 10.82],
-    [35.7708, 10.8281],
-  ],
-  airport: [
-    [35.77, 10.8261],
-    [35.766, 10.81],
-    [35.763, 10.79],
-    [35.76, 10.77],
-    [35.759, 10.7541],
-  ],
-  khniss: [
-    [35.77, 10.8261],
-    [35.755, 10.824],
-    [35.74, 10.821],
-    [35.7146, 10.8183],
-  ],
-  sousse: [
-    [35.77, 10.8261],
-    [35.772, 10.8],
-    [35.78, 10.77],
-    [35.795, 10.73],
-    [35.81, 10.69],
-  ],
+  ...(JSON.parse(readFileSync(ROAD_FILE, 'utf8')) as { routes: Record<string, LatLng[]> }).routes,
+  // Parked at the louage station, nudging forward as the queue moves.
   station: [
-    [35.7712, 10.8259],
-    [35.7714, 10.8262],
+    [35.6424, 10.9665],
+    [35.64255, 10.96672],
   ],
 };
 
@@ -71,7 +52,7 @@ interface DriverSpec {
   key: string;
   name: string;
   type: 'TAXI' | 'LOUAGE' | 'BUS';
-  route: keyof typeof ROUTES;
+  route: string;
   speedMps: number;
   /** Start somewhere along the route (0–1). */
   offset: number;
@@ -84,31 +65,23 @@ interface DriverSpec {
 
 const DRIVERS: DriverSpec[] = [
   { key: 'karim', name: 'Karim', type: 'TAXI', route: 'centre', speedMps: 8, offset: 0 },
-  {
-    key: 'hedi',
-    name: 'Hedi',
-    type: 'TAXI',
-    route: 'airport',
-    speedMps: 11,
-    offset: 0.3,
-    heading: 'airport',
-  },
-  { key: 'sonia', name: 'Sonia', type: 'TAXI', route: 'khniss', speedMps: 9, offset: 0.5, full: true },
-  { key: 'anis', name: 'Anis', type: 'TAXI', route: 'centre', speedMps: 7, offset: 0.55 },
+  { key: 'hedi', name: 'Hedi', type: 'TAXI', route: 'coast', speedMps: 10, offset: 0.3, heading: 'airport' },
+  { key: 'sonia', name: 'Sonia', type: 'TAXI', route: 'south', speedMps: 9, offset: 0.5, full: true },
+  { key: 'anis', name: 'Anis', type: 'TAXI', route: 'east', speedMps: 7, offset: 0.55 },
   {
     key: 'mourad',
     name: 'Mourad',
     type: 'TAXI',
-    route: 'sousse',
-    speedMps: 13,
+    route: 'moknine',
+    speedMps: 12,
     offset: 0.2,
-    heading: 'Sousse',
+    heading: 'Moknine',
   },
   {
     key: 'ridha',
     name: 'Ridha',
     type: 'LOUAGE',
-    route: 'sousse',
+    route: 'moknine',
     speedMps: 14,
     offset: 0.6,
     heading: 'Sousse',
@@ -128,12 +101,12 @@ const DRIVERS: DriverSpec[] = [
     key: 'nabil',
     name: 'Nabil',
     type: 'LOUAGE',
-    route: 'khniss',
+    route: 'south',
     speedMps: 12,
     offset: 0.1,
     heading: 'Mahdia',
   },
-  { key: 'lotfi', name: 'Lotfi', type: 'BUS', route: 'airport', speedMps: 7, offset: 0.7, line: 'L12' },
+  { key: 'lotfi', name: 'Lotfi', type: 'BUS', route: 'west', speedMps: 7, offset: 0.7, line: 'L23' },
   { key: 'walid', name: 'Walid', type: 'TAXI', route: 'centre', speedMps: 8, offset: 0.2, onBreak: true },
 ];
 
@@ -152,7 +125,7 @@ const PASSENGERS: PassengerSpec[] = [
   {
     key: 'amel',
     name: 'Amel',
-    at: [35.772, 10.829],
+    at: [35.6421, 10.9662],
     types: ['TAXI'],
     seats: 1,
     to: 'airport',
@@ -162,7 +135,7 @@ const PASSENGERS: PassengerSpec[] = [
   {
     key: 'p2',
     name: 'Sami',
-    at: [35.768, 10.823],
+    at: [35.6401, 10.9686],
     types: ['TAXI'],
     seats: 2,
     to: 'Sousse',
@@ -171,7 +144,7 @@ const PASSENGERS: PassengerSpec[] = [
   {
     key: 'youssef',
     name: 'Youssef',
-    at: [35.7716, 10.8268],
+    at: [35.64265, 10.96675],
     types: ['LOUAGE'],
     seats: 3,
     to: 'Tunis',
@@ -181,16 +154,16 @@ const PASSENGERS: PassengerSpec[] = [
   {
     key: 'p4',
     name: 'Hela',
-    at: [35.7745, 10.818],
+    at: [35.6445, 10.9632],
     types: ['TAXI'],
     seats: 1,
-    to: 'Khniss',
+    to: 'Moknine',
     showIdentity: false,
   },
   {
     key: 'ines',
     name: 'Ines',
-    at: [35.761, 10.815],
+    at: [35.6382, 10.9614],
     types: ['TAXI'],
     seats: 2,
     to: 'Mahdia',
@@ -199,7 +172,7 @@ const PASSENGERS: PassengerSpec[] = [
   {
     key: 'p6',
     name: 'Omar',
-    at: [35.769, 10.827],
+    at: [35.6429, 10.9673],
     types: ['LOUAGE'],
     seats: 1,
     to: 'Mahdia',
@@ -212,16 +185,19 @@ const q = async <T extends object = Record<string, unknown>>(text: string, value
 const geo = (p: LatLng) => `SRID=4326;POINT(${p[1]} ${p[0]})`;
 const emailOf = (key: string) => `sim-${key}@${DOMAIN}`;
 
+/** A destination by name: 'airport' (Monastir's), 'station' (the louage station nearest the scene) or a town. */
 async function placeId(name: string): Promise<{ id: string; at: LatLng } | null> {
-  const where =
-    name === 'airport'
-      ? `kind = 'AIRPORT' AND name_fr ILIKE '%Monastir%'`
-      : name === 'station'
-        ? `kind = 'LOUAGE_STATION' AND name_fr ILIKE '%Monastir%'`
-        : `kind = 'CITY' AND name_fr = $1`;
+  const centre = geo(shift(CENTRE));
   const [row] = await q<{ id: string; lat: number; lng: number }>(
-    `SELECT id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng FROM places WHERE ${where} LIMIT 1`,
-    where.includes('$1') ? [name] : [],
+    name === 'airport'
+      ? `SELECT id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng FROM places
+         WHERE kind = 'AIRPORT' AND name_fr ILIKE '%Monastir%' LIMIT 1`
+      : name === 'station'
+        ? `SELECT id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng FROM places
+           WHERE kind = 'LOUAGE_STATION' ORDER BY location <-> $1::geography LIMIT 1`
+        : `SELECT id, ST_Y(location::geometry) AS lat, ST_X(location::geometry) AS lng FROM places
+           WHERE kind = 'CITY' AND name_fr = $1 LIMIT 1`,
+    name === 'airport' ? [] : name === 'station' ? [centre] : [name],
   );
   return row ? { id: row.id, at: [row.lat, row.lng] } : null;
 }
@@ -349,9 +325,9 @@ async function setUpDriver(spec: DriverSpec): Promise<LiveDriver> {
     }
   }
 
-  const path = ROUTES[spec.route]!.map(shift);
-  const length = Math.max(1, pathLength(path));
-  return { spec, userId, sessionId: session.id, path, length, travelled: spec.offset * length };
+  const points = ROUTES[spec.route]!.map(shift);
+  const length = Math.max(1, pathLength(points));
+  return { spec, userId, sessionId: session.id, path: points, length, travelled: spec.offset * length };
 }
 
 async function setUpPassenger(spec: PassengerSpec): Promise<string> {
@@ -468,12 +444,16 @@ async function main(): Promise<void> {
     process.stdout.write(`Removed ${removed.length} fake accounts and everything they had.\n`);
     return;
   }
+  await stop();
+  await q(`DELETE FROM driver_routines WHERE driver_user_id IN (SELECT id FROM users WHERE email LIKE $1)`, [
+    `%@${DOMAIN}`,
+  ]);
   const drivers: LiveDriver[] = [];
   for (const spec of DRIVERS) drivers.push(await setUpDriver(spec));
   const requestIds: string[] = [];
   for (const spec of PASSENGERS) requestIds.push(await setUpPassenger(spec));
   await tick(drivers, requestIds);
-  const where = around ? `around ${around.join(',')}` : 'in Monastir';
+  const where = around ? `around ${around.join(',')}` : 'in Teboulba';
   process.stdout.write(
     `Simulating ${drivers.filter((d) => !d.spec.onBreak).length} drivers (1 on a break) and ${requestIds.length} waiting passengers ${where}. Ctrl+C to stop.\n`,
   );

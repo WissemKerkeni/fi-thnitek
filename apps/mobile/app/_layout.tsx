@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
-import { BEFORE_LOCATION } from '../src/auth/next-route';
+import { BEFORE_LOCATION, PASSENGER_ONLY, driverHome } from '../src/auth/next-route';
 import { usePushRegistration } from '../src/push/usePushRegistration';
 import { initI18n } from '../src/i18n';
 import { locationStatus, refreshPosition } from '../src/location/myPosition';
@@ -71,6 +71,7 @@ export default function RootLayout() {
           <PushRegistration />
           <CrashScreenTracker />
           <LocationGuard />
+          <RoleGuard />
           <SharingSupervisor />
           <RequestSupervisor />
           <StatusBar style="dark" />
@@ -108,6 +109,18 @@ function LocationGuard() {
     });
     return () => sub.remove();
   }, [signedIn, path]);
+  return null;
+}
+
+/** ADR-226: a driver account is sent from any passenger screen to its own (sharing, or its file). */
+function RoleGuard() {
+  const { session } = useAuth();
+  const path = usePathname();
+  const me = session.status === 'signedIn' ? session.me : null;
+  useEffect(() => {
+    if (me?.role === 'DRIVER' && PASSENGER_ONLY.includes(path))
+      router.replace(driverHome(me.driverVerification));
+  }, [me?.role, me?.driverVerification, path]);
   return null;
 }
 

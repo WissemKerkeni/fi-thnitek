@@ -80,7 +80,9 @@ export function seesExactPosition(viewer: Viewer, r: Pick<RequestSource, 'types'
 
 /**
  * Per-viewer serialisation of one OPEN, anchored request (docs/architecture.md §5.1). Returns null for the
- * passenger's own request (they know where they are).
+ * passenger's own request (they know where they are), and for a sharing driver of another type (a taxi
+ * driver never sees louage requests; bus drivers see none, ADR-226): drivers only see passengers they
+ * can take. Everyone else sees an approximate cell.
  */
 export function passengerMarker(
   r: RequestSource,
@@ -90,7 +92,8 @@ export function passengerMarker(
   t: Pick<Thresholds, 'approx_grid_m'>,
 ): PassengerMarker | null {
   if (viewer.kind === 'SHARING_DRIVER' && viewer.userId === r.passengerUserId) return null;
-  if (!seesExactPosition(viewer, r) || viewer.kind !== 'SHARING_DRIVER') {
+  if (viewer.kind === 'SHARING_DRIVER' && !seesExactPosition(viewer, r)) return null;
+  if (viewer.kind !== 'SHARING_DRIVER') {
     const cell = snapToGrid(r.anchor, t.approx_grid_m);
     return {
       id: r.id,

@@ -254,7 +254,8 @@ describe('anti-abuse scenarios (docs/anti-abuse.md §4)', () => {
     const p = await f.waitingPassenger(at(2300));
     const find = async (s: SignInResponse) => (await f.map(s)).passengers.find((x) => x.id === p.requestId);
     expect(await find(stalker)).toMatchObject({ exact: false });
-    expect(await find(louageDriver)).toMatchObject({ exact: false });
+    // A louage driver is not sent a taxi-only request at all (ADR-226).
+    expect(await find(louageDriver)).toBeUndefined();
     expect(await find(taxi)).toMatchObject({ exact: true });
 
     await request(t.server())

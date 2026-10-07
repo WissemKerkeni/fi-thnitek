@@ -23,6 +23,7 @@ import {
   nextOccurrence,
   passengerMarker,
   routineMatches,
+  seesExactPosition,
 } from '@fi-thnitek/domain';
 import { type SQL, and, between, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
@@ -138,8 +139,11 @@ export class MapService {
       const drivers = (await this.liveDrivers(this.inBox(bbox), now, MAX_CLUSTERED)).filter(
         (d) => !hidden.has(d.driverUserId),
       );
+      // Drivers only count the passengers they could take (ADR-226).
       const requests = (await this.openRequests(bbox, MAX_CLUSTERED)).filter(
-        (r) => !hidden.has(r.passengerUserId),
+        (r) =>
+          !hidden.has(r.passengerUserId) &&
+          (viewer.kind !== 'SHARING_DRIVER' || seesExactPosition(viewer, { types: r.types })),
       );
       const points: { lat: number; lng: number; kind: ClusterKind }[] = [
         ...drivers.map((d) => ({ lat: d.lat, lng: d.lng, kind: d.type })),
