@@ -5,7 +5,7 @@
 ## 1. Navigation
 
 ```
-Sign-in (Google) → Language → Terms → Name → Location (required, ADR-224)
+Sign-in (Google) → Language → Terms → Name → Role (once, ADR-225) → Location (required, ADR-224)
 │
 ├─ PASSENGER
 │  P1 Map home ──► P2 Destination (now · nearby · scheduled · full) ──► P3 Request sheet

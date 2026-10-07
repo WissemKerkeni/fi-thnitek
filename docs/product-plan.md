@@ -19,7 +19,7 @@
 | 1 | **No assignment.** A passenger request is open to every driver. There are no offers, no acceptance and no chat. Whoever arrives first takes the passenger. Several drivers heading to the same passenger is normal. |
 | 2 | **One request per passenger** at a time. |
 | 3 | **Requests are for taxi or louage only.** Bus passengers don't request and don't share their position; they see buses and bus routes. |
-| 4 | **Passenger tracking = request lifetime.** Posting a request starts live location. It closes automatically when the passenger **moves more than 20 m** from where they asked, when the phone stops sending location for 5 min, when there's no accurate GPS fix within 60 s, after 60 min (one-tap renew), or on cancel. |
+| 4 | **Passenger tracking = request lifetime.** Posting a request starts live location. It closes automatically when the passenger **moves more than 20 m** from where they asked, when the phone stops sending location for 5 min, when there's no accurate GPS fix within 60 s, after 30 min (no renewal, ADR-225), or on cancel. |
 | 5 | **Live driver features require sharing.** Without sharing, a driver sees no map and no passengers. Sharing is open to taxi, louage **and bus** drivers. *(Managing routine routes and documents doesn't require sharing.)* |
 | 6 | **1-hour cooldown after an undeclared stop.** Stop button, GPS off, killed app → no restart for 1 hour. |
 | 7 | **Declared breaks: 30 min, 1 h or 2 h.** The driver disappears from the map for the chosen time, with no cooldown, and resumes with one tap when the break ends. |
@@ -47,7 +47,7 @@ Moves > 20 m in a vehicle → request closes      (the admin quietly records dri
 
 | | Can do | Needs |
 |---|---|---|
-| **Passenger** | See the map and routine routes; search a destination; post **1** taxi/louage request (anonymous by default); cancel/renew; report a problem with a request; block | Google sign-in |
+| **Passenger** | See the map and routine routes; search a destination; post **1** taxi *or* louage request (anonymous by default); cancel; report a problem with a request; block | Google sign-in |
 | **Driver (taxi/louage/bus)** | **Without sharing:** manage routine routes, documents, profile. **While sharing:** appear on the map (name, type, vehicle, heading to, Full), see passengers and all other drivers, take breaks | Google sign-in + admin verification |
 | **Admin** | Verify drivers; see reports with the **pick-up history**; suspend/ban; clear cooldowns; manage places, documents and thresholds | Allow-listed Google account (web admin) |
 
@@ -71,7 +71,7 @@ OPEN (hidden until the first accurate GPS fix, then visible)
   ├─ moved > 20 m from where they asked  → MOVED_AWAY     (picked up or left; drivers within 50 m silently recorded)
   ├─ no location for 5 min               → LOCATION_LOST
   ├─ no accurate fix within 60 s         → NO_GPS_FIX
-  ├─ 60 min (renew +60, max 3)           → EXPIRED
+  ├─ 30 min (no renewal)                 → EXPIRED
   └─ cancel                              → CANCELLED
 ```
 The passenger sees the closure reason with **Post again**. There are no follow-up questions.
@@ -101,7 +101,7 @@ SHARING ── 12 h, "Still working?" unanswered ──► NOT SHARING (no coold
 
 | Risk | Mitigation |
 |---|---|
-| Troll/fake requests | 1 open request; 20 m / 5 min / 60 min auto-closure; daily and device limits; "Nobody there" reports → a 24 h request pause at 3 distinct reports; admin review |
+| Troll/fake requests | 1 open request; 20 m / 5 min / 30 min auto-closure; daily and device limits; "Nobody there" reports → a 24 h request pause at 3 distinct reports; admin review |
 | Racing to the same passenger | Accepted by design; drivers see each other and the Full badges |
 | Passenger privacy | Anonymous by default; exact position only for verified sharing drivers of the right type; nothing after closure |
 | Driver privacy | Visible only while sharing (their choice); breaks hide them; no history shown to users; report/block |

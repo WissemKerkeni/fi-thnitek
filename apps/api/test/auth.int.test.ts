@@ -143,6 +143,50 @@ describe('GET/PATCH /v1/me', () => {
     await request(t.server()).patch('/v1/me').set(bearer(s.accessToken)).send({ locale: 'de' }).expect(400);
   });
 
+  it('sets the role once at first run; a passenger never becomes a driver (ADR-225)', async () => {
+    const passenger = await signIn();
+    expect(
+      Me.parse((await request(t.server()).get('/v1/me').set(bearer(passenger.accessToken)).expect(200)).body)
+        .role,
+    ).toBeNull();
+    const set = await request(t.server())
+      .patch('/v1/me')
+      .set(bearer(passenger.accessToken))
+      .send({ role: 'PASSENGER' })
+      .expect(200);
+    expect(Me.parse(set.body).role).toBe('PASSENGER');
+    // Same role again is fine; switching is refused.
+    await request(t.server())
+      .patch('/v1/me')
+      .set(bearer(passenger.accessToken))
+      .send({ role: 'PASSENGER' })
+      .expect(200);
+    await request(t.server())
+      .patch('/v1/me')
+      .set(bearer(passenger.accessToken))
+      .send({ role: 'DRIVER' })
+      .expect(409);
+    const file = await request(t.server())
+      .put('/v1/driver/profile')
+      .set(bearer(passenger.accessToken))
+      .send({ legalFirstName: 'Ali', legalLastName: 'Trabelsi', cin: '06665544', transportType: 'TAXI' })
+      .expect(403);
+    expect(problem(file.body).code).toBe('FORBIDDEN');
+
+    const driver = await signIn();
+    await request(t.server())
+      .patch('/v1/me')
+      .set(bearer(driver.accessToken))
+      .send({ role: 'DRIVER' })
+      .expect(200);
+    const blocked = await request(t.server())
+      .post('/v1/requests')
+      .set(bearer(driver.accessToken))
+      .send({ destination: { point: { lat: 35.8, lng: 10.6 } }, types: ['TAXI'] })
+      .expect(403);
+    expect(problem(blocked.body).code).toBe('REQUEST_NOT_ALLOWED');
+  });
+
   it('registers and updates the device push token (R-004)', async () => {
     const s = await signIn();
     await request(t.server())

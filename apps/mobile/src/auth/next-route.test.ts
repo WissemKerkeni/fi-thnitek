@@ -12,6 +12,7 @@ const me: Me = {
   currentTermsVersion: 'v2',
   driverVerification: null,
   needsOnboarding: false,
+  role: 'PASSENGER',
 };
 
 describe('nextRoute (docs/ux.md §1)', () => {
@@ -34,15 +35,26 @@ describe('nextRoute (docs/ux.md §1)', () => {
     expect(nextRoute({ status: 'signedIn', me }, true)).toBe('/home');
   });
 
-  it('sends driver accounts to the sharing screen, other driver files to the passenger map', () => {
+  it('asks for the role once, after the name and before location (ADR-225)', () => {
+    expect(nextRoute({ status: 'signedIn', me: { ...me, role: null } }, true, false)).toBe('/role');
+    expect(nextRoute({ status: 'signedIn', me: { ...me, role: null, displayName: null } }, true)).toBe(
+      '/name',
+    );
+  });
+
+  it('sends approved drivers to sharing, other driver accounts to their file, passengers to the map', () => {
+    const driver = { ...me, role: 'DRIVER' as const };
     for (const state of ['VERIFIED', 'EXPIRED', 'SUSPENDED'] as const) {
-      expect(nextRoute({ status: 'signedIn', me: { ...me, driverVerification: state } }, true)).toBe(
+      expect(nextRoute({ status: 'signedIn', me: { ...driver, driverVerification: state } }, true)).toBe(
         '/sharing',
       );
     }
-    for (const state of ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'REJECTED'] as const) {
-      expect(nextRoute({ status: 'signedIn', me: { ...me, driverVerification: state } }, true)).toBe('/home');
+    for (const state of [null, 'DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'REJECTED'] as const) {
+      expect(nextRoute({ status: 'signedIn', me: { ...driver, driverVerification: state } }, true)).toBe(
+        '/driver',
+      );
     }
+    expect(nextRoute({ status: 'signedIn', me }, true)).toBe('/home');
   });
 
   it('requires location after the first-run steps, and only then (ADR-224)', () => {

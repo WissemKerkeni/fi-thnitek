@@ -6,14 +6,12 @@ import { setDestination } from '../../src/places/destination';
 import { langOf, placeNames } from '../../src/places/format';
 import { setNextRequestOptions } from '../../src/requests/draft';
 import { requestErrorMessage, useCurrentRequest, useRequestActions } from '../../src/requests/useRequest';
-import { countdown } from '../../src/sharing/time';
 import { colors, radii, spacing } from '../../src/theme/tokens';
 import { Button } from '../../src/ui/Button';
 import { Icon, type IconName } from '../../src/ui/Icon';
 import { Badge, Banner, Card, StatusPill } from '../../src/ui/kit';
 import { Screen } from '../../src/ui/Screen';
 import { Text } from '../../src/ui/Text';
-import { useNow } from '../../src/ui/useNow';
 
 /** P4 (Stitch "Active Ride") while a request is open, P5 (Stitch "Request closed") once it closes. */
 export default function RequestScreen() {
@@ -68,10 +66,8 @@ function useLabels(r: RequestView) {
 
 function ActiveView({ request: r }: { request: RequestView }) {
   const { t } = useTranslation();
-  const now = useNow();
   const labels = useLabels(r);
-  const { cancel, renew } = useRequestActions();
-  const leftMs = new Date(r.expiresAt).getTime() - now;
+  const { cancel } = useRequestActions();
   const showError = (error: unknown) => Alert.alert(t('requests.activeTitle'), requestErrorMessage(t, error));
 
   function confirmCancel() {
@@ -127,27 +123,6 @@ function ActiveView({ request: r }: { request: RequestView }) {
           <Text style={styles.warningText}>{t('requests.zoneBody')}</Text>
         </View>
       </View>
-
-      <Card>
-        <View style={styles.expiry}>
-          <Icon name="timer-outline" color={colors.primary} />
-          <Text variant="bodyStrong" style={styles.flex}>
-            {t('requests.expiresIn', { time: countdown(r.expiresAt, now) })}
-          </Text>
-          <Text variant="caption" muted>
-            {t('requests.renewalsLeft', { count: r.renewalsLeft })}
-          </Text>
-        </View>
-        {r.renewalsLeft > 0 ? (
-          <Button
-            label={t('requests.renew')}
-            icon="timer-plus-outline"
-            variant={leftMs <= 10 * 60_000 ? 'accent' : 'tonal'}
-            loading={renew.isPending}
-            onPress={() => renew.mutate(undefined, { onError: showError })}
-          />
-        ) : null}
-      </Card>
 
       <Button
         label={t('requests.cancel')}
@@ -256,5 +231,4 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   warningText: { color: colors.warning },
-  expiry: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
 });

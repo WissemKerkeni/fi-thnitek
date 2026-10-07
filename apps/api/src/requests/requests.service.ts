@@ -374,7 +374,12 @@ export class RequestsService {
     now: Date,
   ): Promise<{ blockers: RequestBlocker[]; pausedUntil: string | null }> {
     const [user] = await db
-      .select({ status: users.status, createdAt: users.createdAt, verification: driverProfiles.status })
+      .select({
+        status: users.status,
+        createdAt: users.createdAt,
+        role: users.role,
+        verification: driverProfiles.status,
+      })
       .from(users)
       .leftJoin(driverProfiles, eq(driverProfiles.userId, users.id))
       .where(eq(users.id, userId));
@@ -398,6 +403,7 @@ export class RequestsService {
     const pausedUntil = requestPausedUntil(pauses, now);
     const blockers = requestBlockers({
       verification: user?.verification ?? null,
+      driverRole: user?.role === 'DRIVER',
       accountActive: user?.status === 'ACTIVE',
       hasOpenRequest: open !== undefined,
       types,

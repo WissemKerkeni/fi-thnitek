@@ -41,6 +41,10 @@ export const UserStatus = z.enum(['ACTIVE', 'SUSPENDED', 'BANNED', 'DELETED']);
 export type UserStatus = z.infer<typeof UserStatus>;
 
 /** The signed-in user's own profile. Email is deliberately not returned (docs/security.md). */
+/** ADR-225: chosen once at first run; a passenger account never becomes a driver. */
+export const AccountRole = z.enum(['PASSENGER', 'DRIVER']);
+export type AccountRole = z.infer<typeof AccountRole>;
+
 export const Me = z.object({
   id: z.uuid(),
   displayName: z.string().nullable(),
@@ -56,6 +60,8 @@ export const Me = z.object({
     .nullable(),
   /** True until the onboarding steps (terms + display name) are complete (R-002). */
   needsOnboarding: z.boolean(),
+  /** Null until chosen at first run. */
+  role: AccountRole.nullable(),
 });
 export type Me = z.infer<typeof Me>;
 
@@ -76,6 +82,8 @@ export const UpdateMeRequest = z
     locale: Locale.optional(),
     /** The Terms & Privacy version the user just accepted. */
     acceptTermsVersion: z.string().min(1).max(32).optional(),
+    /** Accepted once (while still null); 409 afterwards. */
+    role: AccountRole.optional(),
   })
   .refine((v) => Object.keys(v).length > 0, 'nothing to update');
 export type UpdateMeRequest = z.infer<typeof UpdateMeRequest>;

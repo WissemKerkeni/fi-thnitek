@@ -28,14 +28,15 @@ Dispatch, offers, chat, phone sharing, seat booking on routines, fares, payments
 - **R-001** Sign in with Google (Android); iOS adds Sign in with Apple (App Store Guideline 4.8).
 - **R-002** First run: language (AR/FR), Terms & Privacy, display name.
 - **R-003** Drivers' public name = the first name from their verified identity; it cannot be hidden.
-- **R-004** Device registration (install ID, push token). **R-005** Delete account; sign out.
+- **R-004** Device registration (install ID, push token). **R-005** Delete account (from Account and data); sign out.
+- **R-006** First run: choose Passenger or Driver once; a passenger account never becomes a driver (ADR-225).
 
 ### 3.2 Places
 - **R-010** Curated places (cities, delegations, neighbourhoods, louage/bus/taxi stations, airports, landmarks), AR/FR + aliases.
 - **R-011** Destination search with suggestions + pick on map; results show the distance from the person, and a search for a kind of station (louage, bus, taxi) lists the nearest ones (ADR-224).
 
 ### 3.3 Live map
-- **R-020** The map shows, in the visible area (max ~20 km span, clustered beyond that): sharing drivers by type (🚕/🚐/🚌) and open passenger requests (🧍). Layer toggles per type.
+- **R-020** The map shows, in the visible area (max ~20 km span, clustered beyond that): sharing drivers by type (🚕/🚐/🚌) and open passenger requests (🧍). One vehicle type at a time (taxi, louage or bus) plus a waiting-passengers toggle (ADR-225).
 - **R-021** Polling every 5 s while visible; markers animate between updates.
 - **R-022** **Driver marker (seen by everyone):** a label with the **driver's name, always displayed**; type; a **Full** badge when full. Tap → photo, verified badge, vehicle model/colour, plate, heading to, bus line, the next routine departure, last update age.
 - **R-023** **Passenger marker, seen by passengers and bus drivers:** approximate position (~100 m grid) + destination. Never a name or note.
@@ -51,7 +52,7 @@ Dispatch, offers, chat, phone sharing, seat booking on routines, fares, payments
 - **R-033** The first fix with accuracy ≤ 30 m = the **anchor**; the request is visible only after anchoring; no accurate fix within 60 s → `NO_GPS_FIX`.
 - **R-034** **Moved-away:** 2 consecutive fixes ≥ 10 s apart, accuracy ≤ 25 m, > 20 m from the anchor → `MOVED_AWAY`.
 - **R-035** **Location-lost:** no location for 5 min → `LOCATION_LOST`.
-- **R-036** **Expiry:** 60 min → `EXPIRED`; a push 10 min before with **Renew** (+60 min, max 3).
+- **R-036** **Expiry:** 30 min → `EXPIRED`, no renewal and no countdown shown (ADR-225).
 - **R-037** Cancel anytime → `CANCELLED`.
 - **R-038** On closure: tracking stops (`stop: true`), the marker disappears, and the passenger sees the reason + **Post again**. **No follow-up questions.**
 - **R-039** **Silent pick-up record:** on `MOVED_AWAY`, the server records every sharing driver whose position was ≤ 50 m from the anchor during the last 2 min before closure (all of them when several qualify). Visible **only in the admin web app**.

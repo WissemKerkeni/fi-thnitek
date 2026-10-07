@@ -26,7 +26,7 @@ Tick each line; write what you saw when it differs.
 2. P1 repeats **indoors** near a window, 20 min → stays open (or closes `NO_GPS_FIX` within 60 s if no fix at all: note which).
 3. P1 walks **25 m** away → closes `MOVED_AWAY` within ~20 s; closure screen says why.
 4. P2 posts, turns location off → `LOCATION_LOST` after 5 min; push received.
-5. P2 posts, waits 50 min → "Renew?" push at ~50 min; renew works; cancel works.
+5. P2 posts and waits → the request closes by itself at 30 min (no countdown, no renew); cancel works.
 6. P2 posts a second request while one is open → refused.
 
 ### B. Driver sharing (R-050…R-059)

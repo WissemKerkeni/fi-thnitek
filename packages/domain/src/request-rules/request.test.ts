@@ -60,6 +60,8 @@ describe('requestBlockers (R-031, R-040, R-041, invariant 3)', () => {
   it('refuses driver accounts, suspended accounts, buses and a second open request', () => {
     expect(requestBlockers({ ...ok, verification: 'VERIFIED' })).toEqual(['DRIVER_ACCOUNT']);
     expect(requestBlockers({ ...ok, verification: 'SUSPENDED' })).toEqual(['DRIVER_ACCOUNT']);
+    // ADR-225: the driver role blocks requesting even before the file is approved.
+    expect(requestBlockers({ ...ok, driverRole: true, verification: 'DRAFT' })).toEqual(['DRIVER_ACCOUNT']);
     expect(requestBlockers({ ...ok, verification: 'UNDER_REVIEW' })).toEqual([]);
     expect(requestBlockers({ ...ok, accountActive: false })).toEqual(['ACCOUNT_SUSPENDED']);
     expect(requestBlockers({ ...ok, types: ['BUS'] })).toEqual(['BUS']);
@@ -160,10 +162,11 @@ describe('sweepRequest', () => {
   const created = new Date(T0);
   const base: SweepRequest = {
     createdAt: created,
-    expiresAt: new Date(T0 + 60 * 60_000),
+    expiresAt: new Date(T0 + 30 * 60_000),
     anchored: true,
     lastPingAt: new Date(T0),
     expiryRemindedAt: null,
+    renewCount: 0,
   };
   const at = (s: number) => new Date(T0 + s * 1000);
 
@@ -180,23 +183,37 @@ describe('sweepRequest', () => {
     expect(sweepRequest(base, at(301), T)).toEqual({ type: 'CLOSE', reason: 'LOCATION_LOST' });
   });
 
-  it('reminds 10 min before expiry, once, then expires (R-036)', () => {
+  it('closes at 30 min without any reminder by default (ADR-225)', () => {
     const alive = (s: number) => ({ ...base, lastPingAt: at(s) });
-    expect(sweepRequest(alive(2999), at(2999), T)).toEqual({ type: 'NONE' });
-    expect(sweepRequest(alive(3000), at(3000), T)).toEqual({ type: 'REMIND_EXPIRY' });
-    expect(sweepRequest({ ...alive(3000), expiryRemindedAt: at(3000) }, at(3001), T)).toEqual({
+    expect(sweepRequest(alive(1500), at(1500), T)).toEqual({ type: 'NONE' });
+    expect(sweepRequest(alive(1799), at(1799), T)).toEqual({ type: 'NONE' });
+    expect(sweepRequest(alive(1800), at(1800), T)).toEqual({ type: 'CLOSE', reason: 'EXPIRED' });
+  });
+
+  it('reminds once before expiry only while a renewal is configured and left', () => {
+    const t = { ...T, request_max_renewals: 2 };
+    const alive = (s: number) => ({ ...base, lastPingAt: at(s) });
+    expect(sweepRequest(alive(1199), at(1199), t)).toEqual({ type: 'NONE' });
+    expect(sweepRequest(alive(1200), at(1200), t)).toEqual({ type: 'REMIND_EXPIRY' });
+    expect(sweepRequest({ ...alive(1200), expiryRemindedAt: at(1200) }, at(1201), t)).toEqual({
       type: 'NONE',
     });
-    expect(sweepRequest(alive(3600), at(3600), T)).toEqual({ type: 'CLOSE', reason: 'EXPIRED' });
+    expect(sweepRequest({ ...alive(1200), renewCount: 2 }, at(1200), t)).toEqual({ type: 'NONE' });
   });
 });
 
 describe('renewal (R-036)', () => {
-  it('adds 60 minutes, at most 3 times, never after expiry', () => {
+  it('is off by default (ADR-225)', () => {
     const expiresAt = new Date(T0 + 5 * 60_000);
-    expect(renewal({ expiresAt, renewCount: 0 }, new Date(T0), T)).toEqual(new Date(T0 + 65 * 60_000));
-    expect(renewal({ expiresAt, renewCount: 3 }, new Date(T0), T)).toBeNull();
-    expect(renewal({ expiresAt, renewCount: 0 }, expiresAt, T)).toBeNull();
+    expect(renewal({ expiresAt, renewCount: 0 }, new Date(T0), T)).toBeNull();
+  });
+
+  it('adds the TTL, at most the configured times, never after expiry', () => {
+    const t = { ...T, request_max_renewals: 3 };
+    const expiresAt = new Date(T0 + 5 * 60_000);
+    expect(renewal({ expiresAt, renewCount: 0 }, new Date(T0), t)).toEqual(new Date(T0 + 35 * 60_000));
+    expect(renewal({ expiresAt, renewCount: 3 }, new Date(T0), t)).toBeNull();
+    expect(renewal({ expiresAt, renewCount: 0 }, expiresAt, t)).toBeNull();
   });
 });
 

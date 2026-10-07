@@ -63,6 +63,8 @@ export function requestBlockers(c: {
   types: readonly TransportType[];
   accountCreatedAt: Date;
   requestsToday: number;
+  /** ADR-225: the account chose the driver role at first run (whatever the file's state). */
+  driverRole?: boolean;
   /** The end of a request pause in force, if any. */
   pausedUntil?: Date | null;
   /** From `deviceProblem` (moderation). */
@@ -72,7 +74,7 @@ export function requestBlockers(c: {
 }): RequestBlocker[] {
   const blockers: RequestBlocker[] = [];
   if (!c.accountActive) blockers.push('ACCOUNT_SUSPENDED');
-  if (isDriverOnlyAccount(c.verification)) blockers.push('DRIVER_ACCOUNT');
+  if (c.driverRole || isDriverOnlyAccount(c.verification)) blockers.push('DRIVER_ACCOUNT');
   if (c.types.length === 0 || c.types.some((t) => !(REQUESTABLE_TYPES as readonly string[]).includes(t))) {
     blockers.push('BUS');
   }
@@ -170,6 +172,7 @@ export interface SweepRequest {
   /** Server time of the last ping that carried at least one fix. */
   lastPingAt: Date | null;
   expiryRemindedAt: Date | null;
+  renewCount: number;
 }
 
 export type RequestSweepAction =
@@ -181,7 +184,10 @@ export type RequestSweepAction =
 export function sweepRequest(
   r: SweepRequest,
   now: Date,
-  t: Pick<Thresholds, 'anchor_timeout_s' | 'location_lost_min' | 'request_expiry_reminder_min'>,
+  t: Pick<
+    Thresholds,
+    'anchor_timeout_s' | 'location_lost_min' | 'request_expiry_reminder_min' | 'request_max_renewals'
+  >,
 ): RequestSweepAction {
   if (now >= r.expiresAt) return { type: 'CLOSE', reason: 'EXPIRED' };
   if (!r.anchored && now.getTime() - r.createdAt.getTime() > t.anchor_timeout_s * 1000) {
@@ -189,7 +195,13 @@ export function sweepRequest(
   }
   const alive = (r.lastPingAt ?? r.createdAt).getTime();
   if (now.getTime() - alive > t.location_lost_min * MIN) return { type: 'CLOSE', reason: 'LOCATION_LOST' };
-  if (!r.expiryRemindedAt && r.expiresAt.getTime() - now.getTime() <= t.request_expiry_reminder_min * MIN) {
+  // "Renew?" only makes sense while a renewal is left (none by default since ADR-225).
+  const canRenew = r.renewCount < t.request_max_renewals;
+  if (
+    canRenew &&
+    !r.expiryRemindedAt &&
+    r.expiresAt.getTime() - now.getTime() <= t.request_expiry_reminder_min * MIN
+  ) {
     return { type: 'REMIND_EXPIRY' };
   }
   return { type: 'NONE' };

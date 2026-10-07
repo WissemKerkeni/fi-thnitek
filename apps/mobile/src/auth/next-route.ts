@@ -1,9 +1,17 @@
 import type { Me } from '@fi-thnitek/contracts';
 
-export type Route = '/sign-in' | '/language' | '/terms' | '/name' | '/location' | '/home' | '/sharing';
+export type Route =
+  '/sign-in' | '/language' | '/terms' | '/name' | '/role' | '/location' | '/home' | '/sharing' | '/driver';
 
 /** Screens reachable before location is granted: the first-run steps and the location screen. */
-export const BEFORE_LOCATION: readonly string[] = ['/sign-in', '/language', '/terms', '/name', '/location'];
+export const BEFORE_LOCATION: readonly string[] = [
+  '/sign-in',
+  '/language',
+  '/terms',
+  '/name',
+  '/role',
+  '/location',
+];
 
 export type SessionState = { status: 'loading' } | { status: 'signedOut' } | { status: 'signedIn'; me: Me };
 
@@ -13,8 +21,9 @@ export function isDriverAccount(state: Me['driverVerification'] | undefined): bo
 }
 
 /**
- * First-run order from docs/ux.md §1: Sign-in (Google) → Language → Terms → Name → Location (ADR-224)
- * → home (the passenger map, or the sharing screen for driver accounts).
+ * First-run order from docs/ux.md §1: Sign-in (Google) → Language → Terms → Name → Role (ADR-225)
+ * → Location (ADR-224) → home: the passenger map, the sharing screen for an approved driver, or the
+ * driver file while it is not approved yet.
  * Returns null while the session is still loading.
  */
 export function nextRoute(
@@ -28,6 +37,8 @@ export function nextRoute(
   const { me } = session;
   if (me.termsAcceptedVersion !== me.currentTermsVersion) return '/terms';
   if (!me.displayName) return '/name';
+  if (!me.role) return '/role';
   if (!locationOk) return '/location';
-  return isDriverAccount(me.driverVerification) ? '/sharing' : '/home';
+  if (me.role === 'DRIVER') return isDriverAccount(me.driverVerification) ? '/sharing' : '/driver';
+  return '/home';
 }

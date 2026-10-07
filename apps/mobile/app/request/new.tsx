@@ -3,6 +3,7 @@ import { Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Linking, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { mapFilter } from '../../src/map/mapType';
 import { VehicleBadge } from '../../src/map/VehicleBadge';
 import { useDestination } from '../../src/places/destination';
 import { langOf, placeNames } from '../../src/places/format';
@@ -37,7 +38,13 @@ export default function NewRequestScreen() {
   const blockers = current.data?.blockers ?? [];
   const pausedUntil = current.data?.pausedUntil ?? null;
   const [initial] = useState(() => takeNextRequestOptions());
-  const [types, setTypes] = useState<RequestableType[]>(initial?.types ?? DEFAULT_OPTIONS.types);
+  // ADR-225: one type. "Post again" keeps the last one; otherwise the type shown on the map, if requestable.
+  const [type, setType] = useState<RequestableType | null>(() => {
+    const previous = (initial ?? DEFAULT_OPTIONS).types[0];
+    if (previous) return previous;
+    const shown = mapFilter().type;
+    return shown === 'TAXI' || shown === 'LOUAGE' ? shown : null;
+  });
   const [seats, setSeats] = useState(initial?.seats ?? DEFAULT_OPTIONS.seats);
   const [note, setNote] = useState(initial?.note ?? '');
   const [showIdentity, setShowIdentity] = useState(initial?.showIdentity ?? false);
@@ -47,14 +54,6 @@ export default function NewRequestScreen() {
     if (!initial) void loadShowIdentity().then(setShowIdentity);
     void explainerSeen().then((seen) => setExplainer(!seen));
   }, [initial]);
-
-  function toggleType(type: RequestableType) {
-    setTypes((prev) =>
-      prev.includes(type)
-        ? prev.filter((x) => x !== type)
-        : TYPES.filter((x) => x === type || prev.includes(x)),
-    );
-  }
 
   function setIdentity(value: boolean) {
     setShowIdentity(value);
@@ -66,7 +65,7 @@ export default function NewRequestScreen() {
     post.mutate(
       {
         destination: { point: destination.point, placeId: destination.place?.id ?? null },
-        types,
+        types: type ? [type] : [],
         seats,
         note: note.trim() || null,
         showIdentity,
@@ -93,12 +92,11 @@ export default function NewRequestScreen() {
     );
   }
 
+  // A place is attached only when the pin was on it (ADR-225); otherwise it is a point.
   const destName = destination
-    ? destination.place && destination.distanceM === 0
+    ? destination.place
       ? placeNames(destination.place, lang).name
-      : destination.place
-        ? placeNames(destination.place, lang).name
-        : t('places.pinnedPoint')
+      : t('places.pinnedPoint')
     : null;
 
   return (
@@ -124,41 +122,37 @@ export default function NewRequestScreen() {
       ) : null}
 
       <Card>
-        <SectionTitle icon="car-multiple" title={t('requests.types')} />
-        <View style={styles.tiles}>
-          {TYPES.map((type) => {
-            const on = types.includes(type);
+        <View style={styles.tiles} accessibilityRole="radiogroup" accessibilityLabel={t('requests.types')}>
+          {TYPES.map((option) => {
+            const on = type === option;
             return (
               <Pressable
-                key={type}
-                accessibilityRole="checkbox"
+                key={option}
+                accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                onPress={() => toggleType(type)}
+                onPress={() => setType(option)}
                 style={[styles.tile, on && styles.tileOn]}
               >
-                <VehicleBadge type={type} size={44} />
+                <VehicleBadge type={option} size={28} />
                 <Text variant="label" style={on ? styles.tileTextOn : undefined}>
-                  {t(`driver.type_${type}`)}
+                  {t(`driver.type_${option}`)}
                 </Text>
-                <View style={[styles.check, on && styles.checkOn]}>
-                  {on ? <Icon name="check" size={16} color={colors.onPrimary} /> : null}
-                </View>
               </Pressable>
             );
           })}
         </View>
-      </Card>
-
-      <Card>
-        <SectionTitle icon="seat-passenger" title={t('requests.seats')} />
         <View style={styles.stepper}>
+          <Icon name="seat-passenger" color={colors.primary} />
+          <Text variant="bodyStrong" style={styles.flex}>
+            {t('requests.seats')}
+          </Text>
           <IconButton
             icon="minus"
             label="−"
             variant="tonal"
             onPress={() => setSeats((s) => Math.max(1, s - 1))}
           />
-          <Text variant="display" style={styles.seatValue}>
+          <Text variant="headline" style={styles.seatValue}>
             {seats}
           </Text>
           <IconButton
@@ -230,9 +224,7 @@ export default function NewRequestScreen() {
         subtitle={t('requests.askSubtitle')}
         icon="bullhorn-outline"
         loading={post.isPending}
-        disabled={
-          !destination || types.length === 0 || pausedUntil !== null || blockers.includes('DEVICE_LIMIT')
-        }
+        disabled={!destination || !type || pausedUntil !== null || blockers.includes('DEVICE_LIMIT')}
         onPress={publish}
       />
     </Screen>
@@ -244,10 +236,12 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: spacing.sm },
   tile: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    justifyContent: 'center',
+    gap: spacing.sm,
     minHeight: sizes.minTouchTarget,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
     borderRadius: radii.md,
     borderWidth: 2,
     borderColor: colors.border,
@@ -255,18 +249,8 @@ const styles = StyleSheet.create({
   },
   tileOn: { borderColor: colors.primary, backgroundColor: colors.primaryContainer },
   tileTextOn: { color: colors.primary },
-  check: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkOn: { borderColor: colors.primary, backgroundColor: colors.primary },
-  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.lg },
-  seatValue: { minWidth: 56, textAlign: 'center' },
+  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  seatValue: { minWidth: 32, textAlign: 'center' },
   change: { minHeight: 32, justifyContent: 'center' },
   link: { color: colors.primary, fontWeight: '700' },
   destination: {

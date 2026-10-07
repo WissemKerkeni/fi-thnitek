@@ -4,6 +4,8 @@ import { boolean, index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } f
 export const userStatus = pgEnum('user_status', ['ACTIVE', 'SUSPENDED', 'BANNED', 'DELETED']);
 export const locale = pgEnum('locale', ['ar', 'fr', 'en']);
 export const platform = pgEnum('platform', ['android', 'ios', 'web']);
+/** ADR-225: chosen once at first run. */
+export const accountRole = pgEnum('account_role', ['PASSENGER', 'DRIVER']);
 
 /** docs/domain-model.md § Identity. `email` is private: never returned by user endpoints, never logged. */
 export const users = pgTable('users', {
@@ -17,6 +19,8 @@ export const users = pgTable('users', {
   status: userStatus('status').notNull().default('ACTIVE'),
   /** Recomputed from ADMIN_EMAILS at every sign-in. */
   isAdmin: boolean('is_admin').notNull().default(false),
+  /** Null until chosen; a PASSENGER never becomes a DRIVER (ADR-225). */
+  role: accountRole('role'),
   termsAcceptedVersion: text('terms_accepted_version'),
   termsAcceptedAt: timestamp('terms_accepted_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

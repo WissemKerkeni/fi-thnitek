@@ -10,7 +10,8 @@ export interface RequestOptions {
 }
 
 export const DEFAULT_OPTIONS: RequestOptions = {
-  types: ['TAXI', 'LOUAGE'],
+  // ADR-225: one type, chosen on the form (it starts from the type shown on the map).
+  types: [],
   seats: 1,
   note: '',
   showIdentity: false,

@@ -31,6 +31,8 @@ export class UsersService {
       currentTermsVersion: this.env.TERMS_VERSION,
       driverVerification,
       needsOnboarding: !user.displayName || user.termsAcceptedVersion !== this.env.TERMS_VERSION,
+      // An account that already has a driver file is a driver, whatever was stored before ADR-225.
+      role: user.role ?? (driverVerification ? 'DRIVER' : null),
     };
   }
 
@@ -55,6 +57,7 @@ export class UsersService {
         { path: 'acceptTermsVersion', message: 'must be the current terms version' },
       ]);
     }
+    if (patch.role !== undefined) await this.setRoleOnce(userId, patch.role);
     const [user] = await this.db
       .update(users)
       .set({
@@ -70,6 +73,22 @@ export class UsersService {
       .returning();
     if (!user) throw new ApiException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return this.toMe(user, await this.driverStateOf(userId));
+  }
+
+  /**
+   * ADR-225: the role is chosen once. Choosing the same role again is a no-op; changing it is refused
+   * (a passenger never becomes a driver, a driver never requests).
+   */
+  private async setRoleOnce(userId: string, role: 'PASSENGER' | 'DRIVER'): Promise<void> {
+    const set = await this.db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(and(eq(users.id, userId), isNull(users.role)))
+      .returning({ id: users.id });
+    if (set.length === 1) return;
+    const [current] = await this.db.select({ role: users.role }).from(users).where(eq(users.id, userId));
+    if (current?.role !== role)
+      throw new ApiException('CONFLICT', HttpStatus.CONFLICT, 'The role is already set');
   }
 
   /** Upserts the caller's device by install ID (R-004). Returns the device ID. */

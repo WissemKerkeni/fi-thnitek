@@ -126,7 +126,7 @@ describe('posting a request (R-030, R-031, R-041, invariants 1–3)', () => {
       seats: 1,
       showIdentity: false,
       anchored: false,
-      renewalsLeft: 3,
+      renewalsLeft: 0,
       destination: { place: { nameFr: 'Sousse' } },
     });
     expect(res.tracking).toEqual({ intervalS: 5, distanceFilterM: 3, bufferMaxMin: 5 });
@@ -318,9 +318,11 @@ describe('sweep (R-033, R-035, R-036)', () => {
     expect((await requestRow(p.userId)).status).toBe('LOCATION_LOST');
   });
 
-  it('asks to renew 10 minutes before expiry, once, then expires', async () => {
+  it('lasts 30 minutes, closes by itself and never asks to renew (ADR-225)', async () => {
     const p = await signIn();
-    await api(p).post().expect(201);
+    const posted = currentOf((await api(p).post().expect(201)).body).request!;
+    const ttl = new Date(posted.expiresAt).getTime() - new Date(posted.createdAt).getTime();
+    expect(Math.round(ttl / 60_000)).toBe(30);
     await api(p)
       .pings([fix(0)])
       .expect(200);
@@ -329,8 +331,7 @@ describe('sweep (R-033, R-035, R-036)', () => {
       [p.userId],
     );
     await sweep();
-    await sweep();
-    expect(pushesTo(p, 'REQUEST_EXPIRING')).toBe(1);
+    expect(pushesTo(p, 'REQUEST_EXPIRING')).toBe(0);
     await t.pool.query(
       `UPDATE passenger_requests SET expires_at = now() - interval '1 second' WHERE passenger_user_id = $1`,
       [p.userId],
@@ -341,15 +342,18 @@ describe('sweep (R-033, R-035, R-036)', () => {
 });
 
 describe('renew and cancel (R-036, R-037)', () => {
-  it('renews three times by 60 minutes each, then refuses', async () => {
+  it('refuses renewals (none since ADR-225)', async () => {
     const p = await signIn();
-    const first = currentOf((await api(p).post().expect(201)).body).request!;
-    const renewed = currentOf((await api(p).renew().expect(200)).body).request!;
-    expect(new Date(renewed.expiresAt).getTime() - new Date(first.expiresAt).getTime()).toBe(3_600_000);
-    expect(renewed.renewalsLeft).toBe(2);
-    await api(p).renew().expect(200);
-    await api(p).renew().expect(200);
+    await api(p).post().expect(201);
     expect(problem((await api(p).renew().expect(409)).body).code).toBe('RENEW_NOT_ALLOWED');
+  });
+
+  it('takes exactly one transport type (ADR-225)', async () => {
+    const p = await signIn();
+    await api(p)
+      .post({ destination, types: ['TAXI', 'LOUAGE'] })
+      .expect(400);
+    await api(p).post({ destination, types: [] }).expect(400);
   });
 
   it('cancels, then has nothing left to cancel', async () => {
@@ -367,7 +371,7 @@ describe('history (R-042)', () => {
     await api(p).post().expect(201);
     await api(p).cancel().expect(200);
     await api(p)
-      .post({ destination, types: ['TAXI', 'LOUAGE'], showIdentity: true, note: 'Valise' })
+      .post({ destination, types: ['TAXI'], showIdentity: true, note: 'Valise' })
       .expect(201);
     const history = RequestHistory.parse((await api(p).history().expect(200)).body);
     expect(history.requests.map((r) => r.status)).toEqual(['OPEN', 'CANCELLED']);

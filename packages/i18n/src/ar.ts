@@ -101,7 +101,19 @@ export const ar: Catalog = {
     namePlaceholder: 'مثلا: سامي',
     nameInvalid: 'من 2 حتى 40 حرف',
   },
+  role: {
+    title: 'إنت…',
+    passenger: 'راكب',
+    passengerHint: 'نلوّج على تاكسي ولا لواج ولا كار.',
+    driver: 'سوّاق',
+    driverHint: 'نسوق تاكسي ولا لواج ولا كار ونحب الناس تشوفني على الخريطة.',
+    final: 'الاختيار هذا نهائي للحساب هذا.',
+    confirmTitle: 'تكمّل كـ {{role}}؟',
+    confirm: 'أكّد',
+  },
   me: {
+    account: 'الحساب والمعطيات',
+    deleteHint: 'يفسخ الحساب متاعك والتليفونات والمعطيات الشخصية. نهائي.',
     greeting: 'عسلامة {{name}}',
     signOut: 'اخرج',
     deleteAccount: 'امسح حسابي',
@@ -271,6 +283,7 @@ export const ar: Catalog = {
     suggested: 'مقترحة من ثنيتك المعتادة',
   },
   live: {
+    stale: 'آخر تحديث قبل {{value}} ث',
     zoomIn: 'قرّب الخريطة باش تشوف السوّاقة.',
     headingTo: 'ماشي لـ {{name}}',
     line: 'الخط {{line}}',

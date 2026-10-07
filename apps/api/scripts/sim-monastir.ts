@@ -163,7 +163,7 @@ const PASSENGERS: PassengerSpec[] = [
     key: 'p2',
     name: 'Sami',
     at: [35.768, 10.823],
-    types: ['TAXI', 'LOUAGE'],
+    types: ['TAXI'],
     seats: 2,
     to: 'Sousse',
     showIdentity: false,

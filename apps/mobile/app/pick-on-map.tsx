@@ -1,4 +1,5 @@
 import type { LatLng } from '@fi-thnitek/contracts';
+import { DEFAULT_THRESHOLDS } from '@fi-thnitek/domain';
 import { Camera, Map as MapView, type ViewStateChangeEvent } from '@maplibre/maplibre-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Stack, router } from 'expo-router';
@@ -28,8 +29,10 @@ import { Text } from '../src/ui/Text';
 const round = (v: number) => Math.round(v * 1e4) / 1e4;
 
 /**
- * "Pick on map" (R-011): a fixed centre pin, named after the closest known place. With
- * `purpose` (heading-to, routine ends) the closest place is chosen instead (a known place is required).
+ * "Pick on map" (R-011): a fixed centre pin. A destination takes a known place's name only when the
+ * pin is on it (within `destination_snap_m`, ADR-225); farther, it stays a point and the place is only
+ * a hint. With `purpose` (heading-to, routine ends) the closest place is chosen (a known place is
+ * required).
  */
 export default function PickOnMapScreen() {
   const { t, i18n } = useTranslation();
@@ -63,14 +66,19 @@ export default function PickOnMapScreen() {
     }
     setDestination({
       point,
-      place: nearest.data?.place ?? null,
-      distanceM: nearest.data?.distanceM ?? null,
+      place: snapped ? nearest.data!.place : null,
+      distanceM: snapped ? nearest.data!.distanceM : null,
     });
     router.dismissTo('/home');
   }
 
+  const snapped =
+    nearest.data?.place != null &&
+    (nearest.data.distanceM ?? Infinity) <= DEFAULT_THRESHOLDS.destination_snap_m;
   let label: string | null = null;
-  if (nearest.data?.place) {
+  if (snapped && !placeOnly) {
+    label = placeNames(nearest.data!.place!, langOf(i18n.language)).name;
+  } else if (nearest.data?.place) {
     const d = distanceParts(nearest.data.distanceM ?? 0);
     label = t('places.near', {
       name: placeNames(nearest.data.place, langOf(i18n.language)).name,
