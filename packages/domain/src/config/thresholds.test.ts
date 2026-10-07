@@ -10,8 +10,8 @@ describe('DEFAULT_THRESHOLDS', () => {
       anchor_max_accuracy_m: 30,
       location_lost_min: 5,
       anchor_timeout_s: 60,
-      request_ttl_min: 60,
-      request_max_renewals: 3,
+      request_ttl_min: 30,
+      request_max_renewals: 0,
       request_expiry_reminder_min: 10,
       request_daily_limit_new: 5,
       request_daily_limit: 15,
@@ -59,6 +59,7 @@ describe('DEFAULT_THRESHOLDS', () => {
       request_coarse_grid_m: 1000,
       session_retention_days: 365,
       client_error_retention_days: 90,
+      destination_snap_m: 20,
       document_expiry_reminder_days: 30,
     });
   });

@@ -20,11 +20,8 @@ export const RequestDestination = z.object({
 /** POST /v1/requests (R-030). The origin is always the phone's own location, never sent here. */
 export const CreateRequestInput = z.object({
   destination: RequestDestination,
-  types: z
-    .array(RequestableType)
-    .min(1)
-    .max(2)
-    .refine((xs) => new Set(xs).size === xs.length, 'types must be unique'),
+  /** ADR-225: one transport type per request (taxi or louage). */
+  types: z.array(RequestableType).length(1),
   seats: z.number().int().min(1).max(8).default(1),
   note: z.string().trim().max(80).nullable().default(null),
   /** "Show my name and note to drivers": off by default (anonymous). */

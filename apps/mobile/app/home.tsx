@@ -1,9 +1,10 @@
-import type { MapDriver, TransportType } from '@fi-thnitek/contracts';
+import type { MapDriver } from '@fi-thnitek/contracts';
 import {
   Camera,
   type CameraRef,
   Map as MapView,
   Marker,
+  type TrackUserLocation,
   type ViewStateChangeEvent,
   UserLocation,
 } from '@maplibre/maplibre-react-native';
@@ -21,7 +22,8 @@ import { setMapCenter } from '../src/map/mapCenter';
 import { bboxAround, bboxOf } from '../src/map/viewport';
 import { refreshPosition, useMyPosition } from '../src/location/myPosition';
 import { DestinationPin } from '../src/places/DestinationPin';
-import { type Layer, LayerChips } from '../src/places/LayerChips';
+import { LayerChips } from '../src/places/LayerChips';
+import { useMapFilter } from '../src/map/mapType';
 import { setDestination, useDestination } from '../src/places/destination';
 import { useCurrentRequest } from '../src/requests/useRequest';
 import { langOf, placeNames } from '../src/places/format';
@@ -34,9 +36,6 @@ import { IconButton, StatusPill } from '../src/ui/kit';
 import { Text } from '../src/ui/Text';
 import { useNow } from '../src/ui/useNow';
 
-const ALL_LAYERS: readonly Layer[] = ['taxi', 'louage', 'bus', 'passengers'];
-const LAYER_OF: Record<TransportType, Layer> = { TAXI: 'taxi', LOUAGE: 'louage', BUS: 'bus' };
-
 /**
  * P1 Map home (R-020…R-022), as the Stitch "Map home" screen: top bar, search card, layer chips, the map
  * with live drivers (polled every 5 s while visible), a "live" freshness pill and the bottom navigation.
@@ -48,21 +47,26 @@ export default function HomeScreen() {
   const destination = useDestination();
   const me = useMyPosition();
   const [start] = useState(() => me);
-  const centredOnMe = useRef(start !== null);
+  // The map's own follow-me mode (like Google Maps): on at opening and after "my location", off when panned.
+  const [follow, setFollow] = useState<TrackUserLocation | undefined>(() =>
+    destination ? undefined : 'default',
+  );
   const now = useNow();
-  const [layers, setLayers] = useState<ReadonlySet<Layer>>(() => new Set(ALL_LAYERS));
+  const filter = useMapFilter();
   const [bbox, setBbox] = useState(() => bboxAround(start ? [start.lng, start.lat] : TUNIS_CENTER));
   const [selected, setSelected] = useState<MapDriver | null>(null);
   const live = useLiveMap(bbox);
   const current = useCurrentRequest();
   const open = current.data?.request ?? null;
   const visibleDrivers = useMemo(
-    () => (live.data?.drivers ?? []).filter((d) => layers.has(LAYER_OF[d.type])),
-    [live.data, layers],
+    () => (live.data?.drivers ?? []).filter((d) => d.type === filter.type),
+    [live.data, filter.type],
   );
   const drivers = useAnimatedPositions(visibleDrivers);
-  const passengers = layers.has('passengers') ? (live.data?.passengers ?? []) : [];
-  const updatedS = live.dataUpdatedAt ? Math.max(0, Math.round((now - live.dataUpdatedAt) / 1000)) : null;
+  const passengers = filter.passengers ? (live.data?.passengers ?? []) : [];
+  // "Live" while answers keep coming; the age is shown only when updates have stopped.
+  const ageS = live.dataUpdatedAt ? Math.max(0, Math.round((now - live.dataUpdatedAt) / 1000)) : null;
+  const stale = ageS !== null && ageS > STALE_AFTER_S;
 
   function onRegionDidChange(e: NativeSyntheticEvent<ViewStateChangeEvent>) {
     setBbox(bboxOf(e.nativeEvent.bounds));
@@ -70,17 +74,10 @@ export default function HomeScreen() {
     setMapCenter({ lat, lng });
   }
 
-  // The position may arrive after the map: go there once, unless the person is looking at a destination.
-  useEffect(() => {
-    if (me && !centredOnMe.current && !destination) {
-      centredOnMe.current = true;
-      camera.current?.flyTo({ center: [me.lng, me.lat], zoom: MY_ZOOM, duration: 600 });
-    }
-  }, [me, destination]);
-
-  async function locateMe() {
-    const p = (await refreshPosition()) ?? me;
-    if (p) camera.current?.flyTo({ center: [p.lng, p.lat], zoom: MY_ZOOM, duration: 600 });
+  function locateMe() {
+    void refreshPosition();
+    camera.current?.zoomTo(MY_ZOOM, { duration: 300 });
+    setFollow('default');
   }
 
   useEffect(() => {
@@ -93,16 +90,8 @@ export default function HomeScreen() {
     }
   }, [destination]);
 
-  function toggle(layer: Layer) {
-    setLayers((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(layer)) next.add(layer);
-      return next;
-    });
-  }
-
   const destinationName = destination
-    ? destination.place && destination.distanceM === 0
+    ? destination.place
       ? placeNames(destination.place, langOf(i18n.language)).name
       : t('places.pinnedPoint')
     : null;
@@ -123,6 +112,11 @@ export default function HomeScreen() {
         >
           <Camera
             ref={camera}
+            // Looking at a destination wins over following the person.
+            trackUserLocation={destination ? undefined : follow}
+            onTrackUserLocationChange={(e) => {
+              if (!e.nativeEvent.trackUserLocation) setFollow(undefined);
+            }}
             initialViewState={{
               center: start ? [start.lng, start.lat] : TUNIS_CENTER,
               zoom: start ? MY_ZOOM : DEFAULT_ZOOM,
@@ -182,17 +176,12 @@ export default function HomeScreen() {
               />
             )}
           </View>
-          <LayerChips visible={layers} onToggle={toggle} />
+          <LayerChips filter={filter} />
         </View>
 
         <View style={styles.bottom} pointerEvents="box-none">
           <View style={styles.locate} pointerEvents="box-none">
-            <IconButton
-              icon="crosshairs-gps"
-              label={t('location.locateMe')}
-              floating
-              onPress={() => void locateMe()}
-            />
+            <IconButton icon="crosshairs-gps" label={t('location.locateMe')} floating onPress={locateMe} />
           </View>
           {open ? (
             <Pressable
@@ -238,11 +227,15 @@ export default function HomeScreen() {
                 {t('live.zoomIn')}
               </Text>
             </View>
-          ) : updatedS !== null && live.isSuccess ? (
-            <View style={styles.livePill} pointerEvents="none" accessibilityLiveRegion="polite">
-              <View style={styles.liveDot} />
+          ) : ageS !== null ? (
+            <View
+              style={[styles.livePill, stale && styles.stalePill]}
+              pointerEvents="none"
+              accessibilityLiveRegion="polite"
+            >
+              {stale ? null : <View style={styles.liveDot} />}
               <Text variant="caption" style={styles.livePillText}>
-                {t('live.liveUpdated', { value: updatedS })}
+                {stale ? t('live.stale', { value: ageS }) : t('live.live')}
               </Text>
             </View>
           ) : null}
@@ -272,7 +265,9 @@ export default function HomeScreen() {
 }
 
 /** Street level around the person (~1 km across). */
-const MY_ZOOM = 15;
+const MY_ZOOM = 16;
+/** Polls come every 5 s: past this, say how old the map is instead of "Live". */
+const STALE_AFTER_S = 15;
 
 const styles = StyleSheet.create({
   locate: { alignItems: 'flex-end' },
@@ -333,4 +328,5 @@ const styles = StyleSheet.create({
   },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80' },
   livePillText: { color: colors.onPrimary },
+  stalePill: { backgroundColor: colors.warning },
 });

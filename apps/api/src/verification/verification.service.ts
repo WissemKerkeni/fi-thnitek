@@ -28,7 +28,7 @@ import { ENV, type Env } from '../config/env.js';
 import type { Database, Executor } from '../db/client.js';
 import { DB } from '../db/db.module.js';
 import { UNIQUE_VIOLATION, pgError } from '../db/pg-errors.js';
-import { driverDocuments, driverProfiles, vehicles } from '../db/schema/index.js';
+import { driverDocuments, driverProfiles, users, vehicles } from '../db/schema/index.js';
 import { InvalidImageError, sanitizeImage } from '../documents/image-sanitizer.js';
 import { STORAGE, type StorageService } from '../storage/storage.service.js';
 import { CIN_PROTECTOR, type CinProtector } from './cin-crypto.js';
@@ -122,6 +122,12 @@ export class VerificationService {
       ]);
     }
     await this.assertEditableIfExists(userId);
+    // ADR-225: only a driver account fills a driver file; an account without a role becomes one.
+    const [account] = await this.db.select({ role: users.role }).from(users).where(eq(users.id, userId));
+    if (account?.role === 'PASSENGER') {
+      throw new ApiException('FORBIDDEN', HttpStatus.FORBIDDEN, 'A passenger account cannot become a driver');
+    }
+    if (!account?.role) await this.db.update(users).set({ role: 'DRIVER' }).where(eq(users.id, userId));
     const values = {
       legalFirstName: input.legalFirstName,
       legalLastName: input.legalLastName,

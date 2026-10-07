@@ -11,6 +11,7 @@ const me = {
   currentTermsVersion: 'v1',
   driverVerification: null,
   needsOnboarding: true,
+  role: null,
 };
 const pair = (n: number) => ({ accessToken: `a${n}`, expiresIn: 900, refreshToken: `r${n}`.padEnd(43, 'x') });
 const json = (status: number, body: unknown) =>

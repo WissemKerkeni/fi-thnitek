@@ -1,40 +1,33 @@
 import { Stack, router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { isDriverAccount } from '../src/auth/next-route';
-import { colors, radii, spacing } from '../src/theme/tokens';
+import { colors, radii, sizes, spacing } from '../src/theme/tokens';
 import { Icon } from '../src/ui/Icon';
-import { Badge, Banner, Card, ListRow, SectionTitle } from '../src/ui/kit';
-import { Button } from '../src/ui/Button';
+import { Badge, Card, ListRow } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 
-/** Tunisian emergency numbers (shown on the Stitch "Profile" screen). */
+/** Tunisian emergency numbers (R-072), one compact row. */
 const EMERGENCY = [
-  { key: 'police', number: '197', icon: 'police-badge-outline' },
-  { key: 'nationalGuard', number: '193', icon: 'shield-account-outline' },
-  { key: 'civilProtection', number: '198', icon: 'fire-truck' },
-  { key: 'samu', number: '190', icon: 'ambulance' },
+  { key: 'police', number: '197' },
+  { key: 'nationalGuard', number: '193' },
+  { key: 'civilProtection', number: '198' },
+  { key: 'samu', number: '190' },
 ] as const;
 
-/** P6 / D6 "Me" (Stitch "Profile"): identity card, driver file, language, emergency numbers, sign out, delete (R-005). */
+/**
+ * P6 / D6 "Me": identity, the person's own lists, language, emergency numbers, sign out. A passenger
+ * account never sees the driver sign-up (ADR-225: the role is chosen once at first run); deleting the
+ * account lives one level down, on the Account screen.
+ */
 export default function MeScreen() {
   const { t } = useTranslation();
-  const { session, signOut, deleteAccount } = useAuth();
+  const { session, signOut } = useAuth();
   const me = session.status === 'signedIn' ? session.me : null;
-  const driver = isDriverAccount(me?.driverVerification);
-
-  function confirmDelete() {
-    Alert.alert(t('me.deleteConfirmTitle'), t('me.deleteConfirmBody'), [
-      { text: t('me.cancel'), style: 'cancel' },
-      {
-        text: t('me.confirmDelete'),
-        style: 'destructive',
-        onPress: () => void deleteAccount().then(() => router.replace('/')),
-      },
-    ]);
-  }
+  const driverRole = me?.role === 'DRIVER';
+  const verifiedDriver = isDriverAccount(me?.driverVerification);
 
   return (
     <Screen>
@@ -48,44 +41,39 @@ export default function MeScreen() {
           </View>
           <View style={styles.flex}>
             <Text variant="headline">{me.displayName}</Text>
-            {driver ? (
-              <Badge label={t(`driver.status_${me.driverVerification!}`)} tone="success" icon="steering" />
+            {driverRole && me.driverVerification ? (
+              <Badge
+                label={t(`driver.status_${me.driverVerification}`)}
+                tone={verifiedDriver ? 'success' : 'info'}
+                icon="steering"
+              />
             ) : (
-              <Badge label={t('me.passenger')} icon="account" />
+              <Badge label={driverRole ? t('role.driver') : t('me.passenger')} icon="account" />
             )}
+            {!driverRole ? (
+              <Text variant="caption" muted>
+                {t('me.privacyNote')}
+              </Text>
+            ) : null}
           </View>
         </Card>
       ) : null}
 
-      {me && !driver ? <Banner icon="incognito">{t('me.privacyNote')}</Banner> : null}
-
-      {me && !me.driverVerification ? (
-        <View style={styles.cta}>
-          <Icon name="steering" size={32} color={colors.accent} />
-          <Text variant="bodyStrong" style={[styles.flex, styles.ctaText]}>
-            {t('me.driverCta')}
-          </Text>
-          <View>
-            <Button label={t('me.driverCtaAction')} variant="accent" onPress={() => router.push('/driver')} />
-          </View>
-        </View>
-      ) : null}
-
       <View style={styles.group}>
-        {driver ? (
+        {verifiedDriver ? (
           <ListRow icon="access-point" title={t('sharing.title')} onPress={() => router.push('/sharing')} />
         ) : null}
-        {driver ? (
+        {verifiedDriver ? (
           <ListRow
             icon="calendar-clock"
             title={t('routines.title')}
             onPress={() => router.push('/routines')}
           />
         ) : null}
-        {me?.driverVerification ? (
+        {driverRole ? (
           <ListRow icon="steering" title={t('driver.statusTitle')} onPress={() => router.push('/driver')} />
         ) : null}
-        {driver ? (
+        {driverRole ? (
           <ListRow
             icon="history"
             title={t('safety.sessionHistory')}
@@ -104,42 +92,34 @@ export default function MeScreen() {
           onPress={() => router.push('/blocks')}
         />
         <ListRow icon="translate" title={t('language.title')} onPress={() => router.push('/language')} />
+        <ListRow icon="account-cog-outline" title={t('me.account')} onPress={() => router.push('/account')} />
       </View>
 
-      <Card>
-        <SectionTitle icon="phone-alert-outline" title={t('me.emergency')} />
-        <View style={styles.grid}>
-          {EMERGENCY.map((e) => (
-            <Pressable
-              key={e.key}
-              accessibilityRole="button"
-              accessibilityLabel={`${t(`me.${e.key}`)} ${e.number}`}
-              onPress={() => void Linking.openURL(`tel:${e.number}`)}
-              style={({ pressed }) => [styles.emergency, pressed && styles.pressed]}
-            >
-              <Icon name={e.icon} color={colors.danger} />
-              <Text variant="title" style={styles.number}>
-                {e.number}
-              </Text>
-              <Text variant="caption" muted style={styles.center}>
-                {t(`me.${e.key}`)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </Card>
+      <View style={styles.emergencyRow} accessibilityRole="summary" accessibilityLabel={t('me.emergency')}>
+        <Icon name="phone-alert-outline" size={20} color={colors.danger} />
+        {EMERGENCY.map((e) => (
+          <Pressable
+            key={e.key}
+            accessibilityRole="button"
+            accessibilityLabel={`${t(`me.${e.key}`)} ${e.number}`}
+            onPress={() => void Linking.openURL(`tel:${e.number}`)}
+            style={({ pressed }) => [styles.emergency, pressed && styles.pressed]}
+          >
+            <Text variant="label" style={styles.number}>
+              {e.number}
+            </Text>
+            <Text variant="caption" muted numberOfLines={1}>
+              {t(`me.${e.key}`)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.group}>
         <ListRow
           icon="logout"
           title={t('me.signOut')}
           onPress={() => void signOut().then(() => router.replace('/'))}
-        />
-        <ListRow
-          icon="delete-outline"
-          title={t('me.deleteAccount')}
-          onPress={confirmDelete}
-          trailing={<Icon name="alert-outline" color={colors.danger} />}
         />
       </View>
     </Screen>
@@ -148,28 +128,6 @@ export default function MeScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1, gap: spacing.xs },
-  center: { textAlign: 'center' },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    backgroundColor: colors.primary,
-  },
-  ctaText: { color: colors.onPrimary },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  emergency: {
-    flexBasis: '47%',
-    flexGrow: 1,
-    alignItems: 'center',
-    gap: 2,
-    paddingVertical: spacing.md,
-    borderRadius: radii.md,
-    backgroundColor: colors.dangerContainer,
-  },
-  number: { color: colors.danger },
-  pressed: { opacity: 0.85 },
   identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
     width: 64,
@@ -188,4 +146,16 @@ const styles = StyleSheet.create({
     gap: StyleSheet.hairlineWidth,
     backgroundColor: colors.border,
   },
+  emergencyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  emergency: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: sizes.minTouchTarget,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.md,
+    backgroundColor: colors.dangerContainer,
+  },
+  number: { color: colors.danger },
+  pressed: { opacity: 0.85 },
 });

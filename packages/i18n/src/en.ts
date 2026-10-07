@@ -103,7 +103,19 @@ export const en: Catalog = {
     namePlaceholder: 'e.g. Sami',
     nameInvalid: '2 to 40 letters',
   },
+  role: {
+    title: 'You are…',
+    passenger: 'Passenger',
+    passengerHint: 'I am looking for a taxi, a louage or a bus.',
+    driver: 'Driver',
+    driverHint: 'I drive a taxi, a louage or a bus and want to be seen on the map.',
+    final: 'This choice is final for this account.',
+    confirmTitle: 'Continue as {{role}}?',
+    confirm: 'Confirm',
+  },
   me: {
+    account: 'Account and data',
+    deleteHint: 'Erases your profile, your devices and your personal data. This is final.',
     greeting: 'Hello {{name}}',
     signOut: 'Sign out',
     deleteAccount: 'Delete my account',
@@ -274,6 +286,7 @@ export const en: Catalog = {
     suggested: 'Suggested from your regular trip',
   },
   live: {
+    stale: 'Updated {{value}} s ago',
     zoomIn: 'Zoom in to see the drivers.',
     headingTo: 'To {{name}}',
     line: 'Line {{line}}',

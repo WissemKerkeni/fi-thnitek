@@ -93,6 +93,8 @@ export const ThresholdsSchema = z
     session_retention_days: positiveInt,
     /** Crash reports (scrubbed) are kept this long. */
     client_error_retention_days: positiveInt,
+    /** Pick-on-map: a destination pin is named after a known place only this close to it (ADR-225). */
+    destination_snap_m: positiveInt,
     /** Drivers get a reminder this many days before an accepted document expires (R-064). */
     document_expiry_reminder_days: positiveInt,
   })
@@ -114,8 +116,8 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     anchor_max_accuracy_m: 30,
     location_lost_min: 5,
     anchor_timeout_s: 60,
-    request_ttl_min: 60,
-    request_max_renewals: 3,
+    request_ttl_min: 30,
+    request_max_renewals: 0,
     request_expiry_reminder_min: 10,
     request_daily_limit_new: 5,
     request_daily_limit: 15,
@@ -163,6 +165,7 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     request_coarse_grid_m: 1000,
     session_retention_days: 365,
     client_error_retention_days: 90,
+    destination_snap_m: 20,
     document_expiry_reminder_days: 30,
   }),
 );

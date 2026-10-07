@@ -101,7 +101,19 @@ export const fr = {
     namePlaceholder: 'Ex. Sami',
     nameInvalid: '2 à 40 lettres',
   },
+  role: {
+    title: 'Vous êtes…',
+    passenger: 'Passager',
+    passengerHint: 'Je cherche un taxi, un louage ou un bus.',
+    driver: 'Chauffeur',
+    driverHint: 'Je conduis un taxi, un louage ou un bus et je veux être vu sur la carte.',
+    final: 'Ce choix est définitif pour ce compte.',
+    confirmTitle: 'Continuer en tant que {{role}} ?',
+    confirm: 'Confirmer',
+  },
   me: {
+    account: 'Compte et données',
+    deleteHint: 'Efface votre profil, vos appareils et vos données personnelles. C’est définitif.',
     greeting: 'Bonjour {{name}}',
     signOut: 'Se déconnecter',
     deleteAccount: 'Supprimer mon compte',
@@ -275,6 +287,7 @@ export const fr = {
     suggested: 'Proposé d’après votre trajet habituel',
   },
   live: {
+    stale: 'Mise à jour il y a {{value}} s',
     zoomIn: 'Zoomez pour voir les chauffeurs.',
     headingTo: 'Vers {{name}}',
     line: 'Ligne {{line}}',

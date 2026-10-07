@@ -10,7 +10,7 @@
 - Only fake documents for the driver file (INPDP).
 
 ## 1. First run (A and B)
-- [ ] Sign-in with Google → language (try English) → terms → first name → **Location** screen → map opens where you are, blue dot visible.
+- [ ] Sign-in with Google → language (try English) → terms → first name → **Passenger or Driver** (once, final) → **Location** screen → map opens where you are, blue dot visible.
 - [ ] Refuse location once: the explanation stays, "Allow" asks again; refuse "don't ask again": **Open settings** appears.
 - [ ] Turn the phone's GPS off, come back to the app → back on the Location screen.
 - [ ] Language switch in the header (عربي | FR | EN): Arabic is right-to-left, arrows point the reading way; app restarts when switching.
@@ -24,7 +24,7 @@
 - [ ] Choose a destination → "Who is going to …?" lists (with `--around` near you: heading there now, taxis nearby, regular departures).
 
 ## 3. Driver B: verification
-- [ ] Profile → Sign up as a driver → form (you, licences, vehicle, review) with fake photos → submit → "Under review".
+- [ ] Choose **Driver** at first run → form (you, licences, vehicle, review) with fake photos → submit → "Under review". (A passenger account has no driver sign-up.)
 - [ ] Admin → Vérifications → open B → approve → B gets a push, status "Verified", B now opens on the sharing screen.
 
 ## 4. Driver B: sharing
@@ -39,7 +39,7 @@
 - [ ] B (sharing, next to A) sees A exactly with name and note.
 - [ ] A walks 25 m away → request closes "You moved away"; B no longer sees A.
 - [ ] Admin → Prises en charge → by request → B is listed with a distance ≤ 50 m (and the read is in the audit log).
-- [ ] A: post, stand still 5 min (no false closure); cancel; renew.
+- [ ] A: post, stand still 5 min (no false closure); cancel; a request left alone closes by itself at 30 min (no countdown shown).
 
 ## 6. Safety
 - [ ] B reports Amel "Nobody there"; A reports a fake driver "Unsafe" → both in Admin → Signalements (Unsafe first).

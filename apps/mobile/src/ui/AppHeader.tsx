@@ -60,23 +60,25 @@ interface Props {
   showProfile?: boolean;
 }
 
-/** The Stitch top bar: back, logo, title over a subtitle, language pill and profile. */
+/** The Stitch top bar: logo, title over a subtitle, language pill and profile; pushed screens: back + title. */
 export function AppHeader({ title, subtitle, onBack, showProfile }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing.sm }]}>
-      {onBack ? <IconButton icon="arrow-left" label={t('common.back')} onPress={onBack} /> : null}
-      <AppLogo />
+      {onBack ? <IconButton icon="arrow-left" label={t('common.back')} onPress={onBack} /> : <AppLogo />}
       <View style={styles.titles}>
-        <Text variant="headline" numberOfLines={1}>
+        <Text variant="headline" numberOfLines={onBack ? 2 : 1}>
           {title}
         </Text>
-        <Text variant="caption" muted numberOfLines={1}>
-          {subtitle ?? 'في ثنيتك · Fi thnitek'}
-        </Text>
+        {/* Pushed screens keep the room for their title; the brand and language live on the main ones. */}
+        {onBack ? null : (
+          <Text variant="caption" muted numberOfLines={1}>
+            {subtitle ?? 'في ثنيتك · Fi thnitek'}
+          </Text>
+        )}
       </View>
-      <LanguagePill />
+      {onBack ? null : <LanguagePill />}
       {showProfile ? (
         <IconButton icon="account" label={t('map.me')} variant="filled" onPress={() => router.push('/me')} />
       ) : null}

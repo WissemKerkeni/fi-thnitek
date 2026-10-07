@@ -30,6 +30,7 @@ const me = {
   currentTermsVersion: 'v1',
   driverVerification: null,
   needsOnboarding: true,
+  role: null,
 };
 const pair = (n: number): TokenPair => ({
   accessToken: `access-${n}`,
