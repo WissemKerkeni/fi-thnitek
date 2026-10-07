@@ -23,6 +23,8 @@ if (process.env.NODE_ENV === 'production' || !/@(localhost|127\.0\.0\.1)(:\d+)?\
   process.exit(1);
 }
 const pool = new Pool({ connectionString: url });
+// A dropped idle connection (database restart) must not end the simulation.
+pool.on('error', (error) => process.stderr.write(`db pool: ${error.message}\n`));
 const DOMAIN = 'sim.fi-thnitek.test';
 const TICK_MS = 5_000;
 
@@ -374,6 +376,14 @@ async function tick(drivers: LiveDriver[], requestIds: string[]): Promise<void> 
       await q(
         `UPDATE sharing_sessions SET break_until = GREATEST(break_until, now() + interval '30 minutes') WHERE id = $1 AND ended_at IS NULL`,
         [d.sessionId],
+      );
+      // ADR-227: on the map, frozen where the break began (written once, never moved).
+      const { at } = along(d.path, d.length, d.travelled);
+      await q(
+        `INSERT INTO driver_live_locations (driver_user_id, session_id, transport_type, point, lat, lng, accuracy_m, fix_ts, recent_fixes, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, 6, now() - interval '5 minutes', '[]', now())
+         ON CONFLICT (driver_user_id) DO NOTHING`,
+        [d.userId, d.sessionId, d.spec.type, geo(at), at[0], at[1]],
       );
       continue;
     }

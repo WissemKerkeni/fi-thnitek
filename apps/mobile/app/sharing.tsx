@@ -132,7 +132,7 @@ function StartView({ status }: { status: SharingStatus }) {
         <Text variant="bodyStrong" style={styles.flex}>
           {t('sharing.driverMode')}
         </Text>
-        <StatusPill label={t('sharing.notVisible')} on={false} />
+        <StatusPill label={t('sharing.onBreakShort')} on={false} />
       </View>
       <Banner icon="eye-off-outline">{t('sharing.notVisibleHint')}</Banner>
 
@@ -506,6 +506,7 @@ function BreakView({ status }: { status: SharingStatus }) {
   const showError = useErrorAlert();
   const until = s.breakUntil!;
   const over = now >= new Date(until).getTime();
+  // ADR-227: on the map as "on break" (frozen where it began); Resume works at any time.
 
   return (
     <Screen>
@@ -539,17 +540,10 @@ function BreakView({ status }: { status: SharingStatus }) {
         </Text>
       </Card>
 
-      {over && s.resumeDeadline ? (
-        <Banner icon="alarm" tone="warning">
-          {t('sharing.resumeBefore', { time: clockTime(s.resumeDeadline, lang) })}
-        </Banner>
-      ) : (
-        <Banner icon="lock-clock">{t('sharing.resumeAt', { time: clockTime(until, lang) })}</Banner>
-      )}
+      <Banner icon="play-circle-outline">{t('sharing.resumeAt', { time: clockTime(until, lang) })}</Banner>
       <Button
-        label={t('sharing.resume')}
+        label={t('sharing.resumeNow')}
         icon="play"
-        disabled={!over}
         loading={resume.isPending}
         onPress={() => resume.mutate(undefined, { onError: showError })}
       />

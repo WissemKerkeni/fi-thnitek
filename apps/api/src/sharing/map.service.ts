@@ -25,7 +25,7 @@ import {
   routineMatches,
   seesExactPosition,
 } from '@fi-thnitek/domain';
-import { type SQL, and, between, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
+import { type SQL, and, between, eq, gte, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 import { ApiException } from '../common/api-exception.js';
@@ -111,12 +111,15 @@ export class MapService {
       return {
         around,
         markers: new Map(markers.map((m) => [m.id, m])),
-        sharing: around.map((d) => ({
-          userId: d.driverUserId,
-          type: d.type,
-          isFull: d.isFull,
-          position: { lat: d.lat, lng: d.lng },
-        })),
+        // Drivers on a break are not available, so they never count as "closer" (ADR-227).
+        sharing: around
+          .filter((d) => d.state === 'SHARING')
+          .map((d) => ({
+            userId: d.driverUserId,
+            type: d.type,
+            isFull: d.isFull,
+            position: { lat: d.lat, lng: d.lng },
+          })),
         requests: await this.openRequests(tile, MAX_MARKERS * 4),
       };
     })();
@@ -324,6 +327,8 @@ export class MapService {
         displayName: users.displayName,
         legalFirstName: driverProfiles.legalFirstName,
         isFull: sharingSessions.isFull,
+        state: sharingSessions.state,
+        breakUntil: sharingSessions.breakUntil,
         lineLabel: sharingSessions.lineLabel,
         plateDisplay: vehicles.plateDisplay,
         headingNameAr: heading.nameAr,
@@ -339,10 +344,13 @@ export class MapService {
       .leftJoin(heading, eq(heading.id, sharingSessions.headingToPlaceId))
       .where(
         and(
-          eq(sharingSessions.state, 'SHARING'),
           isNull(sharingSessions.endedAt),
           eq(users.status, 'ACTIVE'),
-          gte(driverLiveLocations.fixTs, freshSince),
+          // Sharing with a fresh fix, or on a break (frozen where it began, ADR-227).
+          or(
+            and(eq(sharingSessions.state, 'SHARING'), gte(driverLiveLocations.fixTs, freshSince)),
+            eq(sharingSessions.state, 'ON_BREAK'),
+          ),
           where,
         ),
       )
@@ -362,6 +370,7 @@ export class MapService {
         {
           ...r,
           nextRoutine: nextRoutines.get(r.driverUserId) ?? null,
+          onBreak: r.state === 'ON_BREAK',
           fixTs: r.fixTs.getTime(),
           headingTo: headingOf(r.headingNameAr, r.headingNameFr),
         },

@@ -46,7 +46,6 @@ export const ThresholdsSchema = z
       .array(positiveInt)
       .nonempty()
       .refine((xs) => xs.every((x, i) => i === 0 || x > xs[i - 1]!), 'must be unique and ascending'),
-    break_resume_window_min: positiveInt,
     session_max_h: positiveInt,
     /** "Still working?" unanswered for this long → MAX_DURATION (R-058). */
     still_working_answer_min: positiveInt,
@@ -133,7 +132,6 @@ export const DEFAULT_THRESHOLDS: Thresholds = freeze(
     driver_distance_filter_m: 10,
     cooldown_min: 60,
     break_options_min: [30, 60, 120],
-    break_resume_window_min: 15,
     session_max_h: 12,
     still_working_answer_min: 10,
     routine_max: 5,

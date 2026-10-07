@@ -96,8 +96,14 @@ export function finderGroup(
 }
 
 /** R-045(d): available drivers first, full ones last; then by distance. */
-export function finderOrder<T extends { isFull: boolean; distanceM: number | null }>(a: T, b: T): number {
-  if (a.isFull !== b.isFull) return a.isFull ? 1 : -1;
+export function finderOrder<T extends { isFull: boolean; onBreak?: boolean; distanceM: number | null }>(
+  a: T,
+  b: T,
+): number {
+  // Unavailable drivers (full, or on a break, ADR-227) come last.
+  const ua = a.isFull || a.onBreak === true;
+  const ub = b.isFull || b.onBreak === true;
+  if (ua !== ub) return ua ? 1 : -1;
   return (a.distanceM ?? Number.POSITIVE_INFINITY) - (b.distanceM ?? Number.POSITIVE_INFINITY);
 }
 

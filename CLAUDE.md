@@ -23,7 +23,7 @@ pnpm + Turborepo · TypeScript strict · NestJS REST `/v1` + `@nestjs/schedule` 
    - No restart during the cooldown.
    - Exact passenger coordinates only for sharing (not on break) taxi/louage drivers of a matching type; passenger name/note only when `show_identity = true`; driver name always present.
    - `pickup_records` never exposed by user endpoints (admin-only, audited).
-   - A break can't be ended early; fixes during a break are discarded; Full/Break don't trigger the cooldown.
+   - A driver on a break stays on the map frozen and marked, can resume at any time and resumes by itself at the end; fixes during a break are discarded; Full/Break don't trigger the cooldown (ADR-227).
    - Latest-point-only storage (no location history).
    - Pings outside an active mode → `stop:true`, nothing stored.
 7. Tracking (continuous location) only inside user-started foreground services with a visible notification; never add `ACCESS_BACKGROUND_LOCATION`. One-shot foreground reads to centre the map and measure distances are allowed but never stored or logged; the position leaves the phone only as `near` in a request body (ADR-224).

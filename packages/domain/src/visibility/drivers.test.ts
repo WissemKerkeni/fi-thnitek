@@ -48,7 +48,9 @@ describe('isDriverVisible', () => {
   it('shows only sharing drivers with a fresh fix', () => {
     expect(isDriverVisible('SHARING', NOW - 60_000, NOW, T)).toBe(true);
     expect(isDriverVisible('SHARING', NOW - 121_000, NOW, T)).toBe(false);
-    expect(isDriverVisible('ON_BREAK', NOW, NOW, T)).toBe(false);
+    // ADR-227: on a break the driver stays visible, frozen where the break began.
+    expect(isDriverVisible('ON_BREAK', NOW - 3_600_000, NOW, T)).toBe(true);
+    expect(isDriverVisible('ON_BREAK', null, NOW, T)).toBe(false);
     expect(isDriverVisible('ENDED', NOW, NOW, T)).toBe(false);
   });
 });
@@ -89,6 +91,7 @@ describe('driverMarker (R-022, invariant 9)', () => {
 
   it('exposes exactly the public fields, with the session id instead of the user id', () => {
     expect(Object.keys(driverMarker(source, NOW)).sort()).toEqual([
+      'breakUntil',
       'headingDeg',
       'headingTo',
       'id',
@@ -98,6 +101,7 @@ describe('driverMarker (R-022, invariant 9)', () => {
       'lng',
       'name',
       'nextRoutine',
+      'onBreak',
       'plateDisplay',
       'type',
       'updatedAgoS',

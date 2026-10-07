@@ -346,7 +346,7 @@ describe('location pings (docs/architecture.md §4.2)', () => {
 });
 
 describe('breaks (R-055)', () => {
-  it('hides the driver, discards fixes and cannot be ended early; Full and Break never cool down', async () => {
+  it('freezes the driver where the break began, takes no location, and can be ended early (ADR-227)', async () => {
     const d = await verifiedDriver();
     await api(d).start().expect(200);
     await api(d).full(true).expect(200);
@@ -355,43 +355,49 @@ describe('breaks (R-055)', () => {
     const status = statusOf((await api(d).breakFor(30).expect(200)).body);
     expect(status.session).toMatchObject({ state: 'ON_BREAK', fresh: false });
     expect(new Date(status.session!.breakUntil!).getTime() - Date.now()).toBeGreaterThan(29 * 60_000);
-    expect(await liveRows(d.userId)).toHaveLength(0);
+    // The frozen point stays (for the map); the 2-minute window is cleared.
+    const frozen = await liveRows(d.userId);
+    expect(frozen).toHaveLength(1);
+    expect(frozen[0]!.recent_fixes).toEqual([]);
 
-    expect(pingsOf((await api(d).pings([fix()]).expect(200)).body)).toEqual({
+    expect(
+      pingsOf(
+        (
+          await api(d)
+            .pings([fix(0, 300)])
+            .expect(200)
+        ).body,
+      ),
+    ).toEqual({
       stop: true,
       reason: 'ON_BREAK',
       cooldownUntil: null,
     });
-    expect(await liveRows(d.userId)).toHaveLength(0);
+    expect((await liveRows(d.userId))[0]!.lat).toBe(frozen[0]!.lat);
     expect(problem((await api(d).full(false).expect(409)).body).code).toBe('INVALID_STATE_TRANSITION');
-    expect(problem((await api(d).resume().expect(409)).body).code).toBe('BREAK_NOT_OVER');
-    await request(t.server()).post('/v1/driver/sharing/break/end').set(bearer(d)).expect(404);
 
-    await t.pool.query(
-      `UPDATE sharing_sessions SET break_until = now() - interval '5 minutes' WHERE driver_user_id = $1 AND ended_at IS NULL`,
-      [d.userId],
-    );
+    // Resume at any time, well before the end.
     const resumed = statusOf((await api(d).resume().expect(200)).body);
     expect(resumed.session).toMatchObject({ state: 'SHARING', fresh: true, breakUntil: null });
-    expect(await liveRows(d.userId)).toHaveLength(1);
     expect(await cooldownOf(d.userId)).toBeNull();
   });
 
-  it('ends without cooldown when the break is not resumed in time', async () => {
+  it('resumes by itself when the break time is over, without cooldown (ADR-227)', async () => {
     const d = await verifiedDriver();
     await api(d).start().expect(200);
     await api(d).breakFor(60).expect(200);
     await t.pool.query(
-      `UPDATE sharing_sessions SET break_until = now() - interval '16 minutes' WHERE driver_user_id = $1 AND ended_at IS NULL`,
+      `UPDATE sharing_sessions SET break_until = now() - interval '1 minute' WHERE driver_user_id = $1 AND ended_at IS NULL`,
       [d.userId],
     );
-    expect(problem((await api(d).resume().expect(409)).body).code).toBe('BREAK_RESUME_EXPIRED');
-    expect(await sessionRow(d.userId)).toMatchObject({
-      end_reason: 'BREAK_NOT_RESUMED',
-      cooldown_applied: false,
-    });
+    await t.app.get(SharingService).sweep();
+    const status = statusOf((await api(d).status().expect(200)).body);
+    expect(status.session).toMatchObject({ state: 'SHARING', breakUntil: null, fresh: false });
+    expect(pushesTo(d, 'BREAK_OVER')).toBe(1);
     expect(await cooldownOf(d.userId)).toBeNull();
-    await api(d).start().expect(200);
+    // The phone's next fix is taken as a fresh start (no gap counted over the break).
+    expect(pingsOf((await api(d).pings([fix()]).expect(200)).body).stop).toBe(false);
+    expect(statusOf((await api(d).status().expect(200)).body).session).toMatchObject({ fresh: true });
   });
 });
 
@@ -485,7 +491,7 @@ describe('sweep (every 30 s)', () => {
 });
 
 describe('live map drivers (R-022, R-026, invariant 4)', () => {
-  it('shows sharing drivers with their name to passengers, never drivers on break', async () => {
+  it('shows sharing drivers with their name to passengers, and drivers on a break frozen and marked', async () => {
     const d = await verifiedDriver('LOUAGE');
     const id = statusOf((await api(d).start().expect(200)).body).session!.id;
     await api(d).full(true).expect(200);
@@ -498,7 +504,9 @@ describe('live map drivers (R-022, R-026, invariant 4)', () => {
 
     await api(d).breakFor(30).expect(200);
     const after = MapView.parse((await api(passenger).map().expect(200)).body);
-    expect(after.drivers.find((m) => m.id === marker!.id)).toBeUndefined();
+    const onBreak = after.drivers.find((m) => m.id === marker!.id);
+    expect(onBreak).toMatchObject({ onBreak: true, lat: marker!.lat, lng: marker!.lng });
+    expect(new Date(onBreak!.breakUntil!).getTime()).toBeGreaterThan(Date.now());
   });
 
   it('refuses the map to a driver account that is not sharing (403 SHARING_REQUIRED)', async () => {
