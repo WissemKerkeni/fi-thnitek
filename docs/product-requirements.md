@@ -31,8 +31,8 @@ Dispatch, offers, chat, phone sharing, seat booking on routines, fares, payments
 - **R-004** Device registration (install ID, push token). **R-005** Delete account; sign out.
 
 ### 3.2 Places
-- **R-010** Curated places (cities, delegations, neighbourhoods, louage/bus stations, airports, landmarks), AR/FR + aliases.
-- **R-011** Destination search with suggestions + pick on map.
+- **R-010** Curated places (cities, delegations, neighbourhoods, louage/bus/taxi stations, airports, landmarks), AR/FR + aliases.
+- **R-011** Destination search with suggestions + pick on map; results show the distance from the person, and a search for a kind of station (louage, bus, taxi) lists the nearest ones (ADR-224).
 
 ### 3.3 Live map
 - **R-020** The map shows, in the visible area (max ~20 km span, clustered beyond that): sharing drivers by type (🚕/🚐/🚌) and open passenger requests (🧍). Layer toggles per type.
@@ -105,7 +105,7 @@ Verification decision · request closed (reason) · request expiring ("Renew?") 
 | NFR-02 | Map endpoint p95 < 300 ms server-side for a 20 km viewport |
 | NFR-03 | Location only inside user-started foreground services with a visible notification; no `ACCESS_BACKGROUND_LOCATION` |
 | NFR-04 | Users can never retrieve historical positions; the DB stores latest points + the 2-min driver window + pick-up records |
-| NFR-05 | AR (RTL) + FR |
+| NFR-05 | AR (RTL) + FR + EN (ADR-224) |
 | NFR-06 | All admin actions and admin views of pick-up records are audited |
 | NFR-07 | Battery: driver sharing ≤ ~8%/h on a mid device |
 

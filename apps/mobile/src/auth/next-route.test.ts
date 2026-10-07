@@ -45,6 +45,13 @@ describe('nextRoute (docs/ux.md §1)', () => {
     }
   });
 
+  it('requires location after the first-run steps, and only then (ADR-224)', () => {
+    expect(nextRoute({ status: 'signedIn', me }, true, false)).toBe('/location');
+    expect(nextRoute({ status: 'signedIn', me: { ...me, displayName: null } }, true, false)).toBe('/name');
+    expect(nextRoute({ status: 'signedOut' }, true, false)).toBe('/sign-in');
+    expect(nextRoute({ status: 'signedIn', me }, true, true)).toBe('/home');
+  });
+
   it('asks again when the terms change', () => {
     expect(nextRoute({ status: 'signedIn', me: { ...me, termsAcceptedVersion: 'v1' } }, true)).toBe('/terms');
   });

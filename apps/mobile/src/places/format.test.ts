@@ -31,5 +31,7 @@ describe('langOf', () => {
     expect(langOf('fr-TN')).toBe('fr');
     expect(langOf('ar')).toBe('ar');
     expect(langOf(undefined)).toBe('ar');
+    // English shows place names in their Latin (French) spelling.
+    expect(langOf('en-GB')).toBe('fr');
   });
 });

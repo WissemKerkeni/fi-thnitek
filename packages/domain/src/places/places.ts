@@ -6,6 +6,8 @@ export const PLACE_KINDS = [
   'NEIGHBOURHOOD',
   'LOUAGE_STATION',
   'BUS_STATION',
+  /** Taxi ranks (OSM amenity=taxi); usually unnamed, so named after their kind. */
+  'TAXI_STATION',
   'AIRPORT',
   'LANDMARK',
 ] as const;
@@ -57,6 +59,7 @@ export function placeSearchText(names: readonly (string | null | undefined)[]): 
 export const KIND_POPULARITY: Readonly<Record<PlaceKind, number>> = {
   CITY: 60,
   LOUAGE_STATION: 55,
+  TAXI_STATION: 35,
   AIRPORT: 55,
   BUS_STATION: 45,
   DELEGATION: 40,

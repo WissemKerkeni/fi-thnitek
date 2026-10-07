@@ -22,7 +22,7 @@ export class PlacesController {
   async search(
     @Body(new ZodValidationPipe(PlaceSearchRequest)) body: z.output<typeof PlaceSearchRequest>,
   ): Promise<PlaceSearchResponse> {
-    return { places: await this.places.search(body.q, body) };
+    return this.places.search(body.q, body);
   }
 
   @Post('nearest')

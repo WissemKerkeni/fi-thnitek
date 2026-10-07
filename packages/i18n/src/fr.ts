@@ -13,6 +13,7 @@ export const fr = {
     title: 'Choisissez votre langue',
     arabic: 'العربية',
     french: 'Français',
+    english: 'English',
   },
   health: {
     title: 'État du service',
@@ -36,7 +37,22 @@ export const fr = {
     clearDestination: 'Effacer la destination',
     searchExamples: 'Sousse, Nabeul, Bardo…',
   },
+  location: {
+    title: 'Activez votre position',
+    body: 'Fi thnitek a besoin de votre position pour fonctionner.',
+    why1: 'La carte s’ouvre là où vous êtes.',
+    why2: 'Vous voyez les stations, taxis et louages les plus proches, avec la distance.',
+    why3: 'Vos demandes et votre partage restent précis.',
+    privacy:
+      'Votre position reste sur votre téléphone : elle n’est ni enregistrée ni partagée, sauf pendant une demande ou un partage que vous lancez.',
+    allow: 'Autoriser la position',
+    openSettings: 'Ouvrir les réglages',
+    denied: 'Sans la position, l’application ne peut pas fonctionner. Autorisez-la pour continuer.',
+    servicesOff: 'La localisation du téléphone est désactivée. Activez-la pour continuer.',
+    locateMe: 'Ma position',
+  },
   places: {
+    nearestTitle: 'Les plus proches de vous : {{kind}}',
     searchTitle: 'Destination',
     searchLabel: 'Ville, quartier, station…',
     pickOnMap: 'Choisir sur la carte',
@@ -55,6 +71,7 @@ export const fr = {
       CITY: 'Ville',
       NEIGHBOURHOOD: 'Quartier',
       LOUAGE_STATION: 'Station louage',
+      TAXI_STATION: 'Station taxi',
       BUS_STATION: 'Gare routière',
       AIRPORT: 'Aéroport',
       LANDMARK: 'Lieu connu',

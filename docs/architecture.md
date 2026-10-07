@@ -53,7 +53,7 @@ Google ID token → `POST /v1/auth/google` → server verifies (signature, `aud`
 | Pauses | **Break** 30 min / 1 h / 2 h: the service stops; no fixes are expected | — |
 | Ends | Manual stop / GPS off / ping gap / 12 h unanswered / break not resumed / suspension / mock or jump | Moved > 20 m / 5 min without location / no fix in 60 s / 60 min / cancel |
 
-Permissions: `ACCESS_FINE_LOCATION` (while in use), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`. **No `ACCESS_BACKGROUND_LOCATION`**: services start from a visible UI action. Check the current Google Play foreground-service/location policy at submission. iOS later: when-in-use + `UIBackgroundModes: location`.
+Location is required to use the app (ADR-224): one-shot foreground reads centre the map and give distances, never stored. Permissions: `ACCESS_FINE_LOCATION` (while in use), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`. **No `ACCESS_BACKGROUND_LOCATION`**: services start from a visible UI action. Check the current Google Play foreground-service/location policy at submission. iOS later: when-in-use + `UIBackgroundModes: location`.
 
 ### 4.2 Ping endpoint
 `POST /v1/location/pings` body: `{ fixes: [{ seq, ts, lat, lng, accuracy, speed, heading, isMock }], locationServicesOn }`

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const Locale = z.enum(['ar', 'fr']);
+export const Locale = z.enum(['ar', 'fr', 'en']);
 export type Locale = z.infer<typeof Locale>;
 
 export const Platform = z.enum(['android', 'ios', 'web']);

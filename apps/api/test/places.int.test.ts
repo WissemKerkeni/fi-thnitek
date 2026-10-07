@@ -84,6 +84,33 @@ const FIXTURES: PlaceRecord[] = [
     governorateCode: null,
     popularity: 55,
   },
+  // ADR-224: stations around central Tunis for "the nearest station" searches.
+  ...(
+    [
+      [
+        'osm:node/10',
+        'LOUAGE_STATION',
+        'محطة لواج المنصف باي',
+        'Station louage Moncef Bey',
+        36.7915,
+        10.1937,
+      ],
+      ['osm:node/11', 'LOUAGE_STATION', 'محطة لواج سوسة', 'Station louage Sousse', 35.8301, 10.6352],
+      ['osm:node/12', 'TAXI_STATION', 'محطة تاكسي', 'Station de taxi', 36.8002, 10.1812],
+      ['osm:node/13', 'TAXI_STATION', 'محطة تاكسي', 'Station de taxi', 36.8102, 10.1812],
+      ['osm:node/14', 'BUS_STATION', 'محطة باب عليوة', 'Gare routière Bab Alioua', 36.7896, 10.1803],
+    ] as const
+  ).map(([source, kind, nameAr, nameFr, lat, lng]) => ({
+    source,
+    kind,
+    nameAr,
+    nameFr,
+    aliases: [],
+    lat,
+    lng,
+    governorateCode: null,
+    popularity: 40,
+  })),
 ];
 
 beforeAll(async () => {
@@ -116,6 +143,14 @@ async function search(body: object) {
   return PlaceSearchResponse.parse(res.body).places;
 }
 
+async function searchFull(body: object) {
+  const res = await request(t.server()).post('/v1/places/search').set(bearer(user)).send(body).expect(200);
+  return PlaceSearchResponse.parse(res.body);
+}
+
+/** Central Tunis, next to the first taxi rank. */
+const HERE = { lat: 36.8, lng: 10.181 };
+
 describe('place search (R-011)', () => {
   it('requires a signed-in user', async () => {
     await request(t.server()).post('/v1/places/search').send({ q: 'tunis' }).expect(401);
@@ -141,7 +176,8 @@ describe('place search (R-011)', () => {
 
   it('ranks the more popular place first and filters by kind', async () => {
     const all = await search({ q: 'sousse' });
-    expect(all.map((p) => p.kind)).toEqual(['CITY', 'GOVERNORATE']);
+    // The town first, then the louage station named after it, then the governorate (least popular).
+    expect(all.map((p) => p.kind)).toEqual(['CITY', 'LOUAGE_STATION', 'GOVERNORATE']);
     const govs = await search({ q: 'sousse', kinds: ['GOVERNORATE'] });
     expect(govs).toHaveLength(1);
     expect(govs[0]?.governorateCode).toBe('TN-51');
@@ -165,6 +201,52 @@ describe('place search (R-011)', () => {
 
   it('does not accept the query in the URL', async () => {
     await request(t.server()).get('/v1/places/search?q=tunis').set(bearer(user)).expect(404);
+  });
+});
+
+describe('nearest stations by kind (ADR-224)', () => {
+  it('answers "station louage" with the nearest louage stations first, with distances', async () => {
+    const r = await searchFull({ q: 'station louage', near: HERE });
+    expect(r.nearestKind).toBe('LOUAGE_STATION');
+    expect(r.places.map((p) => p.nameFr)).toEqual([
+      'Station louage Moncef Bey',
+      'Station louage Bab Saadoun',
+      'Station louage Sousse',
+    ]);
+    const d = r.places.map((p) => p.distanceM!);
+    expect(d[0]).toBeGreaterThan(1_000);
+    expect(d[0]).toBeLessThan(2_000);
+    expect([...d].sort((a, b) => a - b)).toEqual(d);
+  });
+
+  it('understands Arabic and English, and taxi ranks', async () => {
+    const taxis = await searchFull({ q: 'أقرب محطة تاكسي', near: HERE });
+    expect(taxis.nearestKind).toBe('TAXI_STATION');
+    expect(taxis.places.map((p) => p.kind)).toEqual(['TAXI_STATION', 'TAXI_STATION']);
+    expect(taxis.places[0]!.distanceM).toBeLessThan(100);
+    const bus = await searchFull({ q: 'bus station', near: HERE });
+    expect(bus.places[0]).toMatchObject({ nameFr: 'Gare routière Bab Alioua', kind: 'BUS_STATION' });
+  });
+
+  it('searches the other words among that kind ("louage sousse")', async () => {
+    const r = await searchFull({ q: 'louage sousse', near: HERE });
+    expect(r.nearestKind).toBeNull();
+    expect(r.places.map((p) => p.nameFr)).toEqual(['Station louage Sousse']);
+  });
+
+  it('gives distances for ordinary searches too, and none without a position', async () => {
+    const withPos = await searchFull({ q: 'sousse', near: HERE });
+    expect(withPos.places[0]!.distanceM).toBeGreaterThan(100_000);
+    const without = await searchFull({ q: 'station louage' });
+    expect(without.nearestKind).toBeNull();
+    expect(without.places.every((p) => p.distanceM === null)).toBe(true);
+    expect(without.places.every((p) => p.kind === 'LOUAGE_STATION')).toBe(true);
+  });
+
+  it('keeps a picker restricted to other kinds on the plain search', async () => {
+    const r = await searchFull({ q: 'louage', near: HERE, kinds: ['CITY'] });
+    expect(r.nearestKind).toBeNull();
+    expect(r.places.every((p) => p.kind === 'CITY')).toBe(true);
   });
 });
 
@@ -199,7 +281,7 @@ describe('admin places (Content → Places)', () => {
       .set(bearer(admin))
       .expect(200);
     const list = AdminPlaceList.parse(res.body);
-    expect(list.total).toBe(2);
+    expect(list.total).toBe(3);
     expect(list.places).toHaveLength(1);
     expect(list.places[0]?.source).toBe('osm:node/3');
   });

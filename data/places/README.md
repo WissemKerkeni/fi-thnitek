@@ -10,5 +10,7 @@
   edited are locked and kept as they are.
 - **Refresh:** re-run the fetch, review the diff (renamed or missing stations especially), commit, seed.
 
+Taxi ranks (`amenity=taxi`, ADR-224) are kept even when unnamed, as "Station de taxi" / "محطة تاكسي".
+
 Each record: `source`, `kind`, `nameAr`, `nameFr`, `aliases`, `lat`, `lng`, `governorateCode`, `popularity`.
 When OSM has a name in only one language, it is used for both until an admin adds the translation.

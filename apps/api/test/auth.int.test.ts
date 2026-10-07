@@ -132,6 +132,15 @@ describe('GET/PATCH /v1/me', () => {
       termsAcceptedVersion: TEST_TERMS_VERSION,
       needsOnboarding: false,
     });
+
+    // ADR-224: English is a supported language (pushes follow it).
+    res = await request(t.server())
+      .patch('/v1/me')
+      .set(bearer(s.accessToken))
+      .send({ locale: 'en' })
+      .expect(200);
+    expect(Me.parse(res.body).locale).toBe('en');
+    await request(t.server()).patch('/v1/me').set(bearer(s.accessToken)).send({ locale: 'de' }).expect(400);
   });
 
   it('registers and updates the device push token (R-004)', async () => {
