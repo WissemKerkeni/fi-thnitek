@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS as T } from '../config/thresholds.js';
 import { InvalidStateTransitionError } from '../state-machines/fsm.js';
+import { isFixFresh } from './fixes.js';
 import {
   COOLDOWN_REASONS,
   SESSION_END_REASONS,
   type StartContext,
   type SweepSession,
+  autoResumeFixAnchor,
   breakEnd,
   cooldownUntil,
   isBreakOver,
@@ -126,6 +128,13 @@ describe('breaks (R-055)', () => {
     const until = at('10:30:00');
     expect(isBreakOver(until, at('10:29:59'))).toBe(false);
     expect(isBreakOver(until, at('10:30:00'))).toBe(true);
+  });
+
+  it('resumes by itself without a fresh fix, but restarts the gap clock (ADR-227)', () => {
+    const now = at('10:30:00');
+    const anchor = autoResumeFixAnchor(now, T);
+    expect(isFixFresh(anchor.getTime(), now.getTime(), T)).toBe(false);
+    expect(now.getTime() - anchor.getTime()).toBeLessThan(T.driver_buffer_max_min * MIN);
   });
 
   it('can be resumed at any time while on break', () => {

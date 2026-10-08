@@ -116,6 +116,15 @@ export function isBreakOver(breakUntil: Date, now: Date): boolean {
   return now.getTime() >= breakUntil.getTime();
 }
 
+/**
+ * ADR-227: the `lastFixAt` written by an automatic resume. The gap clock restarts now (the break isn't
+ * counted as a gap), yet it sits just outside the freshness window: with no real fix the driver stays
+ * hidden and driver screens answer SHARING_REQUIRED (invariant 4) until the phone sends one.
+ */
+export function autoResumeFixAnchor(now: Date, t: Pick<Thresholds, 'driver_fresh_s'>): Date {
+  return new Date(now.getTime() - t.driver_fresh_s * 1000 - 1);
+}
+
 /** R-058: "Still working?" is due `session_max_h` after the start, then again after each confirmation. */
 export function stillWorkingDueAt(
   startedAt: Date,

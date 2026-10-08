@@ -15,6 +15,7 @@ import {
   type SessionEventType,
   type StartBlocker,
   type Thresholds,
+  autoResumeFixAnchor,
   breakEnd,
   cooldownUntil,
   evaluateDriverFixes,
@@ -365,7 +366,12 @@ export class SharingService {
             // afresh (no gap counted over the break). Hidden until that fix arrives (not fresh).
             await tx
               .update(sharingSessions)
-              .set({ state: 'SHARING', breakStartedAt: null, breakUntil: null, lastFixAt: now })
+              .set({
+                state: 'SHARING',
+                breakStartedAt: null,
+                breakUntil: null,
+                lastFixAt: autoResumeFixAnchor(now, this.t),
+              })
               .where(and(eq(sharingSessions.id, id), eq(sharingSessions.state, 'ON_BREAK')));
             await tx.delete(driverLiveLocations).where(eq(driverLiveLocations.driverUserId, driverUserId));
             await event(tx, id, 'RESUMED', now, { auto: true });
