@@ -11,9 +11,12 @@ export function createPool(
 ): Pool {
   // All timestamps are UTC (CLAUDE.md rule 9).
   const pool = new Pool({ connectionString, max, options: '-c timezone=UTC' });
-  // An idle connection dropped by the server (restart, network) must not crash the process: the pool
-  // discards it and opens a new one for the next query. Without a listener, Node treats it as fatal.
+  // A connection dropped by the server (restart, crash recovery, network) must not crash the process.
+  // The pool only listens on idle clients; a client checked out (e.g. mid-transaction in a sweep) emits
+  // 'error' on itself, so each one gets its own listener. The failing query rejects, the client is
+  // discarded on release, and the next query opens a new one. Without a listener, Node treats it as fatal.
   pool.on('error', onIdleError);
+  pool.on('connect', (client) => client.on('error', onIdleError));
   return pool;
 }
 

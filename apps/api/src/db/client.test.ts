@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
 import { createPool } from './client.js';
 
@@ -9,6 +10,17 @@ describe('createPool', () => {
     pool.emit('error', new Error('Connection terminated unexpectedly'), {});
     expect(onIdleError).toHaveBeenCalledTimes(1);
     expect(onIdleError.mock.calls[0]?.[0]).toMatchObject({ message: 'Connection terminated unexpectedly' });
+    await pool.end();
+  });
+
+  it('survives a checked-out connection dropped by the server (database restart mid-transaction)', async () => {
+    const onIdleError = vi.fn();
+    const pool = createPool('postgres://user:pass@127.0.0.1:1/none', 1, onIdleError);
+    const client = new EventEmitter();
+    pool.emit('connect', client);
+    // Without a listener on the client itself this throws (Node's unhandled 'error' event).
+    expect(() => client.emit('error', new Error('Connection terminated unexpectedly'))).not.toThrow();
+    expect(onIdleError).toHaveBeenCalledTimes(1);
     await pool.end();
   });
 });
