@@ -29,6 +29,9 @@ export const MapDriver = z.object({
   headingDeg: z.number().nullable(),
   name: z.string(),
   isFull: z.boolean(),
+  /** ADR-227: on a break the driver stays on the map, frozen and not available, until `breakUntil`. */
+  onBreak: z.boolean(),
+  breakUntil: z.iso.datetime().nullable(),
   headingTo: PlaceNames.nullable(),
   lineLabel: z.string().nullable(),
   plateDisplay: z.string(),

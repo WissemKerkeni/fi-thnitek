@@ -45,7 +45,7 @@ When a request closes `MOVED_AWAY`, **all** sharing drivers ≤ 50 m from the an
 
 ### ADR-210: "I'm full" toggle and declared breaks · Accepted
 - **Full:** a free toggle while sharing; the driver stays visible with a Full badge.
-- **Breaks:** 30/60/120 min. The driver is hidden and not tracked. A break **cannot be ended early**. Resume within 15 min after the end without cooldown; otherwise the session ends without cooldown.
+- **Breaks:** 30/60/120 min. *(Superseded by ADR-227: visible and frozen, resume any time, automatic resume.)* The driver is hidden and not tracked. A break **cannot be ended early**. Resume within 15 min after the end without cooldown; otherwise the session ends without cooldown.
 - The 1 h cooldown still applies to undeclared stops.
 
 ### ADR-211: Routine routes · Accepted
@@ -93,6 +93,17 @@ Drivers found the form too long. The file now asks only: legal first and last na
 - **Seats are not asked:** taxi 4, louage 8 (`DEFAULT_SEATS`); bus none (bus passengers never request).
 - **Trade-off accepted:** without a selfie the admin cannot match the CIN photo to the person, and without a plate photo cannot confirm the vehicle; admins rely on the CIN/licence/card consistency and on reports. Revisit if fake accounts appear (anti-abuse scenario 13).
 - The removed document types stay in the database enum (no destructive enum migration) but are neither required nor accepted.
+
+### ADR-227: Visible breaks that can be ended early · Accepted (product owner, 2026-10-07)
+- **On a break the driver stays on the map**, frozen at the break-start position, with the "heading to" destination and an "On a break · not available" badge (until `break_until`). No location is taken during the break (the service stops, pings answer `stop`, fixes are discarded); the 2-minute window is cleared, so a driver on a break never counts for pick-up records or as a "closer driver", and is listed last in the finder (like Full).
+- **Resume at any time** with a fresh position (no more "can't be ended early"); the driver on a break still sees no map (as before).
+- **Automatic resume when the time is over:** the sweep switches the session back to SHARING, drops the frozen point (the phone's next fix starts afresh, no gap counted over the break) and pushes "Break over: sharing resumes". The phone, when open, restarts tracking by itself; a phone that never comes back is ended later by the usual `PING_GAP` rule (60 min). `break_resume_window_min` and the `BREAK_NOT_RESUMED` path are gone (the enum value stays for history).
+- **Why it is safe now:** the old rule existed because a hidden break could be used to disappear and come back without the 1 h cooldown (anti-abuse scenario 16). A visible, frozen break hides nothing, so ending it early gives no advantage. Supersedes ADR-210's break part and product-plan rule 7.
+
+### ADR-226: Driver accounts see only driver screens, and only the passengers they can take · Accepted (product owner, 2026-10-07)
+- **No passenger screens for drivers:** a driver account never sees the passenger map, "My request", the request form, the finder or the request history; any of them sends it to its own home (sharing once approved, else its driver file). Destination search and pick-on-map stay available for "heading to" and regular trips.
+- **Passengers on a driver's map:** a sharing taxi/louage driver receives only the open requests of its own type (exact, as before); requests of another type are **not sent at all** (previously an approximate circle), and bus drivers receive none. Cluster counts for drivers follow the same rule. Passengers still see every waiting passenger as a ~100 m cell. Drivers keep seeing all sharing drivers of every type (R-025), with no type filter and no passengers toggle on their map.
+- **Dev simulation moved to Teboulba** (`pnpm --filter @fi-thnitek/api sim:demo`): fake drivers drive along Teboulba's real main roads (OSM geometry, ODbL, in `scripts/sim-teboulba-routes.json`), passengers wait in the centre; each start clears the previous fake scene.
 
 ### ADR-225: Passenger feedback from the first phone test · Accepted (product owner, 2026-10-07)
 - **Role chosen once at first run** (after the name, before location): Passenger or Driver, stored in `users.role`. A passenger account never becomes a driver (no driver sign-up in its profile; `PUT /driver/profile` → 403); a driver account goes to the verification form and never makes requests (`DRIVER_ACCOUNT` blocker, whatever the file's state). Setting the role is accepted once (same value again is a no-op, another value → 409). Existing accounts with a driver file were backfilled as drivers; the others choose at their next launch. Supersedes the "Je suis chauffeur" entry from the passenger profile.

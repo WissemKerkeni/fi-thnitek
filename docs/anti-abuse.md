@@ -18,7 +18,7 @@
 | Driver features | Only while sharing (fresh fix < 2 min) |
 | Driver restart after a stop | **1 h cooldown** (manual stop, GPS off, app killed/ping gap, spoof suspicion) |
 | Driver session cap | 12 h ("still working?" confirmation) |
-| Declared breaks | 30 min / 1 h / 2 h; hidden and not tracked; **cannot be ended early**; resume within 15 min after the end, or the session ends (no cooldown) |
+| Declared breaks | 30 min / 1 h / 2 h; **visible but frozen** ("on a break · not available") and not tracked; resume any time; resumes by itself at the end (no cooldown, ADR-227) |
 | "I'm full" | Free toggle while sharing; no penalty |
 | Passenger identity | Anonymous by default; name + note shown to matching drivers only if the passenger opts in |
 | Verified driver account | Driver-only (no passenger mode), so drivers can't peek at the map without sharing |
@@ -51,7 +51,7 @@
 | 13 | **Multiple driver accounts / fake documents** | CIN/plate uniqueness, document hashes, admin review | Rejected at submission / review | Documents | Admin | Reject + blocklist | Contact form |
 | 14 | **Banned user returns with a new Google account** | Device install ID; CIN/plate for drivers | Requesting blocked on flagged devices | Match data | Admin | Ban extended | Contact form |
 | 15 | **Legitimate driver falsely reported** | Needs ≥ 3 distinct reporters for even a flag | Nothing automatic | Pickup data contradicts the claim | Admin | Dismissed, no record | — |
-| 16 | **Driver abuses breaks** (e.g. repeated breaks to hide from certain passengers) | Session events | None automatic (breaks are legitimate) | Break frequency per day | Admin if reported | Warning | Contact form |
+| 16 | **Driver abuses breaks** (e.g. repeated breaks to hide from certain passengers) | Session events; a break no longer hides anyone (ADR-227) | None automatic (breaks are legitimate) | Break frequency per day | Admin if reported | Warning | Contact form |
 | 17 | **Drivers argue over who takes a passenger** | Reports between drivers | None automatic | Session events, pick-up record | Admin | Warning; repeat → suspension | Contact form |
 
 Every scenario above is an end-to-end test in `apps/api/test/scenarios.int.test.ts` (ADR-223).

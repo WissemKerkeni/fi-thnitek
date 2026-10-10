@@ -51,7 +51,7 @@ Google ID token → `POST /v1/auth/google` → server verifies (signature, `aud`
 | Offline | Buffer up to 60 min of fixes; upload in order | Buffer up to 5 min |
 | Server keeps | Latest point only (`driver_live_locations`) + session metadata | Anchor + latest point on the request |
 | Pauses | **Break** 30 min / 1 h / 2 h: the service stops; no fixes are expected | — |
-| Ends | Manual stop / GPS off / ping gap / 12 h unanswered / break not resumed / suspension / mock or jump | Moved > 20 m / 5 min without location / no fix in 60 s / 30 min / cancel |
+| Ends | Manual stop / GPS off / ping gap / 12 h unanswered / suspension / mock or jump | Moved > 20 m / 5 min without location / no fix in 60 s / 30 min / cancel |
 
 Location is required to use the app (ADR-224): one-shot foreground reads centre the map and give distances, never stored. Permissions: `ACCESS_FINE_LOCATION` (while in use), `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION`, `POST_NOTIFICATIONS`. **No `ACCESS_BACKGROUND_LOCATION`**: services start from a visible UI action. Check the current Google Play foreground-service/location policy at submission. iOS later: when-in-use + `UIBackgroundModes: location`.
 
@@ -92,9 +92,9 @@ start(driver): require VERIFIED, vehicle approved, no suspension, now() >= coold
 toggleFull(s): s.is_full = !s.is_full                     -- no penalty; only allowed in SHARING
 
 startBreak(s, minutes ∈ {30, 60, 120}):                   -- only allowed in SHARING
-  s.state = ON_BREAK; s.break_until = now() + minutes; delete driver_live_locations row
+  s.state = ON_BREAK; s.break_until = now() + minutes; keep the live point frozen (window cleared) — shown "on a break" (ADR-227)
   respond stop:true (the app stops the location service, shows "On break until …", schedules a local notification)
-resume(s): allowed only if now() >= s.break_until and now() <= s.break_until + 15 min
+resume(s): allowed at any time during the break, with a fresh fix
   → s.state = SHARING (needs a fresh fix); no cooldown
 
 on fixes for s in SHARING:
@@ -107,14 +107,14 @@ fixes received while ON_BREAK → stop:true, discarded
 cron every 30 s:
   SHARING with last fix older than 2 min → hidden from maps; the driver sees "Reconnecting…"
   SHARING with last fix older than 60 min → end(PING_GAP)                    -- beyond the offline buffer
-  ON_BREAK with now() > break_until + 15 min → end(BREAK_NOT_RESUMED)       -- no cooldown
+  ON_BREAK with now() >= break_until → back to SHARING, frozen point dropped, push "break over"   -- no cooldown
   sessions at 12 h (including breaks) without "still working" for 10 min → end(MAX_DURATION)   -- no cooldown
 
 end(s, reason): ended_at, end_reason; delete driver_live_locations;
   if reason ∈ {MANUAL_STOP, LOCATION_OFF, PING_GAP, SPOOF_SUSPECTED}: cooldown_until = end + 1 h
   push the reason (+ cooldown time)
 ```
-The break timer counts from `startBreak`. There's no "end break early" endpoint: breaks can't be cut short.
+The break timer counts from `startBreak`; `resume` ends it earlier (ADR-227).
 
 ### 4.5 Silent pick-up records (admin-only)
 When a request closes `MOVED_AWAY`, **every** sharing driver whose rolling-window fixes include a point ≤ 50 m from the anchor during the last 2 min is inserted into `pickup_records(request_id, driver_user_id, min_distance_m, at)`. When there are several, all are recorded. Nothing is shown to passengers or drivers; the records are exposed only through admin endpoints (every read audited) and used to investigate reports.
@@ -129,7 +129,8 @@ When a request closes `MOVED_AWAY`, **every** sharing driver whose rolling-windo
   The driver's name is always included. Sharing drivers therefore see all other drivers.
 - **Requests** (OPEN and anchored, not blocked), serialised **per viewer** (`packages/domain/visibility/passengers.ts`):
   - a sharing (not on break) taxi/louage driver whose type ∈ request types → `{exact: true, lat, lng, destination, seats, waitingMin, distanceM, closerDrivers}` + `{name, note}` **only if `show_identity = true`**;
-  - everyone else → `{exact: false, lat, lng}` snapped to a ~100 m grid cell centre, plus the destination, never a name or note;
+  - a sharing driver of another type, or a bus driver → nothing (ADR-226);
+  - passengers → `{exact: false, lat, lng}` snapped to a ~100 m grid cell centre, plus the destination, never a name or note;
   - the passenger's own request is not on their map.
 - A driver account without an active, fresh, non-break session → **403** `SHARING_REQUIRED`.
 - `closerDrivers` = the number of other sharing, **non-full** drivers of a matching type closer to the passenger than the viewer. It helps drivers judge whether a passenger is worth going for.

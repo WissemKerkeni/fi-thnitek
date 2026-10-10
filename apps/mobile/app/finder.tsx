@@ -139,7 +139,7 @@ function DriverRow({ driver: d }: { driver: FinderDriver }) {
   const lang = langOf(i18n.language);
   const distance = d.distanceM !== null ? distanceParts(d.distanceM) : null;
   return (
-    <View style={[styles.row, d.isFull && styles.full]}>
+    <View style={[styles.row, (d.isFull || d.onBreak) && styles.full]}>
       <VehicleBadge type={d.type} size={40} />
       <View style={styles.flex}>
         <Text variant="bodyStrong">
@@ -156,7 +156,11 @@ function DriverRow({ driver: d }: { driver: FinderDriver }) {
           {d.plateDisplay}
         </Text>
       </View>
-      {d.isFull ? <Badge label={t('sharing.fullBadge')} tone="danger" icon="account-cancel" /> : null}
+      {d.onBreak ? (
+        <Badge label={t('live.onBreak')} tone="warning" icon="coffee" />
+      ) : d.isFull ? (
+        <Badge label={t('sharing.fullBadge')} tone="danger" icon="account-cancel" />
+      ) : null}
     </View>
   );
 }

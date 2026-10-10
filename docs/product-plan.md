@@ -22,7 +22,7 @@
 | 4 | **Passenger tracking = request lifetime.** Posting a request starts live location. It closes automatically when the passenger **moves more than 20 m** from where they asked, when the phone stops sending location for 5 min, when there's no accurate GPS fix within 60 s, after 30 min (no renewal, ADR-225), or on cancel. |
 | 5 | **Live driver features require sharing.** Without sharing, a driver sees no map and no passengers. Sharing is open to taxi, louage **and bus** drivers. *(Managing routine routes and documents doesn't require sharing.)* |
 | 6 | **1-hour cooldown after an undeclared stop.** Stop button, GPS off, killed app → no restart for 1 hour. |
-| 7 | **Declared breaks: 30 min, 1 h or 2 h.** The driver disappears from the map for the chosen time, with no cooldown, and resumes with one tap when the break ends. |
+| 7 | **Declared breaks: 30 min, 1 h or 2 h.** The driver stays on the map, frozen where the break began and marked *On a break · not available*, with no location sent and no cooldown; they can resume at any time, and sharing resumes by itself when the time is over (ADR-227). |
 | 8 | **"I'm full"** switch while sharing. The driver stays on the map marked *Full*, so passengers and other drivers know. |
 | 9 | **Everyone sees the map**: all drivers (with their **name always displayed**) and the waiting passengers. **Passengers are anonymous by default**; they can choose to show their first name and a note. |
 | 10 | **Silent pick-up records.** When a request closes because the passenger moved away, every sharing driver who was within 50 m in the last 2 min is recorded automatically. **Only admins** see this history (for reports and safety). Users are never asked "who picked you up?". |

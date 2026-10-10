@@ -15,11 +15,11 @@ import {
   type SessionEventType,
   type StartBlocker,
   type Thresholds,
+  autoResumeFixAnchor,
   breakEnd,
   cooldownUntil,
   evaluateDriverFixes,
   isFixFresh,
-  resumeCheck,
   sharingMachine,
   startBlockers,
   startFixProblem,
@@ -52,7 +52,6 @@ type LiveSession = Session & { state: 'SHARING' | 'ON_BREAK' };
 
 /** Sessions ended within this window are still reported to a phone that keeps pinging (stop reason). */
 const RECENT_END_MS = 12 * 3_600_000;
-const MIN = 60_000;
 const DAY_MS = 86_400_000;
 /** R-070: how far back the driver can report a problem during a session. */
 const HISTORY_DAYS = 30;
@@ -232,39 +231,34 @@ export class SharingService {
           breaksCount: sql`${sharingSessions.breaksCount} + 1`,
         })
         .where(and(eq(sharingSessions.id, s.id), eq(sharingSessions.state, 'SHARING')));
-      await tx.delete(driverLiveLocations).where(eq(driverLiveLocations.driverUserId, userId));
+      // ADR-227: the marker stays where the break began (frozen, marked on break); the 2-minute window
+      // is cleared and no location is taken until the driver resumes.
+      await tx
+        .update(driverLiveLocations)
+        .set({ recentFixes: [] })
+        .where(eq(driverLiveLocations.driverUserId, userId));
       await event(tx, s.id, 'BREAK_STARTED', now, { minutes });
     });
     return this.status(userId, now);
   }
 
-  /** Only from `break_until` to the end of the resume window; there is no way to end a break early. */
+  /** ADR-227: at any time during the break, with a fresh position (the sweep also resumes at the end). */
   async resume(
     userId: string,
     req: z.output<typeof ResumeSharingRequest>,
     now = new Date(),
   ): Promise<SharingStatus> {
-    const expired = await this.db.transaction(async (tx) => {
+    await this.db.transaction(async (tx) => {
       const s = await this.lockActive(tx, userId);
       assertCan(s, 'RESUME');
-      const check = s.breakUntil ? resumeCheck(s.breakUntil, now, this.t) : 'OK';
-      if (check === 'TOO_EARLY') {
-        throw new ApiException('BREAK_NOT_OVER', HttpStatus.CONFLICT, `Break until ${iso(s.breakUntil)}`);
-      }
-      if (check === 'TOO_LATE') {
-        await this.endLocked(tx, s, 'BREAK_NOT_RESUMED', now);
-        return true;
-      }
       this.assertFix(req.fix, now);
       await tx
         .update(sharingSessions)
         .set({ state: 'SHARING', breakStartedAt: null, breakUntil: null, lastFixAt: new Date(req.fix.ts) })
         .where(and(eq(sharingSessions.id, s.id), eq(sharingSessions.state, 'ON_BREAK')));
       await this.storeLatest(tx, userId, s.id, s.transportType, req.fix, [req.fix]);
-      await event(tx, s.id, 'RESUMED', now);
-      return false;
+      await event(tx, s.id, 'RESUMED', now, { early: s.breakUntil !== null && now < s.breakUntil });
     });
-    if (expired) throw new ApiException('BREAK_RESUME_EXPIRED', HttpStatus.CONFLICT);
     return this.status(userId, now);
   }
 
@@ -339,8 +333,9 @@ export class SharingService {
   }
 
   /**
-   * The periodic job's work (every 30 s): ends silent, unresumed, unconfirmed or suspended sessions and
-   * sends the break-over and "Still working?" pushes. Each action is re-checked under the row lock.
+   * The periodic job's work (every 30 s): ends silent, unconfirmed or suspended sessions, resumes breaks
+   * whose time is over (ADR-227) and sends the "Still working?" push. Each action is re-checked under the
+   * row lock.
    */
   async sweep(now = new Date()): Promise<{ ended: number; reminded: number; prompted: number }> {
     const counts = { ended: 0, reminded: 0, prompted: 0 };
@@ -366,8 +361,20 @@ export class SharingService {
             await this.endLocked(tx, s as LiveSession, action.reason, now);
             counts.ended += 1;
             return 'SHARING_ENDED';
-          case 'REMIND_BREAK_OVER':
-            await tx.update(sharingSessions).set({ breakRemindedAt: now }).where(eq(sharingSessions.id, id));
+          case 'AUTO_RESUME':
+            // Back to SHARING without a position: the frozen one is dropped, so the phone's next fix starts
+            // afresh (no gap counted over the break). Hidden until that fix arrives (not fresh).
+            await tx
+              .update(sharingSessions)
+              .set({
+                state: 'SHARING',
+                breakStartedAt: null,
+                breakUntil: null,
+                lastFixAt: autoResumeFixAnchor(now, this.t),
+              })
+              .where(and(eq(sharingSessions.id, id), eq(sharingSessions.state, 'ON_BREAK')));
+            await tx.delete(driverLiveLocations).where(eq(driverLiveLocations.driverUserId, driverUserId));
+            await event(tx, id, 'RESUMED', now, { auto: true });
             counts.reminded += 1;
             return 'BREAK_OVER';
           case 'PROMPT_STILL_WORKING':
@@ -527,9 +534,6 @@ export class SharingService {
       lastFixAt: iso(s.lastFixAt),
       fresh: s.state === 'SHARING' && isFixFresh(s.lastFixAt?.getTime() ?? null, now.getTime(), this.t),
       breakUntil: iso(s.breakUntil),
-      resumeDeadline: s.breakUntil
-        ? new Date(s.breakUntil.getTime() + this.t.break_resume_window_min * MIN).toISOString()
-        : null,
       stillWorkingPending: s.stillWorkingPromptedAt !== null && s.stillWorkingPromptedAt >= due,
     };
   }

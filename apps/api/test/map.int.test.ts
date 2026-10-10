@@ -155,10 +155,9 @@ describe('per-viewer passenger serialisation (R-023, R-024, invariant 6)', () =>
       note: null,
       destination: { nameFr: 'Sousse' },
     });
-    // The taxi-only request stays approximate for a louage driver.
-    const other = view.passengers.find((x) => !x.exact)!;
-    expect(other.exact).toBe(false);
-    expect(other.id).toBe(await idOf(taxiRequest));
+    // ADR-226: the taxi-only request is not sent to a louage driver at all.
+    expect(view.passengers.map((x) => x.id)).not.toContain(await idOf(taxiRequest));
+    expect(view.passengers.every((x) => x.exact)).toBe(true);
   });
 
   it('shows the name and note to matching drivers only when the passenger allowed it', async () => {
@@ -166,7 +165,7 @@ describe('per-viewer passenger serialisation (R-023, R-024, invariant 6)', () =>
     const view = await map(taxi);
     const named = view.passengers.find((x) => x.exact)!;
     expect(named).toMatchObject({ name: 'Marwen', note: 'Devant la pharmacie' });
-    expect(view.passengers.find((x) => !x.exact)?.id).toBe(await idOf(louageRequest));
+    expect(view.passengers.map((x) => x.id)).not.toContain(await idOf(louageRequest));
   });
 
   it('counts available, matching drivers closer than the viewer', async () => {
@@ -183,17 +182,17 @@ describe('per-viewer passenger serialisation (R-023, R-024, invariant 6)', () =>
     await request(t.server()).post('/v1/driver/sharing/stop').set(bearer(full)).expect(200);
   });
 
-  it('keeps everyone else on a ~100 m cell with no name or note', async () => {
-    const bus = await sharingDriver('BUS', at(300));
+  it('keeps passengers on a ~100 m cell with no name or note; bus drivers see no request', async () => {
     const passenger = await signIn('Leila');
-    for (const viewer of [bus, passenger]) {
-      const view = await map(viewer);
-      expect(view.passengers).toHaveLength(2);
-      for (const p of view.passengers) expect(p.exact).toBe(false);
-      const json = JSON.stringify(view.passengers);
-      expect(json).not.toMatch(/Marwen|Valise|pharmacie/);
-      expect(json).not.toContain(String(at(0).lat));
-    }
+    const view = await map(passenger);
+    expect(view.passengers).toHaveLength(2);
+    for (const p of view.passengers) expect(p.exact).toBe(false);
+    const json = JSON.stringify(view.passengers);
+    expect(json).not.toMatch(/Marwen|Valise|pharmacie/);
+    expect(json).not.toContain(String(at(0).lat));
+
+    const bus = await sharingDriver('BUS', at(300));
+    expect((await map(bus)).passengers).toEqual([]);
   });
 
   it('never shows a closed or not yet anchored request', async () => {
@@ -207,7 +206,6 @@ describe('per-viewer passenger serialisation (R-023, R-024, invariant 6)', () =>
     await request(t.server()).post('/v1/requests/current/cancel').set(bearer(louageRequest)).expect(200);
     const after = await map(louageDriver);
     expect(after.passengers).toHaveLength(before - 1);
-    expect(after.passengers.every((p) => !p.exact)).toBe(true);
   });
 
   it('refuses the map to a driver account not sharing or on break (SHARING_REQUIRED)', async () => {

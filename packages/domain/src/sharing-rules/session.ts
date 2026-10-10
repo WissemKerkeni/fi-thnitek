@@ -34,8 +34,8 @@ export type SessionEventType = (typeof SESSION_EVENT_TYPES)[number];
 export type SharingEvent = 'TOGGLE_FULL' | 'START_BREAK' | 'RESUME' | 'END';
 
 /**
- * SHARING ⇄ ON_BREAK → ENDED. There is deliberately no event that ends a break early (R-055):
- * from ON_BREAK the only ways out are RESUME (after `break_until`) and END.
+ * SHARING ⇄ ON_BREAK → ENDED. ADR-227: a break can be ended at any time (RESUME), and resumes by
+ * itself at `break_until`; during it the driver stays on the map, frozen and marked on break.
  */
 export const sharingMachine = defineMachine<SharingState, SharingEvent>('sharing_session', {
   SHARING: { TOGGLE_FULL: 'SHARING', START_BREAK: 'ON_BREAK', END: 'ENDED' },
@@ -111,17 +111,18 @@ export function breakEnd(startedAt: Date, minutes: number, t: Pick<Thresholds, '
   return new Date(startedAt.getTime() + minutes * MIN);
 }
 
-export type ResumeCheck = 'OK' | 'TOO_EARLY' | 'TOO_LATE';
+/** ADR-227: the chosen break time is over; the session resumes by itself. */
+export function isBreakOver(breakUntil: Date, now: Date): boolean {
+  return now.getTime() >= breakUntil.getTime();
+}
 
-/** Resuming is possible from `break_until` until the end of the resume window, never before. */
-export function resumeCheck(
-  breakUntil: Date,
-  now: Date,
-  t: Pick<Thresholds, 'break_resume_window_min'>,
-): ResumeCheck {
-  if (now < breakUntil) return 'TOO_EARLY';
-  if (now.getTime() > breakUntil.getTime() + t.break_resume_window_min * MIN) return 'TOO_LATE';
-  return 'OK';
+/**
+ * ADR-227: the `lastFixAt` written by an automatic resume. The gap clock restarts now (the break isn't
+ * counted as a gap), yet it sits just outside the freshness window: with no real fix the driver stays
+ * hidden and driver screens answer SHARING_REQUIRED (invariant 4) until the phone sends one.
+ */
+export function autoResumeFixAnchor(now: Date, t: Pick<Thresholds, 'driver_fresh_s'>): Date {
+  return new Date(now.getTime() - t.driver_fresh_s * 1000 - 1);
 }
 
 /** R-058: "Still working?" is due `session_max_h` after the start, then again after each confirmation. */
@@ -141,7 +142,6 @@ export interface SweepSession {
   startedAt: Date;
   lastFixAt: Date | null;
   breakUntil: Date | null;
-  breakRemindedAt: Date | null;
   stillWorkingPromptedAt: Date | null;
   stillWorkingConfirmedAt: Date | null;
 }
@@ -150,9 +150,10 @@ export type SweepAction =
   | { type: 'NONE' }
   | {
       type: 'END';
-      reason: Extract<SessionEndReason, 'PING_GAP' | 'BREAK_NOT_RESUMED' | 'MAX_DURATION' | 'SUSPENDED'>;
+      reason: Extract<SessionEndReason, 'PING_GAP' | 'MAX_DURATION' | 'SUSPENDED'>;
     }
-  | { type: 'REMIND_BREAK_OVER' }
+  /** ADR-227: the break time is over; back to SHARING (the phone sends a fresh position on its own). */
+  | { type: 'AUTO_RESUME' }
   | { type: 'PROMPT_STILL_WORKING' };
 
 /**
@@ -162,18 +163,12 @@ export type SweepAction =
 export function sweepSession(
   s: SweepSession,
   now: Date,
-  t: Pick<
-    Thresholds,
-    'break_resume_window_min' | 'session_max_h' | 'still_working_answer_min' | 'driver_buffer_max_min'
-  >,
+  t: Pick<Thresholds, 'session_max_h' | 'still_working_answer_min' | 'driver_buffer_max_min'>,
 ): SweepAction {
   const due = stillWorkingDueAt(s.startedAt, s.stillWorkingConfirmedAt, t);
   const prompted = s.stillWorkingPromptedAt !== null && s.stillWorkingPromptedAt >= due;
 
   if (!s.driverAllowed) return { type: 'END', reason: 'SUSPENDED' };
-  if (s.state === 'ON_BREAK' && s.breakUntil && resumeCheck(s.breakUntil, now, t) === 'TOO_LATE') {
-    return { type: 'END', reason: 'BREAK_NOT_RESUMED' };
-  }
   if (prompted && now.getTime() >= s.stillWorkingPromptedAt!.getTime() + t.still_working_answer_min * MIN) {
     return { type: 'END', reason: 'MAX_DURATION' };
   }
@@ -181,9 +176,8 @@ export function sweepSession(
     const since = (s.lastFixAt ?? s.startedAt).getTime();
     if (now.getTime() - since > t.driver_buffer_max_min * MIN) return { type: 'END', reason: 'PING_GAP' };
   }
-  if (s.state === 'ON_BREAK' && s.breakUntil && now >= s.breakUntil && !s.breakRemindedAt) {
-    return { type: 'REMIND_BREAK_OVER' };
-  }
+  if (s.state === 'ON_BREAK' && s.breakUntil && isBreakOver(s.breakUntil, now))
+    return { type: 'AUTO_RESUME' };
   if (now >= due && !prompted) return { type: 'PROMPT_STILL_WORKING' };
   return { type: 'NONE' };
 }

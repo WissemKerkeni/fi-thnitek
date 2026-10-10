@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { langOf } from '../places/format';
 import { shortDate, tunisParts } from '../routines/format';
+import { clockTime } from '../sharing/time';
 import { colors, elevation, radii, spacing } from '../theme/tokens';
 import { Icon } from '../ui/Icon';
 import { Badge, IconButton } from '../ui/kit';
@@ -31,7 +32,19 @@ export function DriverCard({ driver, onClose }: { driver: MapDriver; onClose: ()
         <IconButton icon="close" label={t('live.close')} variant="tonal" onPress={onClose} />
       </View>
       <View style={styles.badges}>
-        {driver.isFull ? <Badge label={t('sharing.fullBadge')} tone="danger" icon="account-cancel" /> : null}
+        {driver.onBreak ? (
+          <Badge
+            label={
+              driver.breakUntil
+                ? t('live.onBreakUntil', { time: clockTime(driver.breakUntil, lang) })
+                : t('live.onBreak')
+            }
+            tone="warning"
+            icon="coffee"
+          />
+        ) : driver.isFull ? (
+          <Badge label={t('sharing.fullBadge')} tone="danger" icon="account-cancel" />
+        ) : null}
         {driver.lineLabel ? (
           <Badge label={t('live.line', { line: driver.lineLabel })} icon="bus-stop" />
         ) : null}

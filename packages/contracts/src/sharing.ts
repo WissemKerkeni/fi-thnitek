@@ -69,9 +69,8 @@ export const SessionView = z.object({
   lastFixAt: z.iso.datetime().nullable(),
   /** False while no recent fix arrived: the driver is hidden and sees "Reconnecting…". */
   fresh: z.boolean(),
+  /** ADR-227: sharing resumes by itself at this time (or earlier with Resume). */
   breakUntil: z.iso.datetime().nullable(),
-  /** After this, an unresumed break ends the session (no cooldown). */
-  resumeDeadline: z.iso.datetime().nullable(),
   /** "Still working?" is waiting for an answer (R-058). */
   stillWorkingPending: z.boolean(),
 });

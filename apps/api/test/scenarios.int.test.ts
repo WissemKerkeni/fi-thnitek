@@ -254,7 +254,8 @@ describe('anti-abuse scenarios (docs/anti-abuse.md §4)', () => {
     const p = await f.waitingPassenger(at(2300));
     const find = async (s: SignInResponse) => (await f.map(s)).passengers.find((x) => x.id === p.requestId);
     expect(await find(stalker)).toMatchObject({ exact: false });
-    expect(await find(louageDriver)).toMatchObject({ exact: false });
+    // A louage driver is not sent a taxi-only request at all (ADR-226).
+    expect(await find(louageDriver)).toBeUndefined();
     expect(await find(taxi)).toMatchObject({ exact: true });
 
     await request(t.server())
@@ -335,19 +336,16 @@ describe('anti-abuse scenarios (docs/anti-abuse.md §4)', () => {
     expect((await sharing(d)).session?.state).toBe('SHARING');
   });
 
-  it('16 · driver abuses breaks: breaks cannot be ended early and are counted for the admin, nothing automatic', async () => {
+  it('16 · driver abuses breaks: a break no longer hides anyone (frozen and marked), breaks are counted for the admin', async () => {
     const d = await f.sharingDriver(at(3100));
     await request(t.server())
       .post('/v1/driver/sharing/break')
       .set(bearer(d))
       .send({ minutes: 30 })
       .expect(200);
-    const early = await request(t.server())
-      .post('/v1/driver/sharing/resume')
-      .set(bearer(d))
-      .send({ fix: fix(at(3100)) })
-      .expect(409);
-    expect(problem(early.body).code).toBe('BREAK_NOT_OVER');
+    // ADR-227: still on the map for everyone, so a break cannot be used to hide from someone.
+    const seen = (await f.map(await f.signIn())).drivers.find((x) => x.id === d.sessionId);
+    expect(seen).toMatchObject({ onBreak: true });
     const detail = AdminSessionDetail.parse(
       (await request(t.server()).get(`/v1/admin/sessions/${d.sessionId}`).set(bearer(admin)).expect(200))
         .body,

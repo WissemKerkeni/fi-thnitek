@@ -94,7 +94,7 @@ export function useSharingActions() {
   };
 }
 
-const KNOWN_ERRORS = new Set(['FIX_REJECTED', 'BREAK_NOT_OVER', 'BREAK_RESUME_EXPIRED', 'COOLDOWN_ACTIVE']);
+const KNOWN_ERRORS = new Set(['FIX_REJECTED', 'COOLDOWN_ACTIVE']);
 
 /** A message the driver can act on, in their language. */
 export function sharingErrorMessage(t: TFunction, error: unknown): string {

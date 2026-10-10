@@ -93,12 +93,8 @@ describe('passengerMarker: exact coordinates (invariant 6)', () => {
 describe('passengerMarker: approximate for everyone else (R-023)', () => {
   const approx = (viewer: Viewer, r: RequestSource = request) => passengerMarker(r, viewer, [], NOW, T);
 
-  it.each([
-    ['a passenger', { kind: 'PUBLIC' as const }],
-    ['a taxi driver when only a louage was requested', viewerFrom(driver('t', 'TAXI', 10))],
-    ['a bus driver', viewerFrom(driver('b', 'BUS', 10))],
-  ])('shows %s a ~100 m cell and the destination only', (_label, viewer) => {
-    const marker = approx(viewer)!;
+  it('shows a passenger a ~100 m cell and the destination only', () => {
+    const marker = approx({ kind: 'PUBLIC' })!;
     expect(marker).toEqual({
       id: 'req-1',
       exact: false,
@@ -112,6 +108,13 @@ describe('passengerMarker: approximate for everyone else (R-023)', () => {
   it('never leaks the name or note, even when shown to drivers', () => {
     const marker = approx({ kind: 'PUBLIC' }, { ...request, showIdentity: true });
     expect(JSON.stringify(marker)).not.toMatch(/Marwen|valise/);
+  });
+
+  it.each([
+    ['a taxi driver when only a louage was requested', viewerFrom(driver('t', 'TAXI', 10))],
+    ['a bus driver', viewerFrom(driver('b', 'BUS', 10))],
+  ])('shows nothing at all to %s: drivers only see passengers they can take (ADR-226)', (_label, viewer) => {
+    expect(approx(viewer)).toBeNull();
   });
 
   it('never gives buses exact positions (they cannot be requested)', () => {

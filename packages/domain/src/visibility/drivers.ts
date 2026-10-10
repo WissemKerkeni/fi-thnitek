@@ -27,13 +27,17 @@ export function liveMapAccess(
   return s?.state === 'SHARING' && isFixFresh(s.lastFixTs, now, t) ? 'ALLOWED' : 'SHARING_REQUIRED';
 }
 
-/** Drivers are on the map only while sharing (not on break) with a fresh fix (R-020, R-055). */
+/**
+ * Drivers are on the map while sharing with a fresh fix (R-020), and while on a break, frozen at the
+ * break-start position and marked on break (ADR-227: they stay visible as unavailable).
+ */
 export function isDriverVisible(
   state: SharingState,
   lastFixTs: number | null,
   now: number,
   t: Pick<Thresholds, 'driver_fresh_s'>,
 ): boolean {
+  if (state === 'ON_BREAK') return lastFixTs !== null;
   return state === 'SHARING' && isFixFresh(lastFixTs, now, t);
 }
 
@@ -61,6 +65,9 @@ export interface DriverMarkerSource {
   displayName: string | null;
   legalFirstName: string;
   isFull: boolean;
+  /** ADR-227: on a break, the marker is frozen where it began and the driver is not available. */
+  onBreak?: boolean;
+  breakUntil?: Date | null;
   headingTo: { nameAr: string; nameFr: string } | null;
   lineLabel: string | null;
   plateDisplay: string;
@@ -77,6 +84,8 @@ export interface DriverMarker {
   headingDeg: number | null;
   name: string;
   isFull: boolean;
+  onBreak: boolean;
+  breakUntil: string | null;
   headingTo: { nameAr: string; nameFr: string } | null;
   lineLabel: string | null;
   plateDisplay: string;
@@ -97,6 +106,8 @@ export function driverMarker(s: DriverMarkerSource, now: number): DriverMarker {
     headingDeg: s.headingDeg,
     name: s.displayName?.trim() || s.legalFirstName,
     isFull: s.isFull,
+    onBreak: s.onBreak === true,
+    breakUntil: s.onBreak && s.breakUntil ? s.breakUntil.toISOString() : null,
     headingTo: s.headingTo,
     lineLabel: s.type === 'BUS' ? s.lineLabel : null,
     plateDisplay: s.plateDisplay,

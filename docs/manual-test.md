@@ -1,11 +1,11 @@
-# Manual test: two real accounts + the Monastir simulation
+# Manual test: two real accounts + the Teboulba simulation
 
 > Before the street test ([field-test.md](field-test.md)): check every screen at home with two phones
-> (or one phone, signing out between roles) and a simulated city full of drivers and passengers.
+> (or one phone, signing out between roles) and a simulated town full of drivers and passengers.
 
 ## 0. Setup (on the PC)
 - Servers: API, Metro and admin running (ask Claude "start the servers").
-- Simulation: `pnpm --filter @fi-thnitek/api sim:monastir` — 9 drivers moving in Monastir (5 taxis, 3 louages, 1 bus line L12), 1 driver on a break, 6 waiting passengers, 2 regular louage trips (Monastir → Tunis 07:30, → Sousse 17:00). Ctrl+C ends it cleanly. `--around <lat>,<lng>` puts the same scene next to you (useful for the finder, which only looks around your position). `--clean` deletes all fake accounts.
+- Simulation: `pnpm --filter @fi-thnitek/api sim:demo` — 9 drivers driving Teboulba's main roads (5 taxis, 3 louages, 1 bus line L23), 1 driver on a break, 6 waiting passengers in the centre (4 taxi, 2 louage), 2 regular louage trips from the Teboulba station (→ Tunis 07:30, → Sousse 17:00). Ctrl+C ends it cleanly. `--around <lat>,<lng>` puts the same scene elsewhere. `--clean` deletes all fake accounts.
 - Accounts: **A = passenger** (any test Google account), **B = driver** (the other one). A verified driver account cannot make passenger requests, so keep the roles apart. The admin console (http://localhost:5173) uses the allow-listed account.
 - Only fake documents for the driver file (INPDP).
 
@@ -16,7 +16,7 @@
 - [ ] Language switch in the header (عربي | FR | EN): Arabic is right-to-left, arrows point the reading way; app restarts when switching.
 
 ## 2. Passenger A: the map and search
-- [ ] Search "Monastir" → the map flies there: moving taxis/louages/bus, a **Full** badge on Sonia, Walid (on a break) absent, passengers shown as ~100 m circles (no names).
+- [ ] Search "Teboulba" → the map flies there: moving taxis/louages/bus, a **Full** badge on Sonia, Walid (on a break) absent, passengers shown as ~100 m circles (no names).
 - [ ] Layer chips (taxi / louage / bus / passengers) hide and show markers; zoom far out → count bubbles; tap one → zooms in.
 - [ ] Tap a driver → card: name, plate, heading to, next regular trip (Ridha, Fathi); **Report** and **Block** buttons.
 - [ ] "My location" button brings you back.
@@ -29,7 +29,7 @@
 
 ## 4. Driver B: sharing
 - [ ] Start sharing (heading to optional) → foreground notification "You are visible on the map".
-- [ ] Pan to Monastir: fake **taxi** passengers (Amel, Ines…) are exact pins with seats; Amel and Ines show their name/note, the others are anonymous; louage-only passengers stay circles for a taxi. Queue under the map grouped by destination.
+- [ ] In Teboulba: every fake driver (taxi, louage, bus) is on the map; only passengers asking for **your** type appear (a taxi driver sees Amel, Sami, Hela, Ines — never Youssef or Omar who want a louage), as exact pins with seats; Amel and Ines show their name/note. No passenger screens, no "Ask for a taxi", no type filter. Queue under the map grouped by destination.
 - [ ] Tap Amel → card: waiting time, distance, "N drivers closer", Google Maps / Waze open at the spot.
 - [ ] "I'm full" on/off; take a 30 min break (cannot resume early); stop → 1 h cooldown message.
 - [ ] Regular trips: add one, see it on your driver card (from A's phone).

@@ -8,3 +8,5 @@ docs/
 *.md
 .idea/
 apps/mobile/.expo/
+# Written by apps/api/scripts/places-*.ts
+data/places/tn-places.json

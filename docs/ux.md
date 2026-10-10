@@ -112,7 +112,7 @@ Sessions (start/end, breaks, reason; each with **Report a problem** + an approxi
 
 ## 4. Copy & design rules
 - Always show freshness and state: "updated 5 s ago", "waiting 4 min", "FULL", "On break until 14:30".
-- Warn before consequences (the 20 m auto-close, the 1 h cooldown, breaks can't be ended early).
+- Warn before consequences (the 20 m auto-close, the 1 h cooldown; a break keeps you on the map as "not available").
 - Say who sees what: "Anonymous to drivers" / "Drivers see your name".
 - Touch targets ≥ 48 dp; body text ≥ 16 sp; RTL-correct; vehicle types have distinct shapes (not colour only).
 

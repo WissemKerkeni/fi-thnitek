@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_THRESHOLDS as T } from '../config/thresholds.js';
 import { InvalidStateTransitionError } from '../state-machines/fsm.js';
+import { isFixFresh } from './fixes.js';
 import {
   COOLDOWN_REASONS,
   SESSION_END_REASONS,
   type StartContext,
   type SweepSession,
+  autoResumeFixAnchor,
   breakEnd,
   cooldownUntil,
-  resumeCheck,
+  isBreakOver,
   sharingMachine,
   startBlockers,
   startFixProblem,
@@ -122,12 +124,21 @@ describe('breaks (R-055)', () => {
     expect(() => breakEnd(at('10:00:00'), 45, T)).toThrow(RangeError);
   });
 
-  it('can be resumed only from its end, within the window', () => {
+  it('is over at its end (ADR-227: it can also be ended earlier at any time)', () => {
     const until = at('10:30:00');
-    expect(resumeCheck(until, at('10:29:59'), T)).toBe('TOO_EARLY');
-    expect(resumeCheck(until, at('10:30:00'), T)).toBe('OK');
-    expect(resumeCheck(until, at('10:45:00'), T)).toBe('OK');
-    expect(resumeCheck(until, at('10:45:01'), T)).toBe('TOO_LATE');
+    expect(isBreakOver(until, at('10:29:59'))).toBe(false);
+    expect(isBreakOver(until, at('10:30:00'))).toBe(true);
+  });
+
+  it('resumes by itself without a fresh fix, but restarts the gap clock (ADR-227)', () => {
+    const now = at('10:30:00');
+    const anchor = autoResumeFixAnchor(now, T);
+    expect(isFixFresh(anchor.getTime(), now.getTime(), T)).toBe(false);
+    expect(now.getTime() - anchor.getTime()).toBeLessThan(T.driver_buffer_max_min * MIN);
+  });
+
+  it('can be resumed at any time while on break', () => {
+    expect(sharingMachine.can('ON_BREAK', 'RESUME')).toBe(true);
   });
 });
 
@@ -149,7 +160,6 @@ describe('sweepSession', () => {
     startedAt: start,
     lastFixAt: start,
     breakUntil: null,
-    breakRemindedAt: null,
     stillWorkingPromptedAt: null,
     stillWorkingConfirmedAt: null,
   };
@@ -181,21 +191,15 @@ describe('sweepSession', () => {
       ...base,
       state: 'ON_BREAK' as const,
       breakUntil: plus(120),
-      breakRemindedAt: plus(120),
     };
     expect(sweepSession(onBreak, plus(119), T)).toEqual({ type: 'NONE' });
   });
 
-  it('reminds once when the break is over, then ends it without resume (BREAK_NOT_RESUMED)', () => {
+  it('resumes by itself when the break time is over (ADR-227)', () => {
     const onBreak = { ...base, state: 'ON_BREAK' as const, breakUntil: plus(30) };
     expect(sweepSession(onBreak, plus(29), T)).toEqual({ type: 'NONE' });
-    expect(sweepSession(onBreak, plus(30), T)).toEqual({ type: 'REMIND_BREAK_OVER' });
-    expect(sweepSession({ ...onBreak, breakRemindedAt: plus(30) }, plus(31), T)).toEqual({ type: 'NONE' });
-    expect(sweepSession({ ...onBreak, breakRemindedAt: plus(30) }, plus(45), T)).toEqual({ type: 'NONE' });
-    expect(sweepSession({ ...onBreak, breakRemindedAt: plus(30) }, plus(46), T)).toEqual({
-      type: 'END',
-      reason: 'BREAK_NOT_RESUMED',
-    });
+    expect(sweepSession(onBreak, plus(30), T)).toEqual({ type: 'AUTO_RESUME' });
+    expect(sweepSession(onBreak, plus(90), T)).toEqual({ type: 'AUTO_RESUME' });
   });
 
   it('asks "Still working?" at 12 h (breaks included) and ends after 10 min unanswered', () => {
@@ -208,7 +212,6 @@ describe('sweepSession', () => {
       ...prompted,
       state: 'ON_BREAK' as const,
       breakUntil: plus(13 * 60),
-      breakRemindedAt: null,
     };
     expect(sweepSession(onBreak, plus(12 * 60 + 10), T)).toEqual({ type: 'END', reason: 'MAX_DURATION' });
   });

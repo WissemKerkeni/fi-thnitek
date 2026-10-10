@@ -3,18 +3,18 @@ import { useTranslation } from 'react-i18next';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { isDriverAccount } from '../src/auth/next-route';
-import { colors, radii, sizes, spacing } from '../src/theme/tokens';
+import { colors, radii, spacing } from '../src/theme/tokens';
 import { Icon } from '../src/ui/Icon';
-import { Badge, Card, ListRow } from '../src/ui/kit';
+import { Badge, Card, ListRow, SectionTitle } from '../src/ui/kit';
 import { Screen } from '../src/ui/Screen';
 import { Text } from '../src/ui/Text';
 
 /** Tunisian emergency numbers (R-072), one compact row. */
 const EMERGENCY = [
-  { key: 'police', number: '197' },
-  { key: 'nationalGuard', number: '193' },
-  { key: 'civilProtection', number: '198' },
-  { key: 'samu', number: '190' },
+  { key: 'police', number: '197', icon: 'police-badge-outline' },
+  { key: 'nationalGuard', number: '193', icon: 'shield-account-outline' },
+  { key: 'civilProtection', number: '198', icon: 'fire-truck' },
+  { key: 'samu', number: '190', icon: 'ambulance' },
 ] as const;
 
 /**
@@ -95,25 +95,30 @@ export default function MeScreen() {
         <ListRow icon="account-cog-outline" title={t('me.account')} onPress={() => router.push('/account')} />
       </View>
 
-      <View style={styles.emergencyRow} accessibilityRole="summary" accessibilityLabel={t('me.emergency')}>
-        <Icon name="phone-alert-outline" size={20} color={colors.danger} />
-        {EMERGENCY.map((e) => (
-          <Pressable
-            key={e.key}
-            accessibilityRole="button"
-            accessibilityLabel={`${t(`me.${e.key}`)} ${e.number}`}
-            onPress={() => void Linking.openURL(`tel:${e.number}`)}
-            style={({ pressed }) => [styles.emergency, pressed && styles.pressed]}
-          >
-            <Text variant="label" style={styles.number}>
-              {e.number}
-            </Text>
-            <Text variant="caption" muted numberOfLines={1}>
-              {t(`me.${e.key}`)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <Card>
+        <SectionTitle icon="phone-alert-outline" title={t('me.emergency')} />
+        <View style={styles.grid}>
+          {EMERGENCY.map((e) => (
+            <Pressable
+              key={e.key}
+              accessibilityRole="button"
+              accessibilityLabel={`${t(`me.${e.key}`)} ${e.number}`}
+              onPress={() => void Linking.openURL(`tel:${e.number}`)}
+              style={({ pressed }) => [styles.emergency, pressed && styles.pressed]}
+            >
+              <Icon name={e.icon} color={colors.danger} />
+              <View style={styles.flex}>
+                <Text variant="headline" style={styles.number}>
+                  {e.number}
+                </Text>
+                <Text variant="caption" muted>
+                  {t(`me.${e.key}`)}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
 
       <View style={styles.group}>
         <ListRow
@@ -146,13 +151,16 @@ const styles = StyleSheet.create({
     gap: StyleSheet.hairlineWidth,
     backgroundColor: colors.border,
   },
-  emergencyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   emergency: {
-    flex: 1,
+    flexBasis: '47%',
+    flexGrow: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: sizes.minTouchTarget,
-    paddingVertical: spacing.xs,
+    gap: spacing.sm,
+    minHeight: 64,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: radii.md,
     backgroundColor: colors.dangerContainer,
   },
