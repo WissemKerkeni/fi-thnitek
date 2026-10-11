@@ -11,8 +11,9 @@ services:
     plan: free
     dockerfilePath: ./infrastructure/docker/api.Dockerfile
     dockerContext: .
-    # The free plan has no pre-deploy step: migrations and the places import (idempotent) run at each start.
-    dockerCommand: sh -c "node dist/db/migrate-cli.js && node dist/db/seed.js && exec node dist/main.js"
+    # The free plan has no pre-deploy step: start.sh runs the migrations and the places import (idempotent)
+    # before the server. A single path: Render does not pass a quoted `sh -c "..."` through as one argument.
+    dockerCommand: /repo/apps/api/start.sh
     healthCheckPath: /v1/health
     autoDeployTrigger: checksPass
     buildFilter:

@@ -52,11 +52,12 @@ COPY --from=prod-deps --chown=node:node /repo/apps/api/dist ./apps/api/dist
 COPY --from=prod-deps --chown=node:node /repo/apps/api/drizzle ./apps/api/drizzle
 # Reference data for `node dist/db/seed.js` (places, ADR-217).
 COPY --chown=node:node data/places ./data/places
+COPY --chown=node:node --chmod=755 infrastructure/docker/api-start.sh ./apps/api/start.sh
 WORKDIR /repo/apps/api
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/v1/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-# Migrations and places run before the server on Render (dockerCommand in render.yaml), or as a one-off:
+# Migrations and places run before the server on Render (start.sh, render.yaml), or as a one-off:
 #   docker compose run --rm api sh -c "node dist/db/migrate-cli.js && node dist/db/seed.js"
 CMD ["node", "dist/main.js"]
