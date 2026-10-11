@@ -28,7 +28,7 @@ services:
       - key: NODE_ENV
         value: production
       # Supabase *session pooler* (IPv4), with the Supabase CA added as the Secret File `supabase-ca.crt`:
-      # postgresql://postgres.<ref>:<password>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=/etc/secrets/supabase-ca.crt
+      # postgresql://postgres.<ref>:<password>@aws-N-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=/etc/secrets/supabase-ca.crt
       - key: DATABASE_URL
         sync: false
       # Supabase free allows few pooled connections; one API process needs little.

@@ -14,7 +14,11 @@
     "preview": {
       "extends": "base",
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fi-thnitek-api.onrender.com",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "801842001144-bphquhlsdm8lb9i12u64qaiaik008j9d.apps.googleusercontent.com"
+      }
     },
     "production": { "extends": "base" }
   }
