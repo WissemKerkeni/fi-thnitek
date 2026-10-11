@@ -1,6 +1,6 @@
 import type { TokenPair } from '@fi-thnitek/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { type ApiClientOptions, ApiError, type TokenStore, createApiClient } from './api.js';
+import { ApiError, type TokenStore, createApiClient } from './api.js';
 
 const json = (status: number, body: unknown, contentType = 'application/json') =>
   new Response(status === 204 ? null : JSON.stringify(body), {
@@ -200,26 +200,28 @@ describe('driver verification calls', () => {
 describe('live map polling', () => {
   it('sends the last ETag for the same area and reuses the view on 304', async () => {
     const view = { clustered: false, drivers: [], passengers: [], clusters: [] };
-    const fetchImpl = vi
-      .fn<NonNullable<ApiClientOptions['fetchImpl']>>()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(view), {
-          status: 200,
-          headers: { 'content-type': 'application/json', etag: 'W/"a"' },
-        }),
-      )
-      .mockResolvedValueOnce(new Response(null, { status: 304 }));
+    const responses = [
+      new Response(JSON.stringify(view), {
+        status: 200,
+        headers: { 'content-type': 'application/json', etag: 'W/"a"' },
+      }),
+      new Response(null, { status: 304 }),
+    ];
+    const fetchImpl = vi.fn((_url: string, _init: RequestInit) => Promise.resolve(responses.shift()!));
     const tokens: TokenStore = {
       getAccessToken: () => 'access',
       getRefreshToken: () => Promise.resolve(null),
       save: () => Promise.resolve(),
       clear: () => Promise.resolve(),
     };
-    const api = createApiClient('https://api.test', { fetchImpl, tokens });
+    const api = createApiClient('https://api.test', {
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      tokens,
+    });
     const bbox = { south: 36.7, west: 10.1, north: 36.9, east: 10.3 };
     expect(await api.liveMap({ bbox })).toEqual(view);
     expect(await api.liveMap({ bbox })).toEqual(view);
-    const second = fetchImpl.mock.calls[1]![1]!.headers as Record<string, string>;
+    const second = fetchImpl.mock.calls[1]![1].headers as Record<string, string>;
     expect(second['If-None-Match']).toBe('W/"a"');
   });
 });
