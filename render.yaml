@@ -1,0 +1,66 @@
+# Render Blueprint: the API on a free web service (ADR-228, docs/deployment.md).
+# Database and document storage: Supabase (free). Admin: Vercel (apps/admin/vercel.json).
+# Keep-alive: a Cloudflare cron pings /v1/health (infrastructure/cloudflare/keepalive), otherwise the free
+# service sleeps after 15 min without requests and the sweeps (gap detection, expiry, break resume) stop.
+services:
+  - type: web
+    name: fi-thnitek-api
+    runtime: docker
+    # Closest Render region to Tunisia; same region as the Supabase project (eu-central-1).
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./infrastructure/docker/api.Dockerfile
+    dockerContext: .
+    # The free plan has no pre-deploy step: migrations and the places import (idempotent) run at each start.
+    dockerCommand: sh -c "node dist/db/migrate-cli.js && node dist/db/seed.js && exec node dist/main.js"
+    healthCheckPath: /v1/health
+    autoDeployTrigger: checksPass
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/**
+        - data/places/**
+        - infrastructure/docker/api.Dockerfile
+        - pnpm-lock.yaml
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Supabase *session pooler* (IPv4), with the Supabase CA added as the Secret File `supabase-ca.crt`:
+      # postgresql://postgres.<ref>:<password>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=/etc/secrets/supabase-ca.crt
+      - key: DATABASE_URL
+        sync: false
+      # Supabase free allows few pooled connections; one API process needs little.
+      - key: DATABASE_POOL_MAX
+        value: '5'
+      - key: LOG_LEVEL
+        value: info
+      # The Vercel admin origin, e.g. https://fi-thnitek-admin.vercel.app (no trailing slash).
+      - key: CORS_ORIGINS
+        sync: false
+      # Random 256-bit base64 values, generated once at creation. Never rotate the CIN keys:
+      # existing encrypted CINs and the uniqueness index depend on them.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CIN_ENCRYPTION_KEY
+        generateValue: true
+      - key: CIN_HMAC_KEY
+        generateValue: true
+      - key: GOOGLE_CLIENT_IDS
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      # Supabase Storage through its S3 API: https://<ref>.storage.supabase.co/storage/v1/s3
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        value: eu-central-1
+      - key: S3_BUCKET
+        value: fi-documents
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      # Set to /etc/secrets/firebase-service-account.json after adding that Secret File. Empty = pushes logged only.
+      - key: FIREBASE_SERVICE_ACCOUNT_FILE
+        sync: false

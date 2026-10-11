@@ -24,6 +24,7 @@
 │ Admin web (React+Vite+Refine)│── REST (admin scope) ──► API
 └─────────────────────────────┘
 Docker Compose on one VPS · Caddy (TLS) · nightly encrypted off-site backups
+Hosted for now on free tiers (Render API, Supabase PostGIS + storage, Vercel admin, Cloudflare keep-alive): ADR-228, docs/deployment.md
 ```
 No websockets, Redis, queues, BaaS or n8n in the core. Polling is enough at pilot scale (see §8).
 

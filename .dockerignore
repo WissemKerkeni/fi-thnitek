@@ -10,3 +10,6 @@
 .idea
 apps/mobile/android
 apps/mobile/ios
+# Render copies Secret Files into the build context root; keep them out of the image.
+firebase-service-account.json
+supabase-ca.crt

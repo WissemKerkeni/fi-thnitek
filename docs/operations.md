@@ -1,6 +1,6 @@
 # Operations runbook (v0.x)
 
-> Day-to-day running of the single-VPS setup (architecture §1, ADR-007). Decisions: ADR-223.
+> Day-to-day running of the single-VPS setup (architecture §1, ADR-007). Decisions: ADR-223. On the free hosted setup, see [deployment.md](deployment.md) (ADR-228).
 
 ## 1. Backups (docs/security.md §6)
 - **What:** PostgreSQL (everything except the photos) and the private documents bucket (Garage).
