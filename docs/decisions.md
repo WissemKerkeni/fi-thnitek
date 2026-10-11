@@ -94,6 +94,15 @@ Drivers found the form too long. The file now asks only: legal first and last na
 - **Trade-off accepted:** without a selfie the admin cannot match the CIN photo to the person, and without a plate photo cannot confirm the vehicle; admins rely on the CIN/licence/card consistency and on reports. Revisit if fake accounts appear (anti-abuse scenario 13).
 - The removed document types stay in the database enum (no destructive enum migration) but are neither required nor accepted.
 
+### ADR-228: Free hosting on Render + Supabase + Vercel + Cloudflare; Prisma Postgres rejected · Accepted (product owner, 2026-10-11)
+- **No paid plans** (product owner). Runbook: `docs/deployment.md`.
+- **API:** a free Render Docker web service (`render.yaml`, Frankfurt, the closest Render region to Tunisia). The free plan has no pre-deploy step, so migrations and the places import run at each start, before the server. Deploys wait for CI.
+- **Keep-alive:** a free plan sleeps after 15 min without requests, which would stop the sweeps (gap detection, expiry, break resume). A Cloudflare Worker cron pings `/v1/health` every 10 min (`infrastructure/cloudflare/keepalive`). One always-on service fits Render's 750 free hours a month, so this workspace has no room for a second free service.
+- **Database:** Supabase free (Postgres + PostGIS, Frankfurt), reached through the IPv4 session pooler with TLS verified against Supabase's CA. Its auto-generated Data API is turned off, and migration `0015` revokes the `anon`/`authenticated` grants on `public` (no-op elsewhere). Render's free Postgres was rejected because it expires after 30 days. **Prisma Postgres was rejected** because its extension list has no PostGIS (checked 2026-10-11), and the schema depends on `geography` columns, GiST indexes and `ST_*` queries.
+- **Documents:** Supabase Storage through its S3 API, instead of the self-hosted Garage of ADR-215. The API only needs the S3 API, so no code changes.
+- **Admin:** Vercel Hobby (Root Directory `apps/admin`, `vercel.json`). Hobby is non-commercial: move before a commercial launch.
+- **Open:** hosting outside Tunisia needs the INPDP transfer advice (roadmap, research-tunisia §4) before real users' data goes there. The single-VPS layout (architecture §1, operations runbook) stays the fallback.
+
 ### ADR-227: Visible breaks that can be ended early · Accepted (product owner, 2026-10-07)
 - **On a break the driver stays on the map**, frozen at the break-start position, with the "heading to" destination and an "On a break · not available" badge (until `break_until`). No location is taken during the break (the service stops, pings answer `stop`, fixes are discarded); the 2-minute window is cleared, so a driver on a break never counts for pick-up records or as a "closer driver", and is listed last in the finder (like Full).
 - **Resume at any time** with a fresh position (no more "can't be ended early"); the driver on a break still sees no map (as before).

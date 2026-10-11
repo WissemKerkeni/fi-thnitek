@@ -1,0 +1,15 @@
+# Cloudflare Worker (free plan) that keeps the free Render API awake (ADR-228, docs/deployment.md §4).
+# Deploy: npx wrangler login && npx wrangler deploy   (from this folder)
+name = "fi-thnitek-keepalive"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+# Cron only: no public URL.
+workers_dev = false
+
+[triggers]
+# Render sleeps a free service after 15 min without inbound requests.
+crons = ["*/10 * * * *"]
+
+[vars]
+# Not a secret. Change it if Render gave the service another hostname.
+API_HEALTH_URL = "https://fi-thnitek-api.onrender.com/v1/health"
