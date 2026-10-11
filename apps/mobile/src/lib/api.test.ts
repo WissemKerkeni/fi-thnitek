@@ -1,6 +1,6 @@
 import type { TokenPair } from '@fi-thnitek/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, type TokenStore, createApiClient } from './api.js';
+import { type ApiClientOptions, ApiError, type TokenStore, createApiClient } from './api.js';
 
 const json = (status: number, body: unknown, contentType = 'application/json') =>
   new Response(status === 204 ? null : JSON.stringify(body), {
@@ -201,7 +201,7 @@ describe('live map polling', () => {
   it('sends the last ETag for the same area and reuses the view on 304', async () => {
     const view = { clustered: false, drivers: [], passengers: [], clusters: [] };
     const fetchImpl = vi
-      .fn<typeof fetch>()
+      .fn<NonNullable<ApiClientOptions['fetchImpl']>>()
       .mockResolvedValueOnce(
         new Response(JSON.stringify(view), {
           status: 200,
